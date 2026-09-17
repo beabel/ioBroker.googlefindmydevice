@@ -1,0 +1,177 @@
+// Public Nova/Spot API protocol schema for Google Find Hub / Find My Device,
+// as used by leonboe1/GoogleFindMyTools (GPL-3.0) ProtoDecoders/DeviceUpdate.proto.
+// Vendored here unchanged (trimmed to the fields this project uses - device
+// listing, location reports, and E2EE owner-key retrieval; the
+// ExecuteAction/BLE-registration messages needed for "locate now"/"play
+// sound"/registering a new tracker are intentionally left out for now)
+// since this is protocol schema, not application logic.
+
+syntax = "proto3";
+
+package googlefindmydevice;
+
+import "common.proto";
+
+message GetEidInfoForE2eeDevicesResponse {
+  EncryptedOwnerKeyAndMetadata encryptedOwnerKeyAndMetadata = 4;
+}
+
+message EncryptedOwnerKeyAndMetadata {
+  bytes encryptedOwnerKey = 1;
+  int32 ownerKeyVersion = 2;
+  string securityDomain = 3;
+}
+
+message DevicesList {
+  repeated DeviceMetadata deviceMetadata = 2;
+}
+
+message DevicesListRequest {
+  DevicesListRequestPayload deviceListRequestPayload = 1;
+}
+
+message DevicesListRequestPayload {
+  DeviceType type = 1;
+  string id = 3;
+}
+
+enum DeviceType {
+  UNKNOWN_DEVICE_TYPE = 0;
+  ANDROID_DEVICE = 1;
+  SPOT_DEVICE = 2;
+  TEST_DEVICE_TYPE = 3;
+  AUTO_DEVICE = 4;
+  FASTPAIR_DEVICE = 5;
+  SUPERVISED_ANDROID_DEVICE = 7;
+}
+
+message DeviceMetadata {
+  IdentitfierInformation identifierInformation = 1;
+  DeviceInformation information = 4;
+  string userDefinedDeviceName = 5;
+  ImageInformation imageInformation = 6;
+}
+
+message ImageInformation {
+  string imageUrl = 1;
+}
+
+message IdentitfierInformation {
+  PhoneInformation phoneInformation = 1;
+  IdentifierInformationType type = 2;
+  CanonicIds canonicIds = 3;
+}
+
+enum IdentifierInformationType {
+  IDENTIFIER_UNKNOWN = 0;
+  IDENTIFIER_ANDROID = 1;
+  IDENTIFIER_SPOT = 2;
+}
+
+message PhoneInformation {
+  CanonicIds canonicIds = 2;
+}
+
+message CanonicIds {
+  repeated CanonicId canonicId = 1;
+}
+
+message CanonicId {
+  string id = 1;
+}
+
+message DeviceInformation {
+  DeviceRegistration deviceRegistration = 1;
+  LocationInformation locationInformation = 2;
+  repeated AccessInformation accessInformation = 3;
+}
+
+message DeviceTypeInformation {
+  SpotDeviceType deviceType = 2;
+}
+
+message DeviceRegistration {
+  DeviceTypeInformation deviceTypeInformation = 2;
+  EncryptedUserSecrets encryptedUserSecrets = 19;
+  string manufacturer = 20;
+  string fastPairModelId = 21;
+  int32 pairDate = 23;
+  string model = 34;
+}
+
+message EncryptedUserSecrets {
+  bytes encryptedIdentityKey = 1;
+  int32 ownerKeyVersion = 3;
+  bytes encryptedAccountKey = 4;
+  Time creationDate = 8;
+  bytes encryptedSha256AccountKeyPublicAddress = 11;
+}
+
+message LocationInformation {
+  LocationsAndTimestampsWrapper reports = 3;
+}
+
+message LocationsAndTimestampsWrapper {
+  RecentLocationAndNetworkLocations recentLocationAndNetworkLocations = 4;
+}
+
+message RecentLocationAndNetworkLocations {
+  LocationReport recentLocation = 1;
+  Time recentLocationTimestamp = 2;
+  repeated LocationReport networkLocations = 5;
+  repeated Time networkLocationTimestamps = 6;
+  uint32 minLocationsNeededForAggregation = 9;
+}
+
+enum SpotDeviceType {
+  DEVICE_TYPE_UNKNOWN = 0;
+  DEVICE_TYPE_BEACON = 1;
+  DEVICE_TYPE_HEADPHONES = 2;
+  DEVICE_TYPE_KEYS = 3;
+  DEVICE_TYPE_WATCH = 4;
+  DEVICE_TYPE_WALLET = 5;
+  DEVICE_TYPE_BAG = 7;
+  DEVICE_TYPE_LAPTOP = 8;
+  DEVICE_TYPE_CAR = 9;
+  DEVICE_TYPE_REMOTE_CONTROL = 10;
+  DEVICE_TYPE_BADGE = 11;
+  DEVICE_TYPE_BIKE = 12;
+  DEVICE_TYPE_CAMERA = 13;
+  DEVICE_TYPE_CAT = 14;
+  DEVICE_TYPE_CHARGER = 15;
+  DEVICE_TYPE_CLOTHING = 16;
+  DEVICE_TYPE_DOG = 17;
+  DEVICE_TYPE_NOTEBOOK = 18;
+  DEVICE_TYPE_PASSPORT = 19;
+  DEVICE_TYPE_PHONE = 20;
+  DEVICE_TYPE_SPEAKER = 21;
+  DEVICE_TYPE_TABLET = 22;
+  DEVICE_TYPE_TOY = 23;
+  DEVICE_TYPE_UMBRELLA = 24;
+  DEVICE_TYPE_STYLUS = 25;
+  DEVICE_TYPE_EARBUDS = 26;
+}
+
+message AccessInformation {
+  string email = 1;
+  bool hasAccess = 2;
+  bool isOwner = 3;
+  bool thisAccount = 4;
+}
+
+message EncryptionUnlockRequestExtras {
+  int32 operation = 1;
+  SecurityDomain securityDomain = 2;
+  string sessionId = 6;
+}
+
+message SecurityDomain {
+  string name = 1;
+  int32 unknown = 2;
+}
+
+message Location {
+  sfixed32 latitude = 1;
+  sfixed32 longitude = 2;
+  int32 altitude = 3;
+}

@@ -20,7 +20,8 @@ const puppeteer = require('puppeteer-core');
 const { install, detectBrowserPlatform, resolveBuildId, computeExecutablePath, Browser, BrowserTag } = require('@puppeteer/browsers');
 
 const { gcmCheckin } = require('iobroker.googlefindmydevice/lib/google-checkin');
-const { exchangeToken } = require('iobroker.googlefindmydevice/lib/google-auth');
+const { exchangeToken, performOAuth, DEFAULT_CLIENT_SIG } = require('iobroker.googlefindmydevice/lib/google-auth');
+const { listDevices } = require('iobroker.googlefindmydevice/lib/nova-api');
 
 const isPkg = typeof process.pkg !== 'undefined';
 const baseDir = isPkg ? path.dirname(process.execPath) : __dirname;
@@ -133,10 +134,24 @@ Es laeuft alles lokal auf diesem Rechner ab.
   console.log('mit deinem Google-Konto an (inkl. 2FA falls aktiv). Das Fenster schliesst');
   console.log('sich danach automatisch.\n');
 
-  const browser = await puppeteer.launch({ executablePath, headless: false });
+  const browser = await puppeteer.launch({
+    executablePath,
+    headless: false,
+    userDataDir: path.join(baseDir, 'chrome-profile'),
+    // Puppeteer normally passes --enable-automation, which both shows the
+    // "Chrome is being controlled by automated test software" infobar and
+    // sets navigator.webdriver=true - Google's sign-in page reads that
+    // signal and reports the browser as "not secure" for exactly this
+    // reason. Dropping the flag (a documented Puppeteer launch option) is
+    // enough for an otherwise completely normal, user-driven Chrome window.
+    ignoreDefaultArgs: ['--enable-automation'],
+  });
   let oauthToken;
   try {
     const page = await browser.newPage();
+    await page.evaluateOnNewDocument(() => {
+      Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+    });
     await page.goto('https://accounts.google.com/EmbeddedSetup', { waitUntil: 'domcontentloaded' });
     oauthToken = await waitForOauthTokenCookie(page, 5 * 60 * 1000);
     console.log('Login erkannt.');
@@ -156,6 +171,30 @@ Es laeuft alles lokal auf diesem Rechner ab.
 
   if (!email) {
     throw new Error('Google hat keine Kontoadresse zurueckgegeben. Bitte erneut versuchen.');
+  }
+
+  console.log('Teste die Verbindung: hole deine Geraeteliste von Google...');
+  try {
+    const { Auth: admToken } = await performOAuth(
+      email,
+      aasToken,
+      androidId,
+      'android_device_manager',
+      'com.google.android.apps.adm',
+      DEFAULT_CLIENT_SIG,
+    );
+    const devices = await listDevices(admToken);
+    if (devices.length === 0) {
+      console.log('Verbindung erfolgreich, aber keine Tracker in deinem Konto gefunden.');
+    } else {
+      console.log(`Verbindung erfolgreich! Gefundene Tracker (${devices.length}):`);
+      for (const d of devices) {
+        console.log(`  - ${d.name}`);
+      }
+    }
+  } catch (err) {
+    console.log(`Hinweis: Geraeteliste konnte nicht abgerufen werden (${err.message}).`);
+    console.log('Die oben erzeugten Zugangsdaten sind trotzdem gueltig und gespeichert.');
   }
 
   console.log('\n' + '='.repeat(70));

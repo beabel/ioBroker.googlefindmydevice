@@ -1,0 +1,47 @@
+// Public Nova/Spot API protocol schema for Google Find Hub / Find My Device,
+// as used by leonboe1/GoogleFindMyTools (GPL-3.0) ProtoDecoders/Common.proto.
+// Vendored here unchanged (trimmed to the fields this project uses) since
+// this is protocol schema, not application logic.
+
+syntax = "proto3";
+
+package googlefindmydevice;
+
+message Time {
+  uint32 seconds = 1;
+  uint32 nanos = 2;
+}
+
+message LocationReport {
+  SemanticLocation semanticLocation = 5;
+  GeoLocation geoLocation = 10;
+  Status status = 11;
+}
+
+message SemanticLocation {
+  string locationName = 1;
+}
+
+enum Status {
+  SEMANTIC = 0;
+  LAST_KNOWN = 1;
+  CROWDSOURCED = 2;
+  AGGREGATED = 3;
+}
+
+message GeoLocation {
+  EncryptedReport encryptedReport = 1;
+  uint32 deviceTimeOffset = 2;
+  float accuracy = 3;
+}
+
+message EncryptedReport {
+  bytes publicKeyRandom = 1;
+  bytes encryptedLocation = 2;
+  bool isOwnReport = 3;
+}
+
+message GetEidInfoForE2eeDevicesRequest {
+  int32 ownerKeyVersion = 1;
+  bool hasOwnerKeyVersion = 2;
+}
