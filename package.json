@@ -17,5 +17,8 @@
   },
   "scripts": {
     "test": "node --test ./test/*.test.js"
+  },
+  "dependencies": {
+    "protobufjs": "^8.8.0"
   }
 }
