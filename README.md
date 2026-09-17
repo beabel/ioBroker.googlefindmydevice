@@ -142,7 +142,22 @@ feature that could not be fully confirmed working even with live network
 capture. Bluetooth tracker locations (the actual point of this adapter) are
 unaffected by this.
 
-## Attribution & License
+## Disclaimer
+
+This project is not affiliated with, endorsed by, or supported by Google.
+"Find Hub" and "Find My Device" are trademarks of Google LLC. Use at your own
+risk; Google's internal APIs are undocumented and may change without notice.
+
+## Changelog
+
+### **WORK IN PROGRESS**
+
+### 0.0.1 (2026-09-18)
+
+* (beabel) Initial development version - Bluetooth tracker names/metadata,
+  location decryption, and active per-device location requests.
+
+## Attribution
 
 The end-to-end-encryption routines in this adapter are a Node.js port of the
 algorithm implemented in
@@ -157,15 +172,12 @@ parts of the [firebase-messaging](https://github.com/sdb9696/firebase-messaging)
 Python library (MIT, (c) 2017 Matthieu Lemoine, (c) 2023 Steven Beth) and the
 "aesgcm" Web Push decryption scheme from
 [encrypted-content-encoding](https://github.com/martinthomson/encrypted-content-encoding)
-(MIT, Martin Thomson). Because this
-adapter is a derivative of the GPL-3.0 GoogleFindMyTools work, it is also
-licensed under the **GNU General Public License v3.0** — see
-[LICENSE](LICENSE).
+(MIT, Martin Thomson).
+
+## License
+
+Because this adapter is a derivative of the GPL-3.0 GoogleFindMyTools work
+credited above, it is licensed under the **GNU General Public License v3.0**
+— see the full text in [LICENSE](LICENSE).
 
 Copyright (c) 2026 Maik Ries <iobroker@ne-xt.de>
-
-## Disclaimer
-
-This project is not affiliated with, endorsed by, or supported by Google.
-"Find Hub" and "Find My Device" are trademarks of Google LLC. Use at your own
-risk; Google's internal APIs are undocumented and may change without notice.
