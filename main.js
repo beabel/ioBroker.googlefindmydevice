@@ -4,7 +4,7 @@ const crypto = require('node:crypto');
 const utils = require('@iobroker/adapter-core');
 const { gcmCheckin } = require('./lib/google-checkin');
 const { exchangeToken, performOAuth, DEFAULT_CLIENT_SIG } = require('./lib/google-auth');
-const { listDevices, executeLocateAction, listDevicesRaw } = require('./lib/nova-api');
+const { listDevices, executeLocateAction } = require('./lib/nova-api');
 const { extractSharedKeyFromVaultKeys, retrieveOwnerKey, buildEncryptionUnlockUrl, CONSOLE_SNIPPET } = require('./lib/owner-key');
 const { decryptLatestLocation } = require('./lib/decrypt-locations');
 const { registerFcm } = require('./lib/fcm-register');
@@ -188,17 +188,6 @@ class Googlefindmydevice extends utils.Adapter {
 
         const devices = await listDevices(admToken);
         this.log.debug(`${devices.length} Tracker gefunden.`);
-
-        // Temporary research call: find out what Nova actually returns for
-        // ANDROID_DEVICE entries (phones/tablets), which listDevices() above
-        // never sees anything for (it only asks for SPOT_DEVICE). Debug-only,
-        // doesn't feed into any state yet.
-        try {
-            const androidDevices = await listDevicesRaw(admToken);
-            this.log.debug(`ANDROID_DEVICE-Rohantwort: ${JSON.stringify(androidDevices)}`);
-        } catch (err) {
-            this.log.debug(`ANDROID_DEVICE-Testabfrage fehlgeschlagen: ${err.message}`);
-        }
 
         await this.syncDeviceSettings(devices);
 
