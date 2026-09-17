@@ -1,4 +1,5 @@
 const path = require('path');
+const { expect } = require('chai');
 const { tests } = require('@iobroker/testing');
 
 // Integration test against a real js-controller instance. Since this adapter
