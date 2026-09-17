@@ -55,8 +55,8 @@
     "adminUI": {
       "config": "json"
     },
-    "protectedNative": ["oauthToken", "aasToken", "securityToken"],
-    "encryptedNative": ["oauthToken", "aasToken", "securityToken"],
+    "protectedNative": ["oauthToken", "aasToken", "securityToken", "sharedKeyJson", "ownerKey"],
+    "encryptedNative": ["oauthToken", "aasToken", "securityToken", "sharedKeyJson", "ownerKey"],
     "dependencies": [{ "js-controller": ">=6.0.11" }],
     "globalDependencies": [{ "admin": ">=7.0.23" }]
   },
@@ -66,6 +66,9 @@
     "androidId": "",
     "securityToken": "",
     "aasToken": "",
+    "sharedKeyJson": "",
+    "ownerKey": "",
+    "ownerKeyVersion": -1,
     "pollInterval": 15
   },
   "objects": [],

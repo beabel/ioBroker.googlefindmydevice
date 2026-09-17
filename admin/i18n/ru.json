@@ -11,5 +11,10 @@
   "oauth_token_help": "Paste the value here, then save. It will be exchanged for a long-lived token and cleared automatically.",
   "connected_as": "Connected as",
   "poll_interval_label": "Poll interval (minutes)",
-  "poll_interval_help": "How often to fetch tracker locations from Google."
+  "poll_interval_help": "How often to fetch tracker locations from Google.",
+  "step2_headline": "Step 2: Enable location decryption",
+  "step2_intro": "One more manual step is needed to decrypt actual coordinates (device names already work without this). Check this adapter instance's log after it restarts for a link to open and a small script to paste into your browser's developer console there - both are logged once this point is reached. Complete whatever Google asks for on that page, then paste the result it shows you into the field below and save.",
+  "shared_key_json_label": "Result from the browser console (JSON)",
+  "shared_key_json_help": "Paste the captured text here, then save. It will be exchanged for the decryption key and cleared automatically.",
+  "step2_done": "Location decryption is set up - coordinates will appear as states on the next poll."
 }

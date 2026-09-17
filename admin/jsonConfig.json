@@ -90,6 +90,37 @@
       "md": 4,
       "lg": 3,
       "xl": 3
+    },
+    "_step2Headline": {
+      "type": "header",
+      "text": "step2_headline",
+      "size": 4,
+      "hidden": "!data.aasToken || data.ownerKey",
+      "newLine": true
+    },
+    "_step2Intro": {
+      "type": "staticText",
+      "text": "step2_intro",
+      "hidden": "!data.aasToken || data.ownerKey",
+      "newLine": true
+    },
+    "sharedKeyJson": {
+      "type": "password",
+      "label": "shared_key_json_label",
+      "help": "shared_key_json_help",
+      "hidden": "!data.aasToken || data.ownerKey",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 8,
+      "lg": 6,
+      "xl": 6
+    },
+    "_step2Done": {
+      "type": "staticText",
+      "text": "step2_done",
+      "hidden": "!data.ownerKey",
+      "newLine": true
     }
   }
 }

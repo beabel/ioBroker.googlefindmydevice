@@ -11,5 +11,10 @@
   "oauth_token_help": "Wert hier einfügen und speichern. Er wird automatisch gegen ein langlebiges Token getauscht und danach geleert.",
   "connected_as": "Verbunden als",
   "poll_interval_label": "Abfrageintervall (Minuten)",
-  "poll_interval_help": "Wie oft Tracker-Standorte von Google abgerufen werden."
+  "poll_interval_help": "Wie oft Tracker-Standorte von Google abgerufen werden.",
+  "step2_headline": "Schritt 2: Standort-Entschlüsselung freischalten",
+  "step2_intro": "Für echte Koordinaten (Gerätenamen funktionieren schon ohne diesen Schritt) ist noch ein manueller Schritt nötig. Schau nach dem Neustart dieser Instanz ins Log dieser Adapter-Instanz: dort stehen ein Link zum Öffnen und ein kleines Skript zum Einfügen in die Entwicklerkonsole deines Browsers, sobald dieser Punkt erreicht ist. Erledige auf der Seite, was Google verlangt, und füge das dort angezeigte Ergebnis unten ein und speichere.",
+  "shared_key_json_label": "Ergebnis aus der Browser-Konsole (JSON)",
+  "shared_key_json_help": "Erfassten Text hier einfügen und speichern. Er wird automatisch gegen den Entschlüsselungs-Schlüssel getauscht und danach geleert.",
+  "step2_done": "Standort-Entschlüsselung ist eingerichtet - Koordinaten erscheinen beim nächsten Abruf als States."
 }

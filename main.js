@@ -4,9 +4,13 @@ const utils = require('@iobroker/adapter-core');
 const { gcmCheckin } = require('./lib/google-checkin');
 const { exchangeToken, performOAuth, DEFAULT_CLIENT_SIG } = require('./lib/google-auth');
 const { listDevices } = require('./lib/nova-api');
+const { extractSharedKeyFromVaultKeys, retrieveOwnerKey, buildEncryptionUnlockUrl, CONSOLE_SNIPPET } = require('./lib/owner-key');
+const { decryptLatestLocation } = require('./lib/decrypt-locations');
 
 const ADM_SERVICE_SCOPE = 'oauth2:https://www.googleapis.com/auth/android_device_manager';
 const ADM_APP = 'com.google.android.apps.adm';
+const SPOT_SERVICE_SCOPE = 'oauth2:https://www.googleapis.com/auth/spot';
+const SPOT_APP = 'com.google.android.gms';
 
 // A number of minutes small enough that minutes * 60 * 1000 never overflows
 // setTimeout's 32-bit signed millisecond limit.
@@ -38,7 +42,66 @@ class Googlefindmydevice extends utils.Adapter {
             return;
         }
 
+        if (this.config.sharedKeyJson) {
+            await this.bootstrapOwnerKey();
+            return; // extendForeignObjectAsync below triggers a restart with the new config
+        }
+
+        if (!this.config.ownerKey) {
+            await this.logStep2Instructions();
+        }
+
         await this.pollLoop();
+    }
+
+    async logStep2Instructions() {
+        try {
+            const url = await buildEncryptionUnlockUrl();
+            this.log.info(
+                'Standort-Entschluesselung noch nicht eingerichtet (Schritt 2). Geraetenamen werden trotzdem ' +
+                    'aktualisiert. Anleitung: 1) Diesen Link in deinem Browser oeffnen: ' +
+                    url +
+                    ' 2) Entwicklertools oeffnen (F12) -> Reiter "Konsole" -> folgenden Code einfuegen und Enter ' +
+                    'druecken: ' +
+                    CONSOLE_SNIPPET +
+                    ' 3) Auf der Seite tun, was Google verlangt. 4) Das danach oben auf der Seite erscheinende ' +
+                    'Textfeld komplett kopieren und in der Instanzkonfiguration bei "Ergebnis aus der ' +
+                    'Browser-Konsole" einfuegen und speichern.',
+            );
+        } catch (err) {
+            this.log.error(`Konnte Schritt-2-Anleitung nicht erzeugen: ${err.message}`);
+        }
+    }
+
+    async bootstrapOwnerKey() {
+        try {
+            this.log.info('Ergebnis aus Schritt 2 erkannt, hole und entschluessele den Owner Key...');
+            const sharedKey = extractSharedKeyFromVaultKeys(this.config.sharedKeyJson);
+
+            const { Auth: spotToken } = await performOAuth(
+                this.config.email,
+                this.config.aasToken,
+                this.config.androidId,
+                SPOT_SERVICE_SCOPE,
+                SPOT_APP,
+                DEFAULT_CLIENT_SIG,
+            );
+
+            const { ownerKey, ownerKeyVersion } = await retrieveOwnerKey(spotToken, sharedKey);
+
+            await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, {
+                native: {
+                    sharedKeyJson: '',
+                    ownerKey: ownerKey.toString('hex'),
+                    ownerKeyVersion,
+                },
+            });
+
+            this.log.info('Owner Key erfolgreich eingerichtet. Adapter startet neu...');
+        } catch (err) {
+            this.log.error(`Einrichtung von Schritt 2 fehlgeschlagen: ${err.message}`);
+            await this.setStateAsync('info.connection', false, true);
+        }
     }
 
     async bootstrapFromOauthToken() {
@@ -97,12 +160,35 @@ class Googlefindmydevice extends utils.Adapter {
         const devices = await listDevices(admToken);
         this.log.debug(`${devices.length} Tracker gefunden.`);
 
+        const ownerKey = this.config.ownerKey ? Buffer.from(this.config.ownerKey, 'hex') : null;
+
         for (const device of devices) {
             const stateId = this.canonicIdToStateId(device.canonicId || device.name);
             await this.ensureDeviceStates(stateId, device.name);
-            // Standort-Entschluesselung braucht den Owner Key (kommt in einem
-            // spaeteren Schritt) - aktuell wird nur der Geraetename angezeigt.
+
+            if (!ownerKey) continue;
+
+            try {
+                const location = await decryptLatestLocation(ownerKey, device);
+                await this.updateLocationStates(stateId, location);
+            } catch (err) {
+                this.log.warn(`Standort fuer "${device.name}" konnte nicht entschluesselt werden: ${err.message}`);
+            }
         }
+    }
+
+    async updateLocationStates(stateId, location) {
+        if (!location) return;
+
+        if (location.semantic !== undefined) {
+            await this.setStateAsync(`devices.${stateId}.semanticLocation`, { val: location.semantic, ack: true });
+            return;
+        }
+
+        await this.setStateAsync(`devices.${stateId}.latitude`, { val: location.lat, ack: true });
+        await this.setStateAsync(`devices.${stateId}.longitude`, { val: location.lon, ack: true });
+        await this.setStateAsync(`devices.${stateId}.altitude`, { val: location.altitude, ack: true });
+        await this.setStateAsync(`devices.${stateId}.lastSeen`, { val: location.timestamp * 1000, ack: true });
     }
 
     canonicIdToStateId(raw) {
@@ -127,6 +213,38 @@ class Googlefindmydevice extends utils.Adapter {
             native: {},
         });
         await this.setStateAsync(`devices.${id}.name`, { val: name, ack: true });
+
+        await this.setObjectNotExistsAsync(`devices.${id}.latitude`, {
+            type: 'state',
+            common: { name: { en: 'Latitude', de: 'Breitengrad' }, type: 'number', role: 'value.gps.latitude', read: true, write: false },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync(`devices.${id}.longitude`, {
+            type: 'state',
+            common: { name: { en: 'Longitude', de: 'Längengrad' }, type: 'number', role: 'value.gps.longitude', read: true, write: false },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync(`devices.${id}.altitude`, {
+            type: 'state',
+            common: { name: { en: 'Altitude', de: 'Höhe' }, type: 'number', role: 'value.gps.elevation', unit: 'm', read: true, write: false },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync(`devices.${id}.lastSeen`, {
+            type: 'state',
+            common: { name: { en: 'Last seen', de: 'Zuletzt gesehen' }, type: 'number', role: 'value.time', read: true, write: false },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync(`devices.${id}.semanticLocation`, {
+            type: 'state',
+            common: {
+                name: { en: 'Semantic location (e.g. "Home")', de: 'Semantischer Standort (z.B. "Zuhause")' },
+                type: 'string',
+                role: 'text',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
     }
 
     onUnload(callback) {
