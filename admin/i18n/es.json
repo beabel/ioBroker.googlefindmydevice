@@ -4,7 +4,7 @@
   "setup_intro": "This adapter needs a one-time login to your Google account. No password is entered here - only a short-lived token you copy out of your own browser.",
   "setup_step1_link": "Step 1: Open Google login page",
   "setup_step2": "Step 2: Don't log in yet. First open your browser's developer tools (F12), then the \"Application\" tab → \"Cookies\" → select \"https://accounts.google.com\". The list is still empty - that's normal, it fills in once you log in. Leave this developer tools window open.",
-  "setup_step3": "Step 3: Now, in the other tab, log in with the Google account your trackers are linked to (including two-factor confirmation if enabled). The page may look empty afterwards - that's normal, it isn't meant for humans.",
+  "setup_step3": "Step 3: Now, in the other tab, log in with the Google account your trackers are linked to (including two-factor confirmation if enabled). The page may look empty afterwards, or get stuck on something like \"I agree\" and not proceed further - that's normal (it isn't meant for humans), the token is already valid at that point. Just continue with step 4.",
   "setup_step4": "Step 4: Switch back to the (already open) developer tools right away and refresh the cookie list if needed (small circular icon) until the row named \"oauth_token\" appears.",
   "setup_step5": "Step 5: Copy the full value of \"oauth_token\", paste it into the field below and save this configuration.",
   "setup_warning": "The oauth_token value only stays valid for a short time - do steps 3-5 in quick succession (step 2 can be done beforehand without rushing).",
