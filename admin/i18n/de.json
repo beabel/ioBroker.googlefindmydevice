@@ -1,4 +1,5 @@
 {
+  "supported_devices_note": "Dieser Adapter unterstützt nur Bluetooth-Tracker (Geräte im \"Find My Device\"-Netzwerk, z.B. Chipolo, Pebblebee). Handys, Tablets und andere Geräte, die mit demselben Google-Konto verbunden sind, erscheinen absichtlich NICHT in diesem Adapter - Google liefert dafür keine nutzbaren Standortdaten über diesen Weg, und eine Handy-Ortung würde einen komplett anderen, unsichereren Zugangsweg (volle Browser-Sitzung statt eng begrenztem Token) erfordern. Nutze dafür weiterhin die Google-eigene Oberfläche unter google.com/android/find.",
   "setup_headline": "Einrichtung erforderlich",
   "setup_intro": "Dieser Adapter braucht eine einmalige Anmeldung bei deinem Google-Konto. Es wird hier kein Passwort eingegeben - nur ein kurzlebiger Wert, den du aus deinem eigenen Browser kopierst.",
   "setup_step1_link": "Schritt 1: Google-Login-Seite öffnen",
@@ -18,7 +19,7 @@
   "shared_key_json_help": "Erfassten Text hier einfügen und speichern. Er wird automatisch gegen den Entschlüsselungs-Schlüssel getauscht und danach geleert.",
   "step2_done": "Standort-Entschlüsselung ist eingerichtet - Koordinaten erscheinen beim nächsten Abruf als States.",
   "device_settings_headline": "Standortabfrage pro Gerät",
-  "device_settings_intro": "Eine aktive Standortabfrage lässt das Gerät kurz per Bluetooth senden - das kostet spürbar Akku. Bitte pro Tracker einzeln aktivieren und einen Abstand wählen, der zum Gerät passt (z.B. selten für ein Fahrrad, das meist zuhause steht). Neu gefundene Tracker werden hier automatisch ergänzt, aber standardmäßig deaktiviert.",
+  "device_settings_intro": "Eine aktive Standortabfrage lässt das Gerät kurz per Bluetooth senden - das kostet spürbar Akku. Bitte pro Tracker einzeln aktivieren und einen Abstand wählen, der zum Gerät passt (z.B. selten für ein Fahrrad, das meist zuhause steht). Neu gefundene Tracker werden hier automatisch ergänzt, aber standardmäßig deaktiviert. Handys/Tablets aus demselben Google-Konto tauchen hier bewusst nicht auf (siehe Hinweis oben).",
   "device_id_col": "ID",
   "device_name_col": "Gerät",
   "device_locate_col": "Standort abfragen",

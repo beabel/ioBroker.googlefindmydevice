@@ -4,6 +4,14 @@ ioBroker adapter to read tracker locations (e.g. Bluetooth item trackers) from
 [Google Find Hub / Find My Device](https://www.google.com/android/find), Google's
 device- and item-tracking service, and expose them as ioBroker states.
 
+> **Supported devices:** Bluetooth item trackers only (e.g. Chipolo,
+> Pebblebee - anything on Google's "Find My Device" network). Phones, tablets
+> and other devices linked to the same Google account are **not** supported
+> and will not show up as ioBroker objects - see
+> [Why not phone/tablet locations too?](#why-not-phonetablet-locations-too)
+> below for why. For those, keep using Google's own app or
+> [google.com/android/find](https://www.google.com/android/find).
+
 ## Status: early development
 
 Google does not offer an official API for Find Hub. This adapter is being built

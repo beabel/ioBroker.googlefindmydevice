@@ -1,4 +1,5 @@
 {
+  "supported_devices_note": "This adapter only supports Bluetooth trackers (devices on the \"Find My Device\" network, e.g. Chipolo, Pebblebee). Phones, tablets and other devices linked to the same Google account are deliberately NOT shown here - Google provides no usable location data for them through this API, and phone location would require a completely different, less secure access method (a full browser session instead of a narrowly-scoped token). Keep using Google's own interface at google.com/android/find for those.",
   "setup_headline": "Setup required",
   "setup_intro": "This adapter needs a one-time login to your Google account. No password is entered here - only a short-lived token you copy out of your own browser.",
   "setup_step1_link": "Step 1: Open Google login page",
@@ -18,7 +19,7 @@
   "shared_key_json_help": "Paste the captured text here, then save. It will be exchanged for the decryption key and cleared automatically.",
   "step2_done": "Location decryption is set up - coordinates will appear as states on the next poll.",
   "device_settings_headline": "Per-device location requests",
-  "device_settings_intro": "Actively requesting a location makes the tracker send a short Bluetooth burst - this noticeably drains its battery. Please enable this individually per tracker and pick an interval that fits the device (e.g. rarely for a bike that mostly sits at home). Newly found trackers are added here automatically, but disabled by default.",
+  "device_settings_intro": "Actively requesting a location makes the tracker send a short Bluetooth burst - this noticeably drains its battery. Please enable this individually per tracker and pick an interval that fits the device (e.g. rarely for a bike that mostly sits at home). Newly found trackers are added here automatically, but disabled by default. Phones/tablets from the same Google account deliberately don't show up here (see the note above).",
   "device_id_col": "ID",
   "device_name_col": "Device",
   "device_locate_col": "Request location",

@@ -2,6 +2,12 @@
   "i18n": true,
   "type": "panel",
   "items": {
+    "_supportedDevicesNote": {
+      "type": "staticText",
+      "text": "supported_devices_note",
+      "style": { "fontWeight": "bold" },
+      "newLine": true
+    },
     "_setupHeadline": {
       "type": "header",
       "text": "setup_headline",
