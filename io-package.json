@@ -31,8 +31,17 @@
       "zh-cn": "Google Find My Device"
     },
     "desc": {
-      "en": "Reads tracker locations from Google Find Hub / Find My Device",
-      "de": "Liest Tracker-Standorte von Google Find Hub / Find My Device aus"
+      "en": "Reads Bluetooth tracker locations from Google Find Hub / Find My Device",
+      "de": "Liest Bluetooth-Tracker-Standorte von Google Find Hub / Find My Device aus",
+      "ru": "Считывает местоположение Bluetooth-трекеров из Google Find Hub / Find My Device",
+      "pt": "Lê a localização de rastreadores Bluetooth do Google Find Hub / Find My Device",
+      "nl": "Leest locaties van Bluetooth-trackers uit Google Find Hub / Find My Device",
+      "fr": "Lit la position des traceurs Bluetooth depuis Google Find Hub / Find My Device",
+      "it": "Legge la posizione dei tracker Bluetooth da Google Find Hub / Find My Device",
+      "es": "Lee la ubicación de rastreadores Bluetooth desde Google Find Hub / Find My Device",
+      "pl": "Odczytuje lokalizacje lokalizatorów Bluetooth z Google Find Hub / Find My Device",
+      "uk": "Зчитує місцезнаходження Bluetooth-трекерів із Google Find Hub / Find My Device",
+      "zh-cn": "从 Google Find Hub / Find My Device 读取蓝牙追踪器的位置"
     },
     "authors": ["Maik Ries <iobroker@ne-xt.de>"],
     "keywords": ["google", "find my device", "find hub", "tracker", "location", "gps"],
@@ -55,11 +64,11 @@
     "adminUI": {
       "config": "json"
     },
-    "protectedNative": ["oauthToken", "aasToken", "securityToken", "sharedKeyJson", "ownerKey"],
-    "encryptedNative": ["oauthToken", "aasToken", "securityToken", "sharedKeyJson", "ownerKey"],
     "dependencies": [{ "js-controller": ">=6.0.11" }],
-    "globalDependencies": [{ "admin": ">=7.0.23" }]
+    "globalDependencies": [{ "admin": ">=7.8.23" }]
   },
+  "protectedNative": ["oauthToken", "aasToken", "securityToken", "sharedKeyJson", "ownerKey"],
+  "encryptedNative": ["oauthToken", "aasToken", "securityToken", "sharedKeyJson", "ownerKey"],
   "native": {
     "oauthToken": "",
     "email": "",

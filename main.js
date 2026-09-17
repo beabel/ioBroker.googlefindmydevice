@@ -63,7 +63,7 @@ class Googlefindmydevice extends utils.Adapter {
 
         if (!this.config.aasToken || !this.config.androidId || !this.config.email) {
             this.log.warn(
-                'Noch nicht eingerichtet: bitte den oauth_token-Wert in der Instanzkonfiguration eintragen (siehe README).',
+                'Not set up yet: please enter the oauth_token value in the instance configuration (see README).',
             );
             await this.setStateAsync('info.connection', false, true);
             return;
@@ -95,25 +95,25 @@ class Googlefindmydevice extends utils.Adapter {
             // are emitted in REVERSE order - the last call here ends up on
             // top, making the visible list read top-to-bottom correctly.
             this.log.warn(
-                '3) Auf der Seite tun, was Google verlangt. 4) Das danach oben auf der Seite erscheinende Textfeld ' +
-                    'komplett kopieren und in der Instanzkonfiguration bei "Ergebnis aus der Browser-Konsole" ' +
-                    'einfuegen und speichern.',
+                '3) Do whatever Google asks for on that page. 4) Copy the text field that then appears at the top ' +
+                    'of the page completely and paste it into the instance configuration under "Result from the ' +
+                    'browser console", then save.',
             );
             this.log.warn(CONSOLE_SNIPPET);
-            this.log.warn('2) Entwicklertools oeffnen (F12) -> Reiter "Konsole" -> folgenden Code komplett einfuegen und Enter druecken (nur der Code, nichts davor/danach):');
+            this.log.warn('2) Open developer tools (F12) -> "Console" tab -> paste the following code completely and press Enter (only the code, nothing before/after):');
             this.log.warn(url);
-            this.log.warn('1) Diesen Link in deinem Browser oeffnen (nur die URL, nichts davor/danach):');
+            this.log.warn('1) Open this link in your browser (only the URL, nothing before/after):');
             this.log.warn(
-                'Standort-Entschluesselung noch nicht eingerichtet (Schritt 2). Geraetenamen werden trotzdem aktualisiert.',
+                'Location decryption not set up yet (Step 2). Device names are still being updated in the meantime.',
             );
         } catch (err) {
-            this.log.error(`Konnte Schritt-2-Anleitung nicht erzeugen: ${err.message}`);
+            this.log.error(`Could not generate Step 2 instructions: ${err.message}`);
         }
     }
 
     async bootstrapOwnerKey() {
         try {
-            this.log.info('Ergebnis aus Schritt 2 erkannt, hole und entschluessele den Owner Key...');
+            this.log.info('Step 2 result detected, fetching and decrypting the owner key...');
             const sharedKey = extractSharedKeyFromVaultKeys(this.config.sharedKeyJson);
 
             const { Auth: spotToken } = await performOAuth(
@@ -135,9 +135,9 @@ class Googlefindmydevice extends utils.Adapter {
                 },
             });
 
-            this.log.info('Owner Key erfolgreich eingerichtet. Adapter startet neu...');
+            this.log.info('Owner key set up successfully. Adapter is restarting...');
         } catch (err) {
-            this.log.error(`Einrichtung von Schritt 2 fehlgeschlagen: ${err.message}`);
+            this.log.error(`Step 2 setup failed: ${err.message}`);
             await this.setStateAsync('info.connection', false, true);
             // Clear it so a bad/expired value doesn't get retried forever on
             // every restart, and so the field is guaranteed empty for a
@@ -150,14 +150,14 @@ class Googlefindmydevice extends utils.Adapter {
 
     async bootstrapFromOauthToken() {
         try {
-            this.log.info('Login-Token erkannt, tausche gegen langlebiges Konto-Token...');
+            this.log.info('Login token detected, exchanging it for a long-lived account token...');
             const { androidId, securityToken } = await gcmCheckin();
             const exchangeResult = await exchangeToken('', this.config.oauthToken, androidId);
 
             if (!exchangeResult.Token || !exchangeResult.Email) {
                 throw new Error(
-                    'Google hat kein gueltiges Token zurueckgegeben - der oauth_token-Wert ist vermutlich ' +
-                        'abgelaufen. Bitte einen frischen Wert eintragen (siehe README).',
+                    'Google did not return a valid token - the oauth_token value has probably expired. ' +
+                        'Please enter a fresh value (see README).',
                 );
             }
 
@@ -171,9 +171,9 @@ class Googlefindmydevice extends utils.Adapter {
                 },
             });
 
-            this.log.info(`Erfolgreich verbunden als ${exchangeResult.Email}. Adapter startet neu...`);
+            this.log.info(`Successfully connected as ${exchangeResult.Email}. Adapter is restarting...`);
         } catch (err) {
-            this.log.error(`Einrichtung fehlgeschlagen: ${err.message}`);
+            this.log.error(`Setup failed: ${err.message}`);
             await this.setStateAsync('info.connection', false, true);
             // Clear it so an expired/invalid oauth_token doesn't get retried
             // forever on every restart, and so the field is guaranteed empty
@@ -189,7 +189,7 @@ class Googlefindmydevice extends utils.Adapter {
             await this.updateDevices();
             await this.setStateAsync('info.connection', true, true);
         } catch (err) {
-            this.log.error(`Aktualisierung fehlgeschlagen: ${err.message}`);
+            this.log.error(`Update failed: ${err.message}`);
             await this.setStateAsync('info.connection', false, true);
         }
 
@@ -216,7 +216,7 @@ class Googlefindmydevice extends utils.Adapter {
         // filtering on that also filters out everything that would otherwise
         // show up as an empty, useless object branch in ioBroker.
         const devices = allDevices.filter(d => d.canonicId);
-        this.log.debug(`${devices.length} Tracker gefunden (von ${allDevices.length} Geraeten im Konto).`);
+        this.log.debug(`${devices.length} tracker(s) found (out of ${allDevices.length} devices in the account).`);
 
         await this.syncDeviceSettings(devices);
         await this.cleanupNonTrackerDevices(devices);
@@ -233,13 +233,13 @@ class Googlefindmydevice extends utils.Adapter {
             try {
                 const location = await decryptLatestLocation(ownerKey, device);
                 if (!location) {
-                    this.log.debug(`Kein Standortbericht fuer "${device.name}" (noch keiner abgerufen oder Cache leer).`);
+                    this.log.debug(`No location report for "${device.name}" yet (none fetched so far, or cache empty).`);
                 } else {
-                    this.log.debug(`Entschluesselter Standort fuer "${device.name}": ${JSON.stringify(location)}`);
+                    this.log.debug(`Decrypted location for "${device.name}": ${JSON.stringify(location)}`);
                 }
                 await this.updateLocationStates(stateId, location);
             } catch (err) {
-                this.log.warn(`Standort fuer "${device.name}" konnte nicht entschluesselt werden: ${err.message}`);
+                this.log.warn(`Could not decrypt location for "${device.name}": ${err.message}`);
             }
         }
     }
@@ -273,7 +273,7 @@ class Googlefindmydevice extends utils.Adapter {
 
         if (missing.length === 0) return;
 
-        this.log.info(`${missing.length} neue(r) Tracker gefunden, zur Geraete-Tabelle in der Konfiguration hinzugefuegt.`);
+        this.log.info(`${missing.length} new tracker(s) found, added to the device table in the configuration.`);
         await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, {
             native: { deviceSettings: existing.concat(missing) },
         });
@@ -295,7 +295,7 @@ class Googlefindmydevice extends utils.Adapter {
             if (!id.startsWith(prefix) || allObjects[id].type !== 'channel') continue;
             const deviceId = id.slice(prefix.length);
             if (!currentIds.has(deviceId)) {
-                this.log.info(`Entferne "${deviceId}" aus dem Objektbaum (kein Bluetooth-Tracker).`);
+                this.log.info(`Removing "${deviceId}" from the object tree (not a Bluetooth tracker).`);
                 await this.delObjectAsync(id, { recursive: true });
             }
         }
@@ -310,7 +310,7 @@ class Googlefindmydevice extends utils.Adapter {
         if (this.fcmReadyPromise) return this.fcmReadyPromise;
 
         this.fcmReadyPromise = (async () => {
-            this.log.debug('Registriere bei Firebase Cloud Messaging fuer Standort-Push-Benachrichtigungen...');
+            this.log.debug('Registering with Firebase Cloud Messaging for location push notifications...');
             this.fcmIdentity = await registerFcm({
                 androidId: this.config.androidId,
                 securityToken: this.config.securityToken,
@@ -343,7 +343,7 @@ class Googlefindmydevice extends utils.Adapter {
                     try {
                         await this.triggerLocate(setting.canonicId, setting.name);
                     } catch (err) {
-                        this.log.warn(`Standortabfrage fuer "${setting.name}" fehlgeschlagen: ${err.message}`);
+                        this.log.warn(`Location request for "${setting.name}" failed: ${err.message}`);
                     }
                     scheduleNext(minutes * 60 * 1000);
                 }, delayMs);
@@ -377,7 +377,7 @@ class Googlefindmydevice extends utils.Adapter {
         // before execution below reaches the real `await responsePromise`.
         responsePromise.catch(() => {});
 
-        this.log.debug(`Fordere aktuellen Standort fuer "${name}" an...`);
+        this.log.debug(`Requesting current location for "${name}"...`);
         await executeLocateAction(admToken, {
             canonicId,
             fcmRegistrationId: this.fcmIdentity.fcmToken,
@@ -386,7 +386,7 @@ class Googlefindmydevice extends utils.Adapter {
         });
 
         const deviceUpdate = await responsePromise;
-        this.log.debug(`Push-Antwort fuer "${name}" erhalten.`);
+        this.log.debug(`Push response for "${name}" received.`);
 
         const ownerKey = this.config.ownerKey ? Buffer.from(this.config.ownerKey, 'hex') : null;
         if (!ownerKey || !deviceUpdate.deviceMetadata) return;
@@ -395,7 +395,7 @@ class Googlefindmydevice extends utils.Adapter {
         const location = await decryptLatestLocation(ownerKey, { raw: deviceUpdate.deviceMetadata });
         await this.updateLocationStates(stateId, location);
         if (location) {
-            this.log.debug(`Standort fuer "${name}" aktualisiert.`);
+            this.log.debug(`Location for "${name}" updated.`);
         }
     }
 

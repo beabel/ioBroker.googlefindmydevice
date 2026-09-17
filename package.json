@@ -14,7 +14,7 @@
   },
   "keywords": ["ioBroker", "google", "find my device", "find hub", "tracker", "location", "gps"],
   "engines": {
-    "node": ">=18"
+    "node": ">=22.0.0"
   },
   "main": "main.js",
   "files": [
@@ -26,10 +26,16 @@
     "main.js"
   ],
   "scripts": {
-    "test": "node --test ./test/*.test.js"
+    "test": "node --test ./test/*.test.js",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@iobroker/adapter-core": "^3.4.3",
     "protobufjs": "^8.8.0"
+  },
+  "devDependencies": {
+    "@iobroker/eslint-config": "^2.1.0",
+    "@iobroker/testing": "^6.2.1",
+    "@types/node": "^22.0.0"
   }
 }
