@@ -21,9 +21,26 @@ Currently implemented:
   built-in `crypto` module. Verified byte-for-byte against an independent
   Python re-implementation of the same algorithm (see `test/`).
 
-Not yet implemented: Google account authentication, the Nova/Spot API client,
-protobuf decoding of device-update responses, the actual ioBroker adapter
-scaffold (`io-package.json`, states, admin UI).
+- [`lib/google-checkin.js`](lib/google-checkin.js) — anonymous GCM checkin
+  (obtains an `androidId`/`securityToken`), verified live against Google.
+- [`lib/google-auth.js`](lib/google-auth.js) — a from-scratch re-implementation
+  of the relevant parts of the established
+  [gpsoauth](https://github.com/simon-weber/gpsoauth) Python library
+  (exchanging a browser login token for a long-lived account token, and that
+  token for a service-scoped bearer token), request format verified live.
+- [`tools/login-helper/`](tools/login-helper/) — a standalone, **local-only**
+  companion tool (not part of the adapter's own runtime dependencies) that
+  walks you through the one-time interactive Google login needed to obtain
+  those tokens. Because most ioBroker installs are headless (Raspberry Pi,
+  NAS, Docker), this runs on any separate PC/Mac with a real browser, and its
+  output is pasted into the adapter's configuration once. See its own
+  [README](tools/login-helper/README.md).
+
+Not yet implemented: the second login-helper step (obtaining the
+end-to-end-encryption "owner key" via Google's own encryption-unlock page),
+the Nova/Spot API client for actually listing devices and locations, protobuf
+decoding of device-update responses, and the actual ioBroker adapter scaffold
+(`io-package.json`, states, admin UI).
 
 ## Attribution & License
 

@@ -1,0 +1,17 @@
+{
+  "name": "googlefindmydevice-login-helper",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Standalone, local-only tool to obtain Google Find Hub credentials for the ioBroker.googlefindmydevice adapter. Run this on any PC with a browser - never on a headless server, and never upload its output anywhere.",
+  "license": "GPL-3.0-only",
+  "author": {
+    "name": "Maik Ries",
+    "email": "iobroker@ne-xt.de"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "puppeteer": "^25.11.0"
+  }
+}
