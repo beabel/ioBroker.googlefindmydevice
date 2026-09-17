@@ -9,23 +9,24 @@ device- and item-tracking service, and expose them as ioBroker states.
 Google does not offer an official API for Find Hub. This adapter is being built
 on top of a reverse-engineered understanding of the protocol, cross-referenced
 against [leonboe1/GoogleFindMyTools](https://github.com/leonboe1/GoogleFindMyTools)
-(GPL-3.0). Because Find Hub tracker locations are end-to-end encrypted by
-design, this is inherently more involved than a typical REST-API adapter and
-may break if Google changes its internal protocol.
+(GPL-3.0). Because Find Hub tracker locations are end-to-end encrypted and
+Google only delivers a fresh location asynchronously over its push
+infrastructure, this is inherently more involved than a typical REST-API
+adapter and may break if Google changes its internal protocol.
 
 Currently implemented and confirmed working against real Google accounts:
 
-- Reading a Google account's Find Hub device list (names) and keeping it
-  updated on a poll interval.
+- Reading a Google account's Find Hub device list (name, manufacturer, model,
+  Fast Pair ID, pairing date, device type) and keeping it updated on a poll
+  interval.
+- Decrypting real location reports once available (latitude, longitude,
+  altitude, last-seen time, or a semantic location like "Home").
+- Actively requesting a fresh location per tracker ("locate now"), with an
+  enable/interval setting per device in the adapter configuration - see
+  **Requesting locations** below.
 - All setup happens inside the adapter's own configuration page in ioBroker
   Admin - see **Setup** below. No separate program or browser automation is
   needed or used.
-
-Not yet implemented: decrypting the actual location reports (needs the
-end-to-end-encryption "owner key", obtained via a second Google login step -
-see [`lib/fmdn-crypto.js`](lib/fmdn-crypto.js) for the already-working
-decryption primitives once that key is available), and the corresponding
-latitude/longitude/last-seen states per tracker.
 
 ## Setup
 
@@ -57,6 +58,29 @@ evasion tooling, which this project deliberately does not use. Logging in
 yourself, in your own normal browser, sidesteps the problem entirely since
 there is nothing to detect.
 
+## Requesting locations
+
+Google only ever hands out a location report if something actually asked the
+tracker for one recently - listing devices alone almost never returns
+coordinates. Getting a fresh one means actively pinging the tracker over
+Bluetooth (via whichever nearby Android phone hears it), which **noticeably
+uses that tracker's battery**. Because of that, this adapter does **not**
+request locations for any tracker automatically.
+
+Once Step 2 (location decryption) is set up, a table appears in the adapter
+configuration listing every discovered tracker with two settings each:
+
+- **Request location** - off by default for every newly discovered tracker.
+  Turn it on for the trackers you actually want live coordinates for.
+- **Interval (minutes)** - how often to request a fresh location for that
+  tracker while it's enabled (5 minutes minimum, so it's still possible to
+  request one relatively often for something like an actively-moving bike,
+  without hammering it constantly).
+
+Device names, manufacturer/model info and pairing date are always kept
+up to date on the regular poll interval regardless of these settings, since
+reading that doesn't touch the tracker itself.
+
 ## Attribution & License
 
 The end-to-end-encryption routines in this adapter are a Node.js port of the
@@ -66,8 +90,15 @@ an independently reverse-engineered client for Google's Find Hub / Find My
 Device protocol, licensed GPL-3.0 by Leon Böttger. The GCM-checkin and
 account-login exchange re-implement the relevant parts of the established
 [gpsoauth](https://github.com/simon-weber/gpsoauth) Python library (MIT,
-Simon Weber). Because this adapter is a derivative of that GPL-3.0 work, it
-is also licensed under the **GNU General Public License v3.0** — see
+Simon Weber). The FCM/MCS push-notification client (used to receive the
+asynchronous answer to a "locate now" request) re-implements the relevant
+parts of the [firebase-messaging](https://github.com/sdb9696/firebase-messaging)
+Python library (MIT, (c) 2017 Matthieu Lemoine, (c) 2023 Steven Beth) and the
+"aesgcm" Web Push decryption scheme from
+[encrypted-content-encoding](https://github.com/martinthomson/encrypted-content-encoding)
+(MIT, Martin Thomson). Because this
+adapter is a derivative of the GPL-3.0 GoogleFindMyTools work, it is also
+licensed under the **GNU General Public License v3.0** — see
 [LICENSE](LICENSE).
 
 Copyright (c) 2026 Maik Ries <iobroker@ne-xt.de>

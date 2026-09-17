@@ -1,11 +1,14 @@
 'use strict';
 
+const crypto = require('node:crypto');
 const utils = require('@iobroker/adapter-core');
 const { gcmCheckin } = require('./lib/google-checkin');
 const { exchangeToken, performOAuth, DEFAULT_CLIENT_SIG } = require('./lib/google-auth');
-const { listDevices } = require('./lib/nova-api');
+const { listDevices, executeLocateAction } = require('./lib/nova-api');
 const { extractSharedKeyFromVaultKeys, retrieveOwnerKey, buildEncryptionUnlockUrl, CONSOLE_SNIPPET } = require('./lib/owner-key');
 const { decryptLatestLocation } = require('./lib/decrypt-locations');
+const { registerFcm } = require('./lib/fcm-register');
+const { McsClient } = require('./lib/mcs-client');
 
 const ADM_SERVICE_SCOPE = 'oauth2:https://www.googleapis.com/auth/android_device_manager';
 const ADM_APP = 'com.google.android.apps.adm';
@@ -17,6 +20,15 @@ const SPOT_APP = 'com.google.android.gms';
 const POLL_MIN_MINUTES = 1;
 const POLL_MAX_MINUTES = 1440; // 24h
 
+// "Locate now" pings the tracker over BLE via nearby phones and costs it
+// battery, unlike the plain name/metadata poll above - so it gets its own,
+// much more conservative, per-device interval (see admin/jsonConfig.json's
+// device table).
+const LOCATE_MIN_MINUTES = 5;
+const LOCATE_MAX_MINUTES = 1440; // 24h
+const LOCATE_INITIAL_DELAY_MS = 20000; // give the MCS connection time to log in first
+const LOCATE_RESPONSE_TIMEOUT_MS = 45000;
+
 class Googlefindmydevice extends utils.Adapter {
     constructor(options) {
         super({
@@ -26,6 +38,11 @@ class Googlefindmydevice extends utils.Adapter {
         this.on('ready', this.onReady.bind(this));
         this.on('unload', this.onUnload.bind(this));
         this.pollTimeout = null;
+        this.locateTimers = new Map();
+        this.mcsClient = new McsClient({ log: this.log });
+        this.fcmIdentity = null;
+        this.fcmReadyPromise = null;
+        this.fmdClientUuid = crypto.randomUUID();
     }
 
     async onReady() {
@@ -49,6 +66,8 @@ class Googlefindmydevice extends utils.Adapter {
 
         if (!this.config.ownerKey) {
             await this.logStep2Instructions();
+        } else {
+            this.startLocateTimers();
         }
 
         await this.pollLoop();
@@ -160,6 +179,8 @@ class Googlefindmydevice extends utils.Adapter {
         const devices = await listDevices(admToken);
         this.log.debug(`${devices.length} Tracker gefunden.`);
 
+        await this.syncDeviceSettings(devices);
+
         const ownerKey = this.config.ownerKey ? Buffer.from(this.config.ownerKey, 'hex') : null;
 
         for (const device of devices) {
@@ -199,6 +220,122 @@ class Googlefindmydevice extends utils.Adapter {
             val: device.pairDate ? device.pairDate * 1000 : null,
             ack: true,
         });
+    }
+
+    /**
+     * Adds newly discovered trackers to native.deviceSettings (used by the
+     * admin UI's per-device table, see admin/jsonConfig.json) with "locate"
+     * disabled by default - fetching a fresh location pings the tracker over
+     * BLE and costs it battery, so that has to be an opt-in per device
+     * rather than something this adapter turns on automatically.
+     */
+    async syncDeviceSettings(devices) {
+        const existing = Array.isArray(this.config.deviceSettings) ? this.config.deviceSettings : [];
+        const existingIds = new Set(existing.map(d => d.canonicId));
+
+        const missing = devices
+            .filter(d => d.canonicId && !existingIds.has(d.canonicId))
+            .map(d => ({ canonicId: d.canonicId, name: d.name, locate: false, intervalMinutes: 60 }));
+
+        if (missing.length === 0) return;
+
+        this.log.info(`${missing.length} neue(r) Tracker gefunden, zur Geraete-Tabelle in der Konfiguration hinzugefuegt.`);
+        await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, {
+            native: { deviceSettings: existing.concat(missing) },
+        });
+    }
+
+    /**
+     * Registers with FCM and opens the persistent MCS push connection, once
+     * per adapter run, so triggerLocate() can wait for the asynchronous
+     * answer to a "locate now" request.
+     */
+    async ensureFcmReady() {
+        if (this.fcmReadyPromise) return this.fcmReadyPromise;
+
+        this.fcmReadyPromise = (async () => {
+            this.log.debug('Registriere bei Firebase Cloud Messaging fuer Standort-Push-Benachrichtigungen...');
+            this.fcmIdentity = await registerFcm({
+                androidId: this.config.androidId,
+                securityToken: this.config.securityToken,
+            });
+            await this.mcsClient.start({
+                androidId: this.config.androidId,
+                securityToken: this.config.securityToken,
+                ...this.fcmIdentity,
+            });
+        })();
+
+        return this.fcmReadyPromise;
+    }
+
+    /**
+     * Sets up one self-rescheduling timer per tracker with "locate" enabled
+     * in native.deviceSettings, each running on its own configured interval
+     * (see LOCATE_MIN_MINUTES/LOCATE_MAX_MINUTES).
+     */
+    startLocateTimers() {
+        const settings = Array.isArray(this.config.deviceSettings) ? this.config.deviceSettings : [];
+
+        for (const setting of settings) {
+            if (!setting.locate || !setting.canonicId) continue;
+
+            const minutes = Math.min(LOCATE_MAX_MINUTES, Math.max(LOCATE_MIN_MINUTES, Number(setting.intervalMinutes) || 60));
+
+            const scheduleNext = delayMs => {
+                const timer = this.setTimeout(async () => {
+                    try {
+                        await this.triggerLocate(setting.canonicId, setting.name);
+                    } catch (err) {
+                        this.log.warn(`Standortabfrage fuer "${setting.name}" fehlgeschlagen: ${err.message}`);
+                    }
+                    scheduleNext(minutes * 60 * 1000);
+                }, delayMs);
+                this.locateTimers.set(setting.canonicId, timer);
+            };
+
+            scheduleNext(LOCATE_INITIAL_DELAY_MS);
+        }
+    }
+
+    /**
+     * Actively asks Google to ping one tracker for a fresh location, then
+     * waits for the asynchronous FCM push answer and decrypts it.
+     */
+    async triggerLocate(canonicId, name) {
+        await this.ensureFcmReady();
+
+        const { Auth: admToken } = await performOAuth(
+            this.config.email,
+            this.config.aasToken,
+            this.config.androidId,
+            ADM_SERVICE_SCOPE,
+            ADM_APP,
+            DEFAULT_CLIENT_SIG,
+        );
+
+        const requestUuid = crypto.randomUUID();
+        const responsePromise = this.mcsClient.waitForDeviceUpdate(requestUuid, LOCATE_RESPONSE_TIMEOUT_MS);
+
+        this.log.debug(`Fordere aktuellen Standort fuer "${name}" an...`);
+        await executeLocateAction(admToken, {
+            canonicId,
+            fcmRegistrationId: this.fcmIdentity.fcmToken,
+            requestUuid,
+            fmdClientUuid: this.fmdClientUuid,
+        });
+
+        const deviceUpdate = await responsePromise;
+
+        const ownerKey = this.config.ownerKey ? Buffer.from(this.config.ownerKey, 'hex') : null;
+        if (!ownerKey || !deviceUpdate.deviceMetadata) return;
+
+        const stateId = this.canonicIdToStateId(canonicId);
+        const location = await decryptLatestLocation(ownerKey, { raw: deviceUpdate.deviceMetadata });
+        await this.updateLocationStates(stateId, location);
+        if (location) {
+            this.log.debug(`Standort fuer "${name}" aktualisiert.`);
+        }
     }
 
     async updateLocationStates(stateId, location) {
@@ -302,6 +439,11 @@ class Googlefindmydevice extends utils.Adapter {
             if (this.pollTimeout) {
                 this.clearTimeout(this.pollTimeout);
             }
+            for (const timer of this.locateTimers.values()) {
+                this.clearTimeout(timer);
+            }
+            this.locateTimers.clear();
+            this.mcsClient.stop();
             callback();
         } catch (err) {
             this.log.error(`Error during unloading: ${err.message}`);

@@ -69,7 +69,8 @@
     "sharedKeyJson": "",
     "ownerKey": "",
     "ownerKeyVersion": -1,
-    "pollInterval": 15
+    "pollInterval": 15,
+    "deviceSettings": []
   },
   "objects": [],
   "instanceObjects": [

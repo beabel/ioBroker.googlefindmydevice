@@ -121,6 +121,54 @@
       "text": "step2_done",
       "hidden": "!data.ownerKey",
       "newLine": true
+    },
+    "_deviceSettingsHeadline": {
+      "type": "header",
+      "text": "device_settings_headline",
+      "size": 4,
+      "hidden": "!data.ownerKey",
+      "newLine": true
+    },
+    "_deviceSettingsIntro": {
+      "type": "staticText",
+      "text": "device_settings_intro",
+      "hidden": "!data.ownerKey",
+      "newLine": true
+    },
+    "deviceSettings": {
+      "type": "table",
+      "hidden": "!data.ownerKey",
+      "newLine": true,
+      "items": [
+        {
+          "type": "text",
+          "attr": "canonicId",
+          "title": "device_id_col",
+          "width": "1%",
+          "hidden": true
+        },
+        {
+          "type": "text",
+          "attr": "name",
+          "title": "device_name_col",
+          "width": "40%",
+          "readOnly": true
+        },
+        {
+          "type": "checkbox",
+          "attr": "locate",
+          "title": "device_locate_col",
+          "width": "25%"
+        },
+        {
+          "type": "number",
+          "attr": "intervalMinutes",
+          "title": "device_interval_col",
+          "width": "25%",
+          "min": 5,
+          "max": 1440
+        }
+      ]
     }
   }
 }

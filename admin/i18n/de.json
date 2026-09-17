@@ -16,5 +16,11 @@
   "step2_intro": "Für echte Koordinaten (Gerätenamen funktionieren schon ohne diesen Schritt) ist noch ein manueller Schritt nötig. Schau nach dem Neustart dieser Instanz ins Log dieser Adapter-Instanz: dort stehen ein Link zum Öffnen und ein kleines Skript zum Einfügen in die Entwicklerkonsole deines Browsers, sobald dieser Punkt erreicht ist. Erledige auf der Seite, was Google verlangt, und füge das dort angezeigte Ergebnis unten ein und speichere.",
   "shared_key_json_label": "Ergebnis aus der Browser-Konsole (JSON)",
   "shared_key_json_help": "Erfassten Text hier einfügen und speichern. Er wird automatisch gegen den Entschlüsselungs-Schlüssel getauscht und danach geleert.",
-  "step2_done": "Standort-Entschlüsselung ist eingerichtet - Koordinaten erscheinen beim nächsten Abruf als States."
+  "step2_done": "Standort-Entschlüsselung ist eingerichtet - Koordinaten erscheinen beim nächsten Abruf als States.",
+  "device_settings_headline": "Standortabfrage pro Gerät",
+  "device_settings_intro": "Eine aktive Standortabfrage lässt das Gerät kurz per Bluetooth senden - das kostet spürbar Akku. Bitte pro Tracker einzeln aktivieren und einen Abstand wählen, der zum Gerät passt (z.B. selten für ein Fahrrad, das meist zuhause steht). Neu gefundene Tracker werden hier automatisch ergänzt, aber standardmäßig deaktiviert.",
+  "device_id_col": "ID",
+  "device_name_col": "Gerät",
+  "device_locate_col": "Standort abfragen",
+  "device_interval_col": "Abstand (Minuten)"
 }
