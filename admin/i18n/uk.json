@@ -1,0 +1,15 @@
+{
+  "setup_headline": "Setup required",
+  "setup_intro": "This adapter needs a one-time login to your Google account. No password is entered here - only a short-lived token you copy out of your own browser.",
+  "setup_step1_link": "Step 1: Open Google login page",
+  "setup_step2": "Step 2: Log in there with the Google account your trackers are linked to (including two-factor confirmation if enabled). The page may look empty afterwards - that's normal, it isn't meant for humans.",
+  "setup_step3": "Step 3: Open your browser's developer tools (F12), then the \"Application\" tab.",
+  "setup_step4": "Step 4: Under \"Cookies\", click \"https://accounts.google.com\".",
+  "setup_step5": "Step 5: Find the row named \"oauth_token\" and copy its full value into the field below, then save this configuration.",
+  "setup_warning": "The oauth_token value only stays valid for a short time - complete steps 1-5 right before pasting it in and saving.",
+  "oauth_token_label": "Google login token (oauth_token)",
+  "oauth_token_help": "Paste the value here, then save. It will be exchanged for a long-lived token and cleared automatically.",
+  "connected_as": "Connected as",
+  "poll_interval_label": "Poll interval (minutes)",
+  "poll_interval_help": "How often to fetch tracker locations from Google."
+}

@@ -1,0 +1,93 @@
+{
+  "common": {
+    "name": "googlefindmydevice",
+    "version": "0.0.1",
+    "news": {
+      "0.0.1": {
+        "en": "initial development version",
+        "de": "erste Entwicklungsversion",
+        "ru": "начальная версия разработки",
+        "pt": "versão inicial de desenvolvimento",
+        "nl": "eerste ontwikkelingsversie",
+        "fr": "version de développement initiale",
+        "it": "versione di sviluppo iniziale",
+        "es": "versión de desarrollo inicial",
+        "pl": "wstępna wersja rozwojowa",
+        "uk": "початкова версія розробки",
+        "zh-cn": "初始开发版本"
+      }
+    },
+    "titleLang": {
+      "en": "Google Find My Device",
+      "de": "Google Find My Device",
+      "ru": "Google Find My Device",
+      "pt": "Google Find My Device",
+      "nl": "Google Find My Device",
+      "fr": "Google Find My Device",
+      "it": "Google Find My Device",
+      "es": "Google Find My Device",
+      "pl": "Google Find My Device",
+      "uk": "Google Find My Device",
+      "zh-cn": "Google Find My Device"
+    },
+    "desc": {
+      "en": "Reads tracker locations from Google Find Hub / Find My Device",
+      "de": "Liest Tracker-Standorte von Google Find Hub / Find My Device aus"
+    },
+    "authors": ["Maik Ries <iobroker@ne-xt.de>"],
+    "keywords": ["google", "find my device", "find hub", "tracker", "location", "gps"],
+    "licenseInformation": {
+      "type": "free",
+      "license": "GPL-3.0-only"
+    },
+    "platform": "Javascript/Node.js",
+    "icon": "googlefindmydevice.png",
+    "enabled": true,
+    "extIcon": "https://raw.githubusercontent.com/beabel/ioBroker.googlefindmydevice/main/admin/googlefindmydevice.png",
+    "readme": "https://github.com/beabel/ioBroker.googlefindmydevice/blob/main/README.md",
+    "loglevel": "info",
+    "tier": 3,
+    "mode": "daemon",
+    "type": "geoposition",
+    "compact": true,
+    "connectionType": "cloud",
+    "dataSource": "poll",
+    "adminUI": {
+      "config": "json"
+    },
+    "protectedNative": ["oauthToken", "aasToken", "securityToken"],
+    "encryptedNative": ["oauthToken", "aasToken", "securityToken"],
+    "dependencies": [{ "js-controller": ">=6.0.11" }],
+    "globalDependencies": [{ "admin": ">=7.0.23" }]
+  },
+  "native": {
+    "oauthToken": "",
+    "email": "",
+    "androidId": "",
+    "securityToken": "",
+    "aasToken": "",
+    "pollInterval": 15
+  },
+  "objects": [],
+  "instanceObjects": [
+    {
+      "_id": "info",
+      "type": "channel",
+      "common": { "name": "Information" },
+      "native": {}
+    },
+    {
+      "_id": "info.connection",
+      "type": "state",
+      "common": {
+        "role": "indicator.connected",
+        "name": "If connected to Google",
+        "type": "boolean",
+        "read": true,
+        "write": false,
+        "def": false
+      },
+      "native": {}
+    }
+  ]
+}

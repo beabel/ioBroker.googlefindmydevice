@@ -1,0 +1,95 @@
+{
+  "i18n": true,
+  "type": "panel",
+  "items": {
+    "_setupHeadline": {
+      "type": "header",
+      "text": "setup_headline",
+      "size": 4,
+      "hidden": "data.aasToken",
+      "newLine": true
+    },
+    "_setupIntro": {
+      "type": "staticText",
+      "text": "setup_intro",
+      "hidden": "data.aasToken",
+      "newLine": true
+    },
+    "_setupStep1Link": {
+      "type": "staticLink",
+      "href": "https://accounts.google.com/EmbeddedSetup",
+      "text": "setup_step1_link",
+      "button": true,
+      "hidden": "data.aasToken",
+      "newLine": true
+    },
+    "_setupStep2": {
+      "type": "staticText",
+      "text": "setup_step2",
+      "hidden": "data.aasToken",
+      "newLine": true
+    },
+    "_setupStep3": {
+      "type": "staticText",
+      "text": "setup_step3",
+      "hidden": "data.aasToken",
+      "newLine": true
+    },
+    "_setupStep4": {
+      "type": "staticText",
+      "text": "setup_step4",
+      "hidden": "data.aasToken",
+      "newLine": true
+    },
+    "_setupStep5": {
+      "type": "staticText",
+      "text": "setup_step5",
+      "hidden": "data.aasToken",
+      "newLine": true
+    },
+    "_setupWarning": {
+      "type": "staticText",
+      "text": "setup_warning",
+      "style": { "color": "orange" },
+      "hidden": "data.aasToken",
+      "newLine": true
+    },
+    "oauthToken": {
+      "type": "password",
+      "label": "oauth_token_label",
+      "help": "oauth_token_help",
+      "visible": true,
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 8,
+      "lg": 6,
+      "xl": 6
+    },
+    "email": {
+      "type": "text",
+      "label": "connected_as",
+      "readOnly": true,
+      "hidden": "!data.aasToken",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 6,
+      "lg": 4,
+      "xl": 4
+    },
+    "pollInterval": {
+      "type": "number",
+      "label": "poll_interval_label",
+      "help": "poll_interval_help",
+      "min": 1,
+      "max": 1440,
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 4,
+      "lg": 3,
+      "xl": 3
+    }
+  }
+}

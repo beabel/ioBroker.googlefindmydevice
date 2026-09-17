@@ -12,13 +12,24 @@
     "type": "git",
     "url": "git+https://github.com/beabel/ioBroker.googlefindmydevice.git"
   },
+  "keywords": ["ioBroker", "google", "find my device", "find hub", "tracker", "location", "gps"],
   "engines": {
     "node": ">=18"
   },
+  "main": "main.js",
+  "files": [
+    "admin{,/!(src)/**}/!(tsconfig|tsconfig.*|.eslintrc).{json,json5}",
+    "admin{,/!(src)/**}/*.{html,css,png,svg,jpg,js}",
+    "lib/",
+    "io-package.json",
+    "LICENSE",
+    "main.js"
+  ],
   "scripts": {
     "test": "node --test ./test/*.test.js"
   },
   "dependencies": {
+    "@iobroker/adapter-core": "^3.4.3",
     "protobufjs": "^8.8.0"
   }
 }
