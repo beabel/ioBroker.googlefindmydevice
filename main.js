@@ -213,6 +213,8 @@ class Googlefindmydevice extends utils.Adapter {
                     if (info && info.deviceRegistration) {
                         this.log.debug(`Vollstaendige "information" fuer "${device.name}": ${JSON.stringify(info)}`);
                     }
+                } else {
+                    this.log.debug(`Entschluesselter Standort fuer "${device.name}": ${JSON.stringify(location)}`);
                 }
                 await this.updateLocationStates(stateId, location);
             } catch (err) {
@@ -340,12 +342,14 @@ class Googlefindmydevice extends utils.Adapter {
         });
 
         const deviceUpdate = await responsePromise;
+        this.log.debug(`Push-Antwort fuer "${name}" erhalten: ${JSON.stringify(deviceUpdate)}`);
 
         const ownerKey = this.config.ownerKey ? Buffer.from(this.config.ownerKey, 'hex') : null;
         if (!ownerKey || !deviceUpdate.deviceMetadata) return;
 
         const stateId = this.canonicIdToStateId(canonicId);
         const location = await decryptLatestLocation(ownerKey, { raw: deviceUpdate.deviceMetadata });
+        this.log.debug(`Entschluesselter Standort fuer "${name}": ${JSON.stringify(location)}`);
         await this.updateLocationStates(stateId, location);
         if (location) {
             this.log.debug(`Standort fuer "${name}" aktualisiert.`);
@@ -355,6 +359,10 @@ class Googlefindmydevice extends utils.Adapter {
     async updateLocationStates(stateId, location) {
         if (!location) return;
 
+        // The timestamp tells you how fresh this report actually is, whether
+        // it's a semantic ("Home") or a GPS report - always set it either way.
+        await this.setStateAsync(`devices.${stateId}.lastSeen`, { val: location.timestamp * 1000, ack: true });
+
         if (location.semantic !== undefined) {
             await this.setStateAsync(`devices.${stateId}.semanticLocation`, { val: location.semantic, ack: true });
             return;
@@ -363,7 +371,6 @@ class Googlefindmydevice extends utils.Adapter {
         await this.setStateAsync(`devices.${stateId}.latitude`, { val: location.lat, ack: true });
         await this.setStateAsync(`devices.${stateId}.longitude`, { val: location.lon, ack: true });
         await this.setStateAsync(`devices.${stateId}.altitude`, { val: location.altitude, ack: true });
-        await this.setStateAsync(`devices.${stateId}.lastSeen`, { val: location.timestamp * 1000, ack: true });
     }
 
     canonicIdToStateId(raw) {
