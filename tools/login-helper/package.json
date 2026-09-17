@@ -15,10 +15,7 @@
     "build": "npm run bundle && pkg dist/bundle.cjs --targets node18-win-x64,node18-macos-x64,node18-linux-x64 --output dist/login-helper --config pkg.config.json --no-bytecode"
   },
   "dependencies": {
-    "@puppeteer/browsers": "^3.2.2",
-    "iobroker.googlefindmydevice": "file:../..",
-    "puppeteer-core": "^25.11.0",
-    "yauzl": "^3.4.0"
+    "iobroker.googlefindmydevice": "file:../.."
   },
   "devDependencies": {
     "@yao-pkg/pkg": "^6.22.0",

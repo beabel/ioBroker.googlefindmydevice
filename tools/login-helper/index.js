@@ -2,30 +2,18 @@
 
 // Standalone, local-only login helper for ioBroker.googlefindmydevice.
 //
-// Designed to also run as a double-clickable executable (built with
-// @yao-pkg/pkg - see package.json's "build" script) so a typical ioBroker
-// user never has to install Node.js or type a command.
-//
-// This tool never sees your Google password - it only reads a short-lived
-// cookie after you've finished logging in yourself in a real, visible
-// Chrome window, then exchanges it (locally, directly against Google's
-// servers) for a long-lived token. Everything happens on this machine.
+// No browser automation of any kind: you log into Google yourself, in your
+// own everyday browser, exactly like on any normal website. This tool only
+// takes one value you copy out of your browser's developer tools afterwards
+// and exchanges it (locally, directly against Google's servers) for a
+// long-lived token. Your Google password never touches this tool.
 
-const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
 const readline = require('node:readline/promises');
 const { stdin, stdout } = require('node:process');
-const puppeteer = require('puppeteer-core');
-const { install, detectBrowserPlatform, resolveBuildId, computeExecutablePath, Browser, BrowserTag } = require('@puppeteer/browsers');
 
 const { gcmCheckin } = require('iobroker.googlefindmydevice/lib/google-checkin');
 const { exchangeToken, performOAuth, DEFAULT_CLIENT_SIG } = require('iobroker.googlefindmydevice/lib/google-auth');
 const { listDevices } = require('iobroker.googlefindmydevice/lib/nova-api');
-
-const isPkg = typeof process.pkg !== 'undefined';
-const baseDir = isPkg ? path.dirname(process.execPath) : __dirname;
-const CHROME_CACHE_DIR = path.join(baseDir, 'browser-cache');
 
 async function ask(question) {
   const rl = readline.createInterface({ input: stdin, output: stdout });
@@ -36,127 +24,50 @@ async function ask(question) {
   }
 }
 
-// Google's sign-in page rejects generic "Chrome for Testing" builds (the
-// kind Puppeteer downloads by default) with "This browser or app may not
-// be secure". A real, everyday Google Chrome installation is not affected,
-// so we prefer that if one is present and only fall back to downloading a
-// throwaway copy if it isn't.
-function findSystemChrome() {
-  const candidates = [];
-  const platform = os.platform();
-
-  if (platform === 'win32') {
-    const programFiles = [process.env['PROGRAMFILES'], process.env['PROGRAMFILES(X86)'], process.env['LOCALAPPDATA']].filter(Boolean);
-    for (const base of programFiles) {
-      candidates.push(path.join(base, 'Google', 'Chrome', 'Application', 'chrome.exe'));
-    }
-  } else if (platform === 'darwin') {
-    candidates.push('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome');
-    candidates.push(path.join(os.homedir(), 'Applications/Google Chrome.app/Contents/MacOS/Google Chrome'));
-  } else {
-    candidates.push('/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/opt/google/chrome/chrome', '/snap/bin/chromium');
-  }
-
-  return candidates.find((p) => fs.existsSync(p)) || null;
-}
-
-async function ensureChrome() {
-  const systemChrome = findSystemChrome();
-  if (systemChrome) {
-    console.log(`Verwende dein installiertes Chrome: ${systemChrome}`);
-    return systemChrome;
-  }
-
-  console.log('Kein installiertes Google Chrome gefunden.');
-  console.log('Hinweis: Google blockiert Anmeldungen in generischen Testversionen von Chrome');
-  console.log('gelegentlich mit der Meldung "Dieser Browser oder App ist unsicher". Falls das');
-  console.log('gleich passiert, installiere bitte das normale Google Chrome und starte dieses');
-  console.log('Programm erneut - es wird dann automatisch bevorzugt verwendet.\n');
-
-  const platform = detectBrowserPlatform();
-  if (!platform) {
-    throw new Error('Betriebssystem/Architektur konnte nicht erkannt werden.');
-  }
-
-  const buildId = await resolveBuildId(Browser.CHROME, platform, BrowserTag.STABLE);
-  const executablePath = computeExecutablePath({ browser: Browser.CHROME, buildId, cacheDir: CHROME_CACHE_DIR, platform });
-
-  if (fs.existsSync(executablePath)) {
-    return executablePath;
-  }
-
-  console.log('Lade eine eigene Chrome-Kopie herunter (nur beim allerersten Start noetig, ca. 200 MB)...');
-  let lastPercent = -1;
-  await install({
-    browser: Browser.CHROME,
-    buildId,
-    cacheDir: CHROME_CACHE_DIR,
-    platform,
-    downloadProgressCallback: (downloadedBytes, totalBytes) => {
-      const percent = Math.floor((downloadedBytes / totalBytes) * 100);
-      if (percent !== lastPercent && percent % 10 === 0) {
-        lastPercent = percent;
-        console.log(`  ${percent}%`);
-      }
-    },
-  });
-  console.log('Download abgeschlossen.\n');
-
-  return executablePath;
-}
-
-async function waitForOauthTokenCookie(page, timeoutMs) {
-  const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
-    const cookies = await page.cookies('https://accounts.google.com');
-    const cookie = cookies.find((c) => c.name === 'oauth_token');
-    if (cookie) return cookie.value;
-    await new Promise((r) => setTimeout(r, 1000));
-  }
-  throw new Error('Timeout: Es wurde innerhalb der Wartezeit kein Google-Login abgeschlossen.');
-}
-
-async function main() {
+function printInstructions() {
   console.log('='.repeat(70));
   console.log('ioBroker.googlefindmydevice - Login-Hilfsskript (Schritt 1/2)');
   console.log('='.repeat(70));
   console.log(`
 Dieses Programm holt sich einmalig ein langlebiges Google-Token, damit der
 ioBroker-Adapter spaeter selbststaendig deine Tracker-Standorte abrufen
-kann. Dein Google-Passwort wird NUR in dem gleich erscheinenden, echten
-Chrome-Fenster eingegeben - dieses Programm sieht oder speichert es nicht.
-Es laeuft alles lokal auf diesem Rechner ab.
+kann. Es steuert dabei KEINEN Browser fern - du meldest dich ganz normal
+in deinem eigenen Browser an. Es laeuft alles lokal auf diesem Rechner ab.
+
+So gehst du vor:
+
+  1. Oeffne in deinem normalen Browser (Chrome, Edge, ...) diese Adresse
+     in einem NEUEN Tab:
+
+         https://accounts.google.com/EmbeddedSetup
+
+  2. Melde dich dort ganz normal mit dem Google-Konto an, mit dem deine
+     Find-Hub-Tracker verknuepft sind (inkl. Zwei-Faktor-Bestaetigung,
+     falls aktiv). Die Seite sieht danach evtl. leer/leicht kaputt aus -
+     das ist normal, sie ist nicht fuer Menschen gedacht.
+
+  3. Oeffne die Entwicklertools deines Browsers, z.B. mit der Taste F12
+     (Chrome/Edge). Wechsle dort zum Reiter "Anwendung" (englisch:
+     "Application").
+
+  4. Klicke dort links unter "Cookies" auf
+     "https://accounts.google.com".
+
+  5. Suche in der Tabelle rechts die Zeile mit dem Namen "oauth_token"
+     und kopiere den kompletten Wert aus der Spalte "Value" (Doppelklick
+     auf den Wert, dann Strg+A / Cmd+A und Strg+C / Cmd+C zum Kopieren -
+     der Wert ist recht lang).
+
+Sobald du den Wert kopiert hast, komm zurueck hierher.
 `);
+}
 
-  const executablePath = await ensureChrome();
+async function main() {
+  printInstructions();
 
-  console.log('\nEs oeffnet sich jetzt ein Chrome-Fenster. Bitte melde dich dort ganz normal');
-  console.log('mit deinem Google-Konto an (inkl. 2FA falls aktiv). Das Fenster schliesst');
-  console.log('sich danach automatisch.\n');
-
-  const browser = await puppeteer.launch({
-    executablePath,
-    headless: false,
-    userDataDir: path.join(baseDir, 'chrome-profile'),
-    // Puppeteer normally passes --enable-automation, which both shows the
-    // "Chrome is being controlled by automated test software" infobar and
-    // sets navigator.webdriver=true - Google's sign-in page reads that
-    // signal and reports the browser as "not secure" for exactly this
-    // reason. Dropping the flag (a documented Puppeteer launch option) is
-    // enough for an otherwise completely normal, user-driven Chrome window.
-    ignoreDefaultArgs: ['--enable-automation'],
-  });
-  let oauthToken;
-  try {
-    const page = await browser.newPage();
-    await page.evaluateOnNewDocument(() => {
-      Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-    });
-    await page.goto('https://accounts.google.com/EmbeddedSetup', { waitUntil: 'domcontentloaded' });
-    oauthToken = await waitForOauthTokenCookie(page, 5 * 60 * 1000);
-    console.log('Login erkannt.');
-  } finally {
-    await browser.close();
+  const oauthToken = await ask('Kopierten "oauth_token"-Wert hier einfuegen und Enter druecken: ');
+  if (!oauthToken || oauthToken.length < 20) {
+    throw new Error('Das sieht nicht nach einem gueltigen oauth_token-Wert aus. Abgebrochen.');
   }
 
   console.log('\nHole Geraete-Identitaet (anonymer GCM-Checkin)...');
@@ -169,8 +80,12 @@ Es laeuft alles lokal auf diesem Rechner ab.
   const aasToken = exchangeResult.Token;
   const email = exchangeResult.Email;
 
-  if (!email) {
-    throw new Error('Google hat keine Kontoadresse zurueckgegeben. Bitte erneut versuchen.');
+  if (!aasToken || !email) {
+    throw new Error(
+      'Google hat kein gueltiges Token zurueckgegeben. Moegliche Ursachen: der oauth_token-Wert ' +
+        'ist schon abgelaufen (er gilt nur kurz - bitte Schritt 1-5 direkt vor dem Einfuegen ' +
+        'wiederholen) oder wurde beim Kopieren unvollstaendig uebernommen.',
+    );
   }
 
   console.log('Teste die Verbindung: hole deine Geraeteliste von Google...');
