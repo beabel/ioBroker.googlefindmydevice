@@ -80,6 +80,28 @@ evasion tooling, which this project deliberately does not use. Logging in
 yourself, in your own normal browser, sidesteps the problem entirely since
 there is nothing to detect.
 
+### Step 2: unlock location decryption
+
+Once Step 1 is done, the adapter restarts and logs a link and a small script
+(see the instance log, level "warn") needed to unlock the end-to-end
+encryption key. This also happens entirely in your own browser:
+
+1. Open the link from the log in your browser.
+2. Open developer tools (`F12`).
+3. Switch to the **Console** tab.
+4. Clear the console (the 🚫 icon), just to keep things tidy.
+5. Chrome blocks pasting into the console by default. Type `allow pasting`
+   manually and press Enter.
+6. Now paste the script from the log and press Enter. Complete whatever
+   Google asks for on the page (e.g. entering a phone's screen-lock PIN to
+   confirm it's really you), then click "Weiter"/"Next":
+
+   ![Console tab with the pasted script, and the PIN/confirmation step of the encryption-unlock page](docs/step2-console.png)
+
+7. A text field appears at the top of the page with the captured result.
+   Copy it completely, paste it into the adapter's configuration page under
+   "Result from the browser console (JSON)" and save.
+
 ## Requesting locations
 
 Google only ever hands out a location report if something actually asked the
