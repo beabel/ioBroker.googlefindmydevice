@@ -212,16 +212,7 @@ class Googlefindmydevice extends utils.Adapter {
             try {
                 const location = await decryptLatestLocation(ownerKey, device);
                 if (!location) {
-                    const info = device.raw && device.raw.information;
-                    this.log.debug(
-                        `Kein Standortbericht fuer "${device.name}" - hasDeviceRegistration=${!!(info && info.deviceRegistration)}, ` +
-                            `hasLocationInformation=${!!(info && info.locationInformation)}, ` +
-                            `hasReports=${!!(info && info.locationInformation && info.locationInformation.reports)}, ` +
-                            `reports=${JSON.stringify(info && info.locationInformation && info.locationInformation.reports)}`,
-                    );
-                    if (info && info.deviceRegistration) {
-                        this.log.debug(`Vollstaendige "information" fuer "${device.name}": ${JSON.stringify(info)}`);
-                    }
+                    this.log.debug(`Kein Standortbericht fuer "${device.name}" (noch keiner abgerufen oder Cache leer).`);
                 } else {
                     this.log.debug(`Entschluesselter Standort fuer "${device.name}": ${JSON.stringify(location)}`);
                 }
@@ -374,14 +365,13 @@ class Googlefindmydevice extends utils.Adapter {
         });
 
         const deviceUpdate = await responsePromise;
-        this.log.debug(`Push-Antwort fuer "${name}" erhalten: ${JSON.stringify(deviceUpdate)}`);
+        this.log.debug(`Push-Antwort fuer "${name}" erhalten.`);
 
         const ownerKey = this.config.ownerKey ? Buffer.from(this.config.ownerKey, 'hex') : null;
         if (!ownerKey || !deviceUpdate.deviceMetadata) return;
 
         const stateId = this.canonicIdToStateId(canonicId);
         const location = await decryptLatestLocation(ownerKey, { raw: deviceUpdate.deviceMetadata });
-        this.log.debug(`Entschluesselter Standort fuer "${name}": ${JSON.stringify(location)}`);
         await this.updateLocationStates(stateId, location);
         if (location) {
             this.log.debug(`Standort fuer "${name}" aktualisiert.`);
