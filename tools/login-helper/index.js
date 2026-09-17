@@ -94,7 +94,7 @@ async function main() {
       email,
       aasToken,
       androidId,
-      'android_device_manager',
+      'oauth2:https://www.googleapis.com/auth/android_device_manager',
       'com.google.android.apps.adm',
       DEFAULT_CLIENT_SIG,
     );
