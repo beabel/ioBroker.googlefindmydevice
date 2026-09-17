@@ -6,7 +6,12 @@
       "type": "staticText",
       "text": "supported_devices_note",
       "style": { "fontWeight": "bold" },
-      "newLine": true
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
     },
     "_setupHeadline": {
       "type": "header",
@@ -19,7 +24,12 @@
       "type": "staticText",
       "text": "setup_intro",
       "hidden": "data.aasToken",
-      "newLine": true
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
     },
     "_setupStep1Link": {
       "type": "staticLink",
@@ -27,38 +37,68 @@
       "text": "setup_step1_link",
       "button": true,
       "hidden": "data.aasToken",
-      "newLine": true
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
     },
     "_setupStep2": {
       "type": "staticText",
       "text": "setup_step2",
       "hidden": "data.aasToken",
-      "newLine": true
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
     },
     "_setupStep3": {
       "type": "staticText",
       "text": "setup_step3",
       "hidden": "data.aasToken",
-      "newLine": true
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
     },
     "_setupStep4": {
       "type": "staticText",
       "text": "setup_step4",
       "hidden": "data.aasToken",
-      "newLine": true
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
     },
     "_setupStep5": {
       "type": "staticText",
       "text": "setup_step5",
       "hidden": "data.aasToken",
-      "newLine": true
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
     },
     "_setupWarning": {
       "type": "staticText",
       "text": "setup_warning",
       "style": { "color": "orange" },
       "hidden": "data.aasToken",
-      "newLine": true
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
     },
     "oauthToken": {
       "type": "password",
@@ -108,7 +148,12 @@
       "type": "staticText",
       "text": "step2_intro",
       "hidden": "!data.aasToken || data.ownerKey",
-      "newLine": true
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
     },
     "sharedKeyJson": {
       "type": "password",
@@ -126,7 +171,12 @@
       "type": "staticText",
       "text": "step2_done",
       "hidden": "!data.ownerKey",
-      "newLine": true
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
     },
     "_deviceSettingsHeadline": {
       "type": "header",
@@ -139,12 +189,22 @@
       "type": "staticText",
       "text": "device_settings_intro",
       "hidden": "!data.ownerKey",
-      "newLine": true
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
     },
     "deviceSettings": {
       "type": "table",
       "hidden": "!data.ownerKey",
       "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12,
       "items": [
         {
           "type": "text",
