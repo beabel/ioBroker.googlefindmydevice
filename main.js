@@ -90,17 +90,21 @@ class Googlefindmydevice extends utils.Adapter {
             // on their own line - a single combined line makes it hard to
             // tell where the URL/code actually ends and the next sentence
             // begins, which makes copying the right part error-prone.
-            this.log.warn(
-                'Standort-Entschluesselung noch nicht eingerichtet (Schritt 2). Geraetenamen werden trotzdem aktualisiert.',
-            );
-            this.log.warn('1) Diesen Link in deinem Browser oeffnen (nur die URL, nichts davor/danach):');
-            this.log.warn(url);
-            this.log.warn('2) Entwicklertools oeffnen (F12) -> Reiter "Konsole" -> folgenden Code komplett einfuegen und Enter druecken (nur der Code, nichts davor/danach):');
-            this.log.warn(CONSOLE_SNIPPET);
+            //
+            // ioBroker's log viewer shows the newest entry first, so these
+            // are emitted in REVERSE order - the last call here ends up on
+            // top, making the visible list read top-to-bottom correctly.
             this.log.warn(
                 '3) Auf der Seite tun, was Google verlangt. 4) Das danach oben auf der Seite erscheinende Textfeld ' +
                     'komplett kopieren und in der Instanzkonfiguration bei "Ergebnis aus der Browser-Konsole" ' +
                     'einfuegen und speichern.',
+            );
+            this.log.warn(CONSOLE_SNIPPET);
+            this.log.warn('2) Entwicklertools oeffnen (F12) -> Reiter "Konsole" -> folgenden Code komplett einfuegen und Enter druecken (nur der Code, nichts davor/danach):');
+            this.log.warn(url);
+            this.log.warn('1) Diesen Link in deinem Browser oeffnen (nur die URL, nichts davor/danach):');
+            this.log.warn(
+                'Standort-Entschluesselung noch nicht eingerichtet (Schritt 2). Geraetenamen werden trotzdem aktualisiert.',
             );
         } catch (err) {
             this.log.error(`Konnte Schritt-2-Anleitung nicht erzeugen: ${err.message}`);
