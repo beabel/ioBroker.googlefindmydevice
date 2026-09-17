@@ -178,6 +178,9 @@ class Googlefindmydevice extends utils.Adapter {
                             `hasReports=${!!(info && info.locationInformation && info.locationInformation.reports)}, ` +
                             `reports=${JSON.stringify(info && info.locationInformation && info.locationInformation.reports)}`,
                     );
+                    if (info && info.deviceRegistration) {
+                        this.log.debug(`Vollstaendige "information" fuer "${device.name}": ${JSON.stringify(info)}`);
+                    }
                 }
                 await this.updateLocationStates(stateId, location);
             } catch (err) {
