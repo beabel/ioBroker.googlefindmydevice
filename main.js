@@ -49,10 +49,10 @@ class Googlefindmydevice extends utils.Adapter {
         // taken before it exists (that snapshot would stay undefined forever).
         this.mcsClient = new McsClient({
             log: {
-                debug: (...args) => this.log.debug(...args),
-                info: (...args) => this.log.info(...args),
-                warn: (...args) => this.log.warn(...args),
-                error: (...args) => this.log.error(...args),
+                debug: msg => this.log.debug(msg),
+                info: msg => this.log.info(msg),
+                warn: msg => this.log.warn(msg),
+                error: msg => this.log.error(msg),
             },
         });
         this.fcmIdentity = null;

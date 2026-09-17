@@ -30,7 +30,8 @@
     "test:package": "mocha test/package --exit",
     "test:integration": "mocha test/integration --exit --timeout 60000",
     "test": "npm run test:unit && npm run test:package",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "check": "tsc --noEmit -p tsconfig.check.json"
   },
   "dependencies": {
     "@iobroker/adapter-core": "^3.4.3",

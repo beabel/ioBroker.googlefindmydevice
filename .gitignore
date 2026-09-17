@@ -4,5 +4,6 @@ npm-debug.log
 .env
 secrets.json
 .idea/
-.vscode/
+.vscode/*
+!.vscode/settings.json
 .commitinfo

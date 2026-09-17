@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "target": "ES2021",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "ignoreDeprecations": "6.0",
+        "allowJs": true,
+        "checkJs": false,
+        "noEmit": true,
+        "resolveJsonModule": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true
+    },
+    "include": ["**/*.js", "types/**/*.d.ts"],
+    "exclude": ["node_modules/**", "admin/**", ".dev-server/**"]
+}
