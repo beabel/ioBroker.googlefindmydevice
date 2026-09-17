@@ -170,6 +170,15 @@ class Googlefindmydevice extends utils.Adapter {
 
             try {
                 const location = await decryptLatestLocation(ownerKey, device);
+                if (!location) {
+                    const info = device.raw && device.raw.information;
+                    this.log.debug(
+                        `Kein Standortbericht fuer "${device.name}" - hasDeviceRegistration=${!!(info && info.deviceRegistration)}, ` +
+                            `hasLocationInformation=${!!(info && info.locationInformation)}, ` +
+                            `hasReports=${!!(info && info.locationInformation && info.locationInformation.reports)}, ` +
+                            `reports=${JSON.stringify(info && info.locationInformation && info.locationInformation.reports)}`,
+                    );
+                }
                 await this.updateLocationStates(stateId, location);
             } catch (err) {
                 this.log.warn(`Standort fuer "${device.name}" konnte nicht entschluesselt werden: ${err.message}`);
