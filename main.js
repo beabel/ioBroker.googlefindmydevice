@@ -86,7 +86,7 @@ class Googlefindmydevice extends utils.Adapter {
     async logStep2Instructions() {
         try {
             const url = await buildEncryptionUnlockUrl();
-            this.log.info(
+            this.log.warn(
                 'Standort-Entschluesselung noch nicht eingerichtet (Schritt 2). Geraetenamen werden trotzdem ' +
                     'aktualisiert. Anleitung: 1) Diesen Link in deinem Browser oeffnen: ' +
                     url +
