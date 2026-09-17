@@ -2,23 +2,30 @@
 
 // Standalone, local-only login helper for ioBroker.googlefindmydevice.
 //
-// Run this on any PC/Mac/Linux machine that has a graphical browser - it
-// does NOT need to be the machine running ioBroker. It opens a real,
-// visible Chrome window for you to log into your Google account yourself;
-// this script never sees or handles your Google password. It only reads a
-// short-lived token from a cookie after you've finished logging in, then
-// exchanges it (locally, directly against Google's servers) for a
-// long-lived token the adapter can use.
+// Designed to also run as a double-clickable executable (built with
+// @yao-pkg/pkg - see package.json's "build" script) so a typical ioBroker
+// user never has to install Node.js or type a command. On first run it
+// downloads its own copy of Chrome next to itself (one-time, needs
+// internet access) and keeps reusing it afterwards.
 //
-// Nothing produced here is uploaded anywhere. Treat the printed output like
-// a password: it grants read access to your Find Hub tracker locations.
+// This tool never sees your Google password - it only reads a short-lived
+// cookie after you've finished logging in yourself in a real, visible
+// Chrome window, then exchanges it (locally, directly against Google's
+// servers) for a long-lived token. Nothing is uploaded anywhere.
 
+const fs = require('node:fs');
+const path = require('node:path');
 const readline = require('node:readline/promises');
 const { stdin, stdout } = require('node:process');
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
+const { install, detectBrowserPlatform, resolveBuildId, computeExecutablePath, Browser, BrowserTag } = require('@puppeteer/browsers');
 
-const { gcmCheckin } = require('../../lib/google-checkin');
-const { exchangeToken } = require('../../lib/google-auth');
+const { gcmCheckin } = require('iobroker.googlefindmydevice/lib/google-checkin');
+const { exchangeToken } = require('iobroker.googlefindmydevice/lib/google-auth');
+
+const isPkg = typeof process.pkg !== 'undefined';
+const baseDir = isPkg ? path.dirname(process.execPath) : __dirname;
+const CHROME_CACHE_DIR = path.join(baseDir, 'browser-cache');
 
 async function ask(question) {
   const rl = readline.createInterface({ input: stdin, output: stdout });
@@ -27,6 +34,39 @@ async function ask(question) {
   } finally {
     rl.close();
   }
+}
+
+async function ensureChrome() {
+  const platform = detectBrowserPlatform();
+  if (!platform) {
+    throw new Error('Betriebssystem/Architektur konnte nicht erkannt werden.');
+  }
+
+  const buildId = await resolveBuildId(Browser.CHROME, platform, BrowserTag.STABLE);
+  const executablePath = computeExecutablePath({ browser: Browser.CHROME, buildId, cacheDir: CHROME_CACHE_DIR, platform });
+
+  if (fs.existsSync(executablePath)) {
+    return executablePath;
+  }
+
+  console.log('Lade Chrome herunter (nur beim allerersten Start noetig, ca. 200 MB)...');
+  let lastPercent = -1;
+  await install({
+    browser: Browser.CHROME,
+    buildId,
+    cacheDir: CHROME_CACHE_DIR,
+    platform,
+    downloadProgressCallback: (downloadedBytes, totalBytes) => {
+      const percent = Math.floor((downloadedBytes / totalBytes) * 100);
+      if (percent !== lastPercent && percent % 10 === 0) {
+        lastPercent = percent;
+        console.log(`  ${percent}%`);
+      }
+    },
+  });
+  console.log('Download abgeschlossen.\n');
+
+  return executablePath;
 }
 
 async function waitForOauthTokenCookie(page, timeoutMs) {
@@ -45,10 +85,10 @@ async function main() {
   console.log('ioBroker.googlefindmydevice - Login-Hilfsskript (Schritt 1/2)');
   console.log('='.repeat(70));
   console.log(`
-Dieses Skript holt sich einmalig ein langlebiges Google-Token, damit der
+Dieses Programm holt sich einmalig ein langlebiges Google-Token, damit der
 ioBroker-Adapter spaeter selbststaendig deine Tracker-Standorte abrufen
 kann. Dein Google-Passwort wird NUR in dem gleich erscheinenden, echten
-Chrome-Fenster eingegeben - dieses Skript sieht oder speichert es nicht.
+Chrome-Fenster eingegeben - dieses Programm sieht oder speichert es nicht.
 
 Alles, was hier ausgegeben wird, bleibt auf diesem Rechner. Nichts wird an
 mich, Anthropic oder sonst jemanden gesendet.
@@ -59,11 +99,13 @@ mich, Anthropic oder sonst jemanden gesendet.
     throw new Error('Das sieht nicht nach einer E-Mail-Adresse aus. Abgebrochen.');
   }
 
+  const executablePath = await ensureChrome();
+
   console.log('\nEs oeffnet sich jetzt ein Chrome-Fenster. Bitte melde dich dort ganz normal');
   console.log('mit deinem Google-Konto an (inkl. 2FA falls aktiv). Das Fenster schliesst');
   console.log('sich danach automatisch.\n');
 
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({ executablePath, headless: false });
   let oauthToken;
   try {
     const page = await browser.newPage();
@@ -100,9 +142,13 @@ mich, Anthropic oder sonst jemanden gesendet.
   );
   console.log('\nSchritt 2 (Freigabe des Standort-Entschluesselungsschluessels) folgt in');
   console.log('einem separaten Lauf dieses Tools, sobald er implementiert ist.');
+  console.log('\nDruecke Enter zum Beenden...');
+  await ask('');
 }
 
-main().catch((err) => {
+main().catch(async (err) => {
   console.error('\nFehler:', err.message);
+  console.log('\nDruecke Enter zum Beenden...');
+  await ask('').catch(() => {});
   process.exitCode = 1;
 });
