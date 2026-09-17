@@ -21,11 +21,9 @@
       "hidden": "data.aasToken",
       "newLine": true
     },
-    "_setupStep1Link": {
-      "type": "staticLink",
-      "href": "https://accounts.google.com/EmbeddedSetup",
-      "text": "setup_step1_link",
-      "button": true,
+    "_setupStep1": {
+      "type": "staticText",
+      "text": "setup_step1",
       "hidden": "data.aasToken",
       "newLine": true
     },
@@ -35,9 +33,11 @@
       "hidden": "data.aasToken",
       "newLine": true
     },
-    "_setupStep3": {
-      "type": "staticText",
-      "text": "setup_step3",
+    "_setupStep3Link": {
+      "type": "staticLink",
+      "href": "https://accounts.google.com/EmbeddedSetup",
+      "text": "setup_step3_link",
+      "button": true,
       "hidden": "data.aasToken",
       "newLine": true
     },
