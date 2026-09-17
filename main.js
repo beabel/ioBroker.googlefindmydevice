@@ -130,6 +130,12 @@ class Googlefindmydevice extends utils.Adapter {
         } catch (err) {
             this.log.error(`Einrichtung von Schritt 2 fehlgeschlagen: ${err.message}`);
             await this.setStateAsync('info.connection', false, true);
+            // Clear it so a bad/expired value doesn't get retried forever on
+            // every restart, and so the field is guaranteed empty for a
+            // fresh attempt instead of silently keeping the failed one.
+            await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, {
+                native: { sharedKeyJson: '' },
+            });
         }
     }
 
@@ -160,6 +166,12 @@ class Googlefindmydevice extends utils.Adapter {
         } catch (err) {
             this.log.error(`Einrichtung fehlgeschlagen: ${err.message}`);
             await this.setStateAsync('info.connection', false, true);
+            // Clear it so an expired/invalid oauth_token doesn't get retried
+            // forever on every restart, and so the field is guaranteed empty
+            // for a fresh paste instead of silently keeping the failed one.
+            await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, {
+                native: { oauthToken: '' },
+            });
         }
     }
 
