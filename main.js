@@ -212,6 +212,12 @@ class Googlefindmydevice extends utils.Adapter {
                     );
                     if (info && info.deviceRegistration) {
                         this.log.debug(`Vollstaendige "information" fuer "${device.name}": ${JSON.stringify(info)}`);
+                    } else {
+                        // No tracker registration - likely a phone/tablet. Dump
+                        // the whole raw device (not just .information) while
+                        // investigating how Google represents those, since none
+                        // of our current decoding assumes anything about them.
+                        this.log.debug(`Vollstaendiges Rohobjekt fuer "${device.name}": ${JSON.stringify(device.raw)}`);
                     }
                 } else {
                     this.log.debug(`Entschluesselter Standort fuer "${device.name}": ${JSON.stringify(location)}`);
