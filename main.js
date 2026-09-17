@@ -39,7 +39,17 @@ class Googlefindmydevice extends utils.Adapter {
         this.on('unload', this.onUnload.bind(this));
         this.pollTimeout = null;
         this.locateTimers = new Map();
-        this.mcsClient = new McsClient({ log: this.log });
+        // this.log isn't initialized yet at construction time - hand McsClient
+        // a wrapper that reads it lazily on each call instead of a snapshot
+        // taken before it exists (that snapshot would stay undefined forever).
+        this.mcsClient = new McsClient({
+            log: {
+                debug: (...args) => this.log.debug(...args),
+                info: (...args) => this.log.info(...args),
+                warn: (...args) => this.log.warn(...args),
+                error: (...args) => this.log.error(...args),
+            },
+        });
         this.fcmIdentity = null;
         this.fcmReadyPromise = null;
         this.fmdClientUuid = crypto.randomUUID();
@@ -316,6 +326,10 @@ class Googlefindmydevice extends utils.Adapter {
 
         const requestUuid = crypto.randomUUID();
         const responsePromise = this.mcsClient.waitForDeviceUpdate(requestUuid, LOCATE_RESPONSE_TIMEOUT_MS);
+        // Mark it as handled right away so Node doesn't log an "unhandled
+        // promise rejection" if this settles (e.g. the connection drops)
+        // before execution below reaches the real `await responsePromise`.
+        responsePromise.catch(() => {});
 
         this.log.debug(`Fordere aktuellen Standort fuer "${name}" an...`);
         await executeLocateAction(admToken, {
