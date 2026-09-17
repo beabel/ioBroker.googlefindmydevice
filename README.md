@@ -46,15 +46,26 @@ ever entered into the adapter - only a short-lived token you copy out of
 your own browser, exactly like you'd copy an API key from some other web
 dashboard:
 
-1. Open `https://accounts.google.com/EmbeddedSetup` in your own browser and
-   log in with the Google account your trackers are linked to (including
-   two-factor confirmation if enabled). The page may look empty afterwards -
-   that's normal, it isn't meant for humans.
-2. Open your browser's developer tools (`F12`) → "Application" tab →
-   "Cookies" → `https://accounts.google.com`.
-3. Find the row named `oauth_token` and copy its full value.
-4. Paste it into the adapter instance's configuration page (in ioBroker
-   Admin) and save.
+1. Open `https://accounts.google.com/EmbeddedSetup` in your own browser (a
+   button for this is in the adapter's configuration page).
+2. Don't log in yet. First open your browser's developer tools (`F12`) →
+   "Application" tab → "Cookies" → `https://accounts.google.com`. The list is
+   still empty - that's expected, it fills in once you log in. Leave this
+   developer tools window open.
+3. Now log in with the Google account your trackers are linked to (including
+   two-factor confirmation if enabled). The page may look empty afterwards,
+   or get stuck on something like "I agree" and not visibly proceed - that's
+   normal (it isn't meant for humans), the token is already valid by then.
+4. Switch back to the already-open developer tools and find the row named
+   `oauth_token` (refresh the list if needed):
+
+   ![Finding oauth_token in DevTools' Application > Cookies panel](docs/step1-oauth-token.png)
+
+5. Copy its full value, paste it into the adapter instance's configuration
+   page (in ioBroker Admin) and save.
+
+The `oauth_token` value only stays valid briefly, so do steps 3-5 in quick
+succession - step 2 can be done beforehand without any rush.
 
 The adapter exchanges that value for a long-lived token on its own, clears
 the pasted value from its configuration, and restarts. From then on it
