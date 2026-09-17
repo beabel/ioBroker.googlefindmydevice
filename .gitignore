@@ -5,3 +5,4 @@ npm-debug.log
 secrets.json
 .idea/
 .vscode/
+.commitinfo

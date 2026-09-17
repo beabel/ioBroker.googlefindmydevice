@@ -5,7 +5,12 @@ const utils = require('@iobroker/adapter-core');
 const { gcmCheckin } = require('./lib/google-checkin');
 const { exchangeToken, performOAuth, DEFAULT_CLIENT_SIG } = require('./lib/google-auth');
 const { listDevices, executeLocateAction } = require('./lib/nova-api');
-const { extractSharedKeyFromVaultKeys, retrieveOwnerKey, buildEncryptionUnlockUrl, CONSOLE_SNIPPET } = require('./lib/owner-key');
+const {
+    extractSharedKeyFromVaultKeys,
+    retrieveOwnerKey,
+    buildEncryptionUnlockUrl,
+    CONSOLE_SNIPPET,
+} = require('./lib/owner-key');
 const { decryptLatestLocation } = require('./lib/decrypt-locations');
 const { registerFcm } = require('./lib/fcm-register');
 const { McsClient } = require('./lib/mcs-client');
@@ -100,7 +105,9 @@ class Googlefindmydevice extends utils.Adapter {
                     'browser console", then save.',
             );
             this.log.warn(CONSOLE_SNIPPET);
-            this.log.warn('2) Open developer tools (F12) -> "Console" tab -> paste the following code completely and press Enter (only the code, nothing before/after):');
+            this.log.warn(
+                '2) Open developer tools (F12) -> "Console" tab -> paste the following code completely and press Enter (only the code, nothing before/after):',
+            );
             this.log.warn(url);
             this.log.warn('1) Open this link in your browser (only the URL, nothing before/after):');
             this.log.warn(
@@ -228,12 +235,16 @@ class Googlefindmydevice extends utils.Adapter {
             await this.ensureDeviceStates(stateId, device.name);
             await this.updateDeviceMetadataStates(stateId, device);
 
-            if (!ownerKey) continue;
+            if (!ownerKey) {
+                continue;
+            }
 
             try {
                 const location = await decryptLatestLocation(ownerKey, device);
                 if (!location) {
-                    this.log.debug(`No location report for "${device.name}" yet (none fetched so far, or cache empty).`);
+                    this.log.debug(
+                        `No location report for "${device.name}" yet (none fetched so far, or cache empty).`,
+                    );
                 } else {
                     this.log.debug(`Decrypted location for "${device.name}": ${JSON.stringify(location)}`);
                 }
@@ -247,7 +258,10 @@ class Googlefindmydevice extends utils.Adapter {
     async updateDeviceMetadataStates(stateId, device) {
         await this.setStateAsync(`devices.${stateId}.manufacturer`, { val: device.manufacturer || '', ack: true });
         await this.setStateAsync(`devices.${stateId}.model`, { val: device.model || '', ack: true });
-        await this.setStateAsync(`devices.${stateId}.fastPairModelId`, { val: device.fastPairModelId || '', ack: true });
+        await this.setStateAsync(`devices.${stateId}.fastPairModelId`, {
+            val: device.fastPairModelId || '',
+            ack: true,
+        });
         await this.setStateAsync(`devices.${stateId}.deviceType`, { val: device.deviceType || '', ack: true });
         await this.setStateAsync(`devices.${stateId}.pairDate`, {
             val: device.pairDate ? device.pairDate * 1000 : null,
@@ -262,6 +276,8 @@ class Googlefindmydevice extends utils.Adapter {
      * disabled by default - fetching a fresh location pings the tracker over
      * BLE and costs it battery, so that has to be an opt-in per device
      * rather than something this adapter turns on automatically.
+     *
+     * @param devices
      */
     async syncDeviceSettings(devices) {
         const existing = Array.isArray(this.config.deviceSettings) ? this.config.deviceSettings : [];
@@ -271,7 +287,9 @@ class Googlefindmydevice extends utils.Adapter {
             .filter(d => d.canonicId && !existingIds.has(d.canonicId))
             .map(d => ({ canonicId: d.canonicId, name: d.name, locate: false, intervalMinutes: 60 }));
 
-        if (missing.length === 0) return;
+        if (missing.length === 0) {
+            return;
+        }
 
         this.log.info(`${missing.length} new tracker(s) found, added to the device table in the configuration.`);
         await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, {
@@ -285,6 +303,8 @@ class Googlefindmydevice extends utils.Adapter {
      * listDevices() results were filtered down to actual trackers), and
      * ioBroker doesn't drop objects on its own just because a poll stops
      * touching them.
+     *
+     * @param devices
      */
     async cleanupNonTrackerDevices(devices) {
         const currentIds = new Set(devices.map(d => this.canonicIdToStateId(d.canonicId)));
@@ -292,7 +312,9 @@ class Googlefindmydevice extends utils.Adapter {
         const prefix = `${this.namespace}.devices.`;
 
         for (const id of Object.keys(allObjects)) {
-            if (!id.startsWith(prefix) || allObjects[id].type !== 'channel') continue;
+            if (!id.startsWith(prefix) || allObjects[id].type !== 'channel') {
+                continue;
+            }
             const deviceId = id.slice(prefix.length);
             if (!currentIds.has(deviceId)) {
                 this.log.info(`Removing "${deviceId}" from the object tree (not a Bluetooth tracker).`);
@@ -307,7 +329,9 @@ class Googlefindmydevice extends utils.Adapter {
      * answer to a "locate now" request.
      */
     async ensureFcmReady() {
-        if (this.fcmReadyPromise) return this.fcmReadyPromise;
+        if (this.fcmReadyPromise) {
+            return this.fcmReadyPromise;
+        }
 
         this.fcmReadyPromise = (async () => {
             this.log.debug('Registering with Firebase Cloud Messaging for location push notifications...');
@@ -334,9 +358,14 @@ class Googlefindmydevice extends utils.Adapter {
         const settings = Array.isArray(this.config.deviceSettings) ? this.config.deviceSettings : [];
 
         for (const setting of settings) {
-            if (!setting.locate || !setting.canonicId) continue;
+            if (!setting.locate || !setting.canonicId) {
+                continue;
+            }
 
-            const minutes = Math.min(LOCATE_MAX_MINUTES, Math.max(LOCATE_MIN_MINUTES, Number(setting.intervalMinutes) || 60));
+            const minutes = Math.min(
+                LOCATE_MAX_MINUTES,
+                Math.max(LOCATE_MIN_MINUTES, Number(setting.intervalMinutes) || 60),
+            );
 
             const scheduleNext = delayMs => {
                 const timer = this.setTimeout(async () => {
@@ -357,6 +386,9 @@ class Googlefindmydevice extends utils.Adapter {
     /**
      * Actively asks Google to ping one tracker for a fresh location, then
      * waits for the asynchronous FCM push answer and decrypts it.
+     *
+     * @param canonicId
+     * @param name
      */
     async triggerLocate(canonicId, name) {
         await this.ensureFcmReady();
@@ -389,7 +421,9 @@ class Googlefindmydevice extends utils.Adapter {
         this.log.debug(`Push response for "${name}" received.`);
 
         const ownerKey = this.config.ownerKey ? Buffer.from(this.config.ownerKey, 'hex') : null;
-        if (!ownerKey || !deviceUpdate.deviceMetadata) return;
+        if (!ownerKey || !deviceUpdate.deviceMetadata) {
+            return;
+        }
 
         const stateId = this.canonicIdToStateId(canonicId);
         const location = await decryptLatestLocation(ownerKey, { raw: deviceUpdate.deviceMetadata });
@@ -400,7 +434,9 @@ class Googlefindmydevice extends utils.Adapter {
     }
 
     async updateLocationStates(stateId, location) {
-        if (!location) return;
+        if (!location) {
+            return;
+        }
 
         // The timestamp tells you how fresh this report actually is, whether
         // it's a semantic ("Home") or a GPS report - always set it either way.
@@ -453,7 +489,13 @@ class Googlefindmydevice extends utils.Adapter {
 
         await this.setObjectNotExistsAsync(`devices.${id}.manufacturer`, {
             type: 'state',
-            common: { name: { en: 'Manufacturer', de: 'Hersteller' }, type: 'string', role: 'text', read: true, write: false },
+            common: {
+                name: { en: 'Manufacturer', de: 'Hersteller' },
+                type: 'string',
+                role: 'text',
+                read: true,
+                write: false,
+            },
             native: {},
         });
         await this.setObjectNotExistsAsync(`devices.${id}.model`, {
@@ -463,17 +505,35 @@ class Googlefindmydevice extends utils.Adapter {
         });
         await this.setObjectNotExistsAsync(`devices.${id}.fastPairModelId`, {
             type: 'state',
-            common: { name: { en: 'Fast Pair model ID', de: 'Fast-Pair-Modell-ID' }, type: 'string', role: 'text', read: true, write: false },
+            common: {
+                name: { en: 'Fast Pair model ID', de: 'Fast-Pair-Modell-ID' },
+                type: 'string',
+                role: 'text',
+                read: true,
+                write: false,
+            },
             native: {},
         });
         await this.setObjectNotExistsAsync(`devices.${id}.deviceType`, {
             type: 'state',
-            common: { name: { en: 'Device type', de: 'Geraetetyp' }, type: 'string', role: 'text', read: true, write: false },
+            common: {
+                name: { en: 'Device type', de: 'Geraetetyp' },
+                type: 'string',
+                role: 'text',
+                read: true,
+                write: false,
+            },
             native: {},
         });
         await this.setObjectNotExistsAsync(`devices.${id}.pairDate`, {
             type: 'state',
-            common: { name: { en: 'Paired since', de: 'Gekoppelt seit' }, type: 'number', role: 'value.time', read: true, write: false },
+            common: {
+                name: { en: 'Paired since', de: 'Gekoppelt seit' },
+                type: 'number',
+                role: 'value.time',
+                read: true,
+                write: false,
+            },
             native: {},
         });
         await this.setObjectNotExistsAsync(`devices.${id}.sharedWithCount`, {
@@ -490,22 +550,47 @@ class Googlefindmydevice extends utils.Adapter {
 
         await this.setObjectNotExistsAsync(`devices.${id}.latitude`, {
             type: 'state',
-            common: { name: { en: 'Latitude', de: 'Breitengrad' }, type: 'number', role: 'value.gps.latitude', read: true, write: false },
+            common: {
+                name: { en: 'Latitude', de: 'Breitengrad' },
+                type: 'number',
+                role: 'value.gps.latitude',
+                read: true,
+                write: false,
+            },
             native: {},
         });
         await this.setObjectNotExistsAsync(`devices.${id}.longitude`, {
             type: 'state',
-            common: { name: { en: 'Longitude', de: 'Längengrad' }, type: 'number', role: 'value.gps.longitude', read: true, write: false },
+            common: {
+                name: { en: 'Longitude', de: 'Längengrad' },
+                type: 'number',
+                role: 'value.gps.longitude',
+                read: true,
+                write: false,
+            },
             native: {},
         });
         await this.setObjectNotExistsAsync(`devices.${id}.altitude`, {
             type: 'state',
-            common: { name: { en: 'Altitude', de: 'Höhe' }, type: 'number', role: 'value.gps.elevation', unit: 'm', read: true, write: false },
+            common: {
+                name: { en: 'Altitude', de: 'Höhe' },
+                type: 'number',
+                role: 'value.gps.elevation',
+                unit: 'm',
+                read: true,
+                write: false,
+            },
             native: {},
         });
         await this.setObjectNotExistsAsync(`devices.${id}.lastSeen`, {
             type: 'state',
-            common: { name: { en: 'Last seen', de: 'Zuletzt gesehen' }, type: 'number', role: 'value.time', read: true, write: false },
+            common: {
+                name: { en: 'Last seen', de: 'Zuletzt gesehen' },
+                type: 'number',
+                role: 'value.time',
+                read: true,
+                write: false,
+            },
             native: {},
         });
         await this.setObjectNotExistsAsync(`devices.${id}.semanticLocation`, {
@@ -521,13 +606,23 @@ class Googlefindmydevice extends utils.Adapter {
         });
         await this.setObjectNotExistsAsync(`devices.${id}.accuracy`, {
             type: 'state',
-            common: { name: { en: 'Accuracy', de: 'Genauigkeit' }, type: 'number', role: 'value', unit: 'm', read: true, write: false },
+            common: {
+                name: { en: 'Accuracy', de: 'Genauigkeit' },
+                type: 'number',
+                role: 'value',
+                unit: 'm',
+                read: true,
+                write: false,
+            },
             native: {},
         });
         await this.setObjectNotExistsAsync(`devices.${id}.isOwnReport`, {
             type: 'state',
             common: {
-                name: { en: 'Reported directly by the tracker (not via a stranger nearby)', de: 'Direkt vom Tracker gemeldet (nicht ueber ein fremdes Geraet in der Naehe)' },
+                name: {
+                    en: 'Reported directly by the tracker (not via a stranger nearby)',
+                    de: 'Direkt vom Tracker gemeldet (nicht ueber ein fremdes Geraet in der Naehe)',
+                },
                 type: 'boolean',
                 role: 'indicator',
                 read: true,
@@ -537,7 +632,13 @@ class Googlefindmydevice extends utils.Adapter {
         });
         await this.setObjectNotExistsAsync(`devices.${id}.mapsLink`, {
             type: 'state',
-            common: { name: { en: 'Google Maps link', de: 'Google-Maps-Link' }, type: 'string', role: 'weblink', read: true, write: false },
+            common: {
+                name: { en: 'Google Maps link', de: 'Google-Maps-Link' },
+                type: 'string',
+                role: 'weblink',
+                read: true,
+                write: false,
+            },
             native: {},
         });
     }

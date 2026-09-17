@@ -26,7 +26,10 @@
     "main.js"
   ],
   "scripts": {
-    "test": "node --test ./test/*.test.js",
+    "test:unit": "node --test ./test/*.test.js",
+    "test:package": "mocha test/package --exit",
+    "test:integration": "mocha test/integration --exit --timeout 60000",
+    "test": "npm run test:unit && npm run test:package",
     "lint": "eslint ."
   },
   "dependencies": {
@@ -34,7 +37,8 @@
     "protobufjs": "^8.8.0"
   },
   "devDependencies": {
-    "@iobroker/eslint-config": "^2.1.0",
+    "@iobroker/adapter-dev": "^1.5.0",
+    "@iobroker/eslint-config": "^2.3.4",
     "@iobroker/testing": "^6.2.1",
     "@types/node": "^22.0.0"
   }
