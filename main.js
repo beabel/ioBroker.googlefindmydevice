@@ -232,6 +232,7 @@ class Googlefindmydevice extends utils.Adapter {
             val: device.pairDate ? device.pairDate * 1000 : null,
             ack: true,
         });
+        await this.setStateAsync(`devices.${stateId}.sharedWithCount`, { val: device.sharedWithCount || 0, ack: true });
     }
 
     /**
@@ -365,12 +366,24 @@ class Googlefindmydevice extends utils.Adapter {
 
         if (location.semantic !== undefined) {
             await this.setStateAsync(`devices.${stateId}.semanticLocation`, { val: location.semantic, ack: true });
+            // A semantic report has no coordinates of its own - clear the
+            // GPS-only fields so they don't keep showing an older report's
+            // accuracy/link as if it still applied.
+            await this.setStateAsync(`devices.${stateId}.accuracy`, { val: null, ack: true });
+            await this.setStateAsync(`devices.${stateId}.isOwnReport`, { val: null, ack: true });
+            await this.setStateAsync(`devices.${stateId}.mapsLink`, { val: '', ack: true });
             return;
         }
 
         await this.setStateAsync(`devices.${stateId}.latitude`, { val: location.lat, ack: true });
         await this.setStateAsync(`devices.${stateId}.longitude`, { val: location.lon, ack: true });
         await this.setStateAsync(`devices.${stateId}.altitude`, { val: location.altitude, ack: true });
+        await this.setStateAsync(`devices.${stateId}.accuracy`, { val: location.accuracy, ack: true });
+        await this.setStateAsync(`devices.${stateId}.isOwnReport`, { val: !!location.isOwnReport, ack: true });
+        await this.setStateAsync(`devices.${stateId}.mapsLink`, {
+            val: `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lon}`,
+            ack: true,
+        });
     }
 
     canonicIdToStateId(raw) {
@@ -421,6 +434,17 @@ class Googlefindmydevice extends utils.Adapter {
             common: { name: { en: 'Paired since', de: 'Gekoppelt seit' }, type: 'number', role: 'value.time', read: true, write: false },
             native: {},
         });
+        await this.setObjectNotExistsAsync(`devices.${id}.sharedWithCount`, {
+            type: 'state',
+            common: {
+                name: { en: 'Shared with (people)', de: 'Geteilt mit (Personen)' },
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
 
         await this.setObjectNotExistsAsync(`devices.${id}.latitude`, {
             type: 'state',
@@ -451,6 +475,27 @@ class Googlefindmydevice extends utils.Adapter {
                 read: true,
                 write: false,
             },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync(`devices.${id}.accuracy`, {
+            type: 'state',
+            common: { name: { en: 'Accuracy', de: 'Genauigkeit' }, type: 'number', role: 'value', unit: 'm', read: true, write: false },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync(`devices.${id}.isOwnReport`, {
+            type: 'state',
+            common: {
+                name: { en: 'Reported directly by the tracker (not via a stranger nearby)', de: 'Direkt vom Tracker gemeldet (nicht ueber ein fremdes Geraet in der Naehe)' },
+                type: 'boolean',
+                role: 'indicator',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync(`devices.${id}.mapsLink`, {
+            type: 'state',
+            common: { name: { en: 'Google Maps link', de: 'Google-Maps-Link' }, type: 'string', role: 'weblink', read: true, write: false },
             native: {},
         });
     }
