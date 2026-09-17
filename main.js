@@ -165,6 +165,7 @@ class Googlefindmydevice extends utils.Adapter {
         for (const device of devices) {
             const stateId = this.canonicIdToStateId(device.canonicId || device.name);
             await this.ensureDeviceStates(stateId, device.name);
+            await this.updateDeviceMetadataStates(stateId, device);
 
             if (!ownerKey) continue;
 
@@ -187,6 +188,17 @@ class Googlefindmydevice extends utils.Adapter {
                 this.log.warn(`Standort fuer "${device.name}" konnte nicht entschluesselt werden: ${err.message}`);
             }
         }
+    }
+
+    async updateDeviceMetadataStates(stateId, device) {
+        await this.setStateAsync(`devices.${stateId}.manufacturer`, { val: device.manufacturer || '', ack: true });
+        await this.setStateAsync(`devices.${stateId}.model`, { val: device.model || '', ack: true });
+        await this.setStateAsync(`devices.${stateId}.fastPairModelId`, { val: device.fastPairModelId || '', ack: true });
+        await this.setStateAsync(`devices.${stateId}.deviceType`, { val: device.deviceType || '', ack: true });
+        await this.setStateAsync(`devices.${stateId}.pairDate`, {
+            val: device.pairDate ? device.pairDate * 1000 : null,
+            ack: true,
+        });
     }
 
     async updateLocationStates(stateId, location) {
@@ -225,6 +237,32 @@ class Googlefindmydevice extends utils.Adapter {
             native: {},
         });
         await this.setStateAsync(`devices.${id}.name`, { val: name, ack: true });
+
+        await this.setObjectNotExistsAsync(`devices.${id}.manufacturer`, {
+            type: 'state',
+            common: { name: { en: 'Manufacturer', de: 'Hersteller' }, type: 'string', role: 'text', read: true, write: false },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync(`devices.${id}.model`, {
+            type: 'state',
+            common: { name: { en: 'Model', de: 'Modell' }, type: 'string', role: 'text', read: true, write: false },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync(`devices.${id}.fastPairModelId`, {
+            type: 'state',
+            common: { name: { en: 'Fast Pair model ID', de: 'Fast-Pair-Modell-ID' }, type: 'string', role: 'text', read: true, write: false },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync(`devices.${id}.deviceType`, {
+            type: 'state',
+            common: { name: { en: 'Device type', de: 'Geraetetyp' }, type: 'string', role: 'text', read: true, write: false },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync(`devices.${id}.pairDate`, {
+            type: 'state',
+            common: { name: { en: 'Paired since', de: 'Gekoppelt seit' }, type: 'number', role: 'value.time', read: true, write: false },
+            native: {},
+        });
 
         await this.setObjectNotExistsAsync(`devices.${id}.latitude`, {
             type: 'state',
