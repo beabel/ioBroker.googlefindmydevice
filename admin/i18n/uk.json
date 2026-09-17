@@ -14,7 +14,7 @@
   "poll_interval_label": "Update device list (minutes) - battery-safe",
   "poll_interval_help": "How often the list of your trackers (name, manufacturer, model, pairing date, \"shared with\") gets refreshed. This only reads data Google already has stored - the tracker itself is NOT pinged, so no extra battery use. Real coordinates do NOT come from here, they come from the per-device location requests further below (only available after Step 2).",
   "step2_headline": "Step 2: Enable location decryption",
-  "step2_intro": "One more manual step is needed to decrypt actual coordinates (device names already work without this). Check this adapter instance's log after it restarts for a link to open and a small script to paste into your browser's developer console there - both are logged once this point is reached. Complete whatever Google asks for on that page, then paste the result it shows you into the field below and save.",
+  "step2_intro": "One more manual step is needed to decrypt actual coordinates (device names already work without this). Check this adapter instance's log after it restarts: the link and the script each get their own log line (easy to select/copy in full) once this point is reached. Complete whatever Google asks for on that page, then paste the result it shows you into the field below and save.",
   "shared_key_json_label": "Result from the browser console (JSON)",
   "shared_key_json_help": "Paste the captured text here, then save. It will be exchanged for the decryption key and cleared automatically.",
   "step2_done": "Location decryption is set up - coordinates will appear as states on the next poll.",

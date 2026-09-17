@@ -86,16 +86,21 @@ class Googlefindmydevice extends utils.Adapter {
     async logStep2Instructions() {
         try {
             const url = await buildEncryptionUnlockUrl();
+            // One log line per piece, with the link/snippet completely alone
+            // on their own line - a single combined line makes it hard to
+            // tell where the URL/code actually ends and the next sentence
+            // begins, which makes copying the right part error-prone.
             this.log.warn(
-                'Standort-Entschluesselung noch nicht eingerichtet (Schritt 2). Geraetenamen werden trotzdem ' +
-                    'aktualisiert. Anleitung: 1) Diesen Link in deinem Browser oeffnen: ' +
-                    url +
-                    ' 2) Entwicklertools oeffnen (F12) -> Reiter "Konsole" -> folgenden Code einfuegen und Enter ' +
-                    'druecken: ' +
-                    CONSOLE_SNIPPET +
-                    ' 3) Auf der Seite tun, was Google verlangt. 4) Das danach oben auf der Seite erscheinende ' +
-                    'Textfeld komplett kopieren und in der Instanzkonfiguration bei "Ergebnis aus der ' +
-                    'Browser-Konsole" einfuegen und speichern.',
+                'Standort-Entschluesselung noch nicht eingerichtet (Schritt 2). Geraetenamen werden trotzdem aktualisiert.',
+            );
+            this.log.warn('1) Diesen Link in deinem Browser oeffnen (nur die URL, nichts davor/danach):');
+            this.log.warn(url);
+            this.log.warn('2) Entwicklertools oeffnen (F12) -> Reiter "Konsole" -> folgenden Code komplett einfuegen und Enter druecken (nur der Code, nichts davor/danach):');
+            this.log.warn(CONSOLE_SNIPPET);
+            this.log.warn(
+                '3) Auf der Seite tun, was Google verlangt. 4) Das danach oben auf der Seite erscheinende Textfeld ' +
+                    'komplett kopieren und in der Instanzkonfiguration bei "Ergebnis aus der Browser-Konsole" ' +
+                    'einfuegen und speichern.',
             );
         } catch (err) {
             this.log.error(`Konnte Schritt-2-Anleitung nicht erzeugen: ${err.message}`);
