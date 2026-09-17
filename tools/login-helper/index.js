@@ -4,16 +4,15 @@
 //
 // Designed to also run as a double-clickable executable (built with
 // @yao-pkg/pkg - see package.json's "build" script) so a typical ioBroker
-// user never has to install Node.js or type a command. On first run it
-// downloads its own copy of Chrome next to itself (one-time, needs
-// internet access) and keeps reusing it afterwards.
+// user never has to install Node.js or type a command.
 //
 // This tool never sees your Google password - it only reads a short-lived
 // cookie after you've finished logging in yourself in a real, visible
 // Chrome window, then exchanges it (locally, directly against Google's
-// servers) for a long-lived token. Nothing is uploaded anywhere.
+// servers) for a long-lived token. Everything happens on this machine.
 
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const readline = require('node:readline/promises');
 const { stdin, stdout } = require('node:process');
@@ -36,7 +35,43 @@ async function ask(question) {
   }
 }
 
+// Google's sign-in page rejects generic "Chrome for Testing" builds (the
+// kind Puppeteer downloads by default) with "This browser or app may not
+// be secure". A real, everyday Google Chrome installation is not affected,
+// so we prefer that if one is present and only fall back to downloading a
+// throwaway copy if it isn't.
+function findSystemChrome() {
+  const candidates = [];
+  const platform = os.platform();
+
+  if (platform === 'win32') {
+    const programFiles = [process.env['PROGRAMFILES'], process.env['PROGRAMFILES(X86)'], process.env['LOCALAPPDATA']].filter(Boolean);
+    for (const base of programFiles) {
+      candidates.push(path.join(base, 'Google', 'Chrome', 'Application', 'chrome.exe'));
+    }
+  } else if (platform === 'darwin') {
+    candidates.push('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome');
+    candidates.push(path.join(os.homedir(), 'Applications/Google Chrome.app/Contents/MacOS/Google Chrome'));
+  } else {
+    candidates.push('/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/opt/google/chrome/chrome', '/snap/bin/chromium');
+  }
+
+  return candidates.find((p) => fs.existsSync(p)) || null;
+}
+
 async function ensureChrome() {
+  const systemChrome = findSystemChrome();
+  if (systemChrome) {
+    console.log(`Verwende dein installiertes Chrome: ${systemChrome}`);
+    return systemChrome;
+  }
+
+  console.log('Kein installiertes Google Chrome gefunden.');
+  console.log('Hinweis: Google blockiert Anmeldungen in generischen Testversionen von Chrome');
+  console.log('gelegentlich mit der Meldung "Dieser Browser oder App ist unsicher". Falls das');
+  console.log('gleich passiert, installiere bitte das normale Google Chrome und starte dieses');
+  console.log('Programm erneut - es wird dann automatisch bevorzugt verwendet.\n');
+
   const platform = detectBrowserPlatform();
   if (!platform) {
     throw new Error('Betriebssystem/Architektur konnte nicht erkannt werden.');
@@ -49,7 +84,7 @@ async function ensureChrome() {
     return executablePath;
   }
 
-  console.log('Lade Chrome herunter (nur beim allerersten Start noetig, ca. 200 MB)...');
+  console.log('Lade eine eigene Chrome-Kopie herunter (nur beim allerersten Start noetig, ca. 200 MB)...');
   let lastPercent = -1;
   await install({
     browser: Browser.CHROME,
@@ -89,15 +124,8 @@ Dieses Programm holt sich einmalig ein langlebiges Google-Token, damit der
 ioBroker-Adapter spaeter selbststaendig deine Tracker-Standorte abrufen
 kann. Dein Google-Passwort wird NUR in dem gleich erscheinenden, echten
 Chrome-Fenster eingegeben - dieses Programm sieht oder speichert es nicht.
-
-Alles, was hier ausgegeben wird, bleibt auf diesem Rechner. Nichts wird an
-mich, Anthropic oder sonst jemanden gesendet.
+Es laeuft alles lokal auf diesem Rechner ab.
 `);
-
-  const email = await ask('Google-Kontoadresse (die, mit der die Tracker eingerichtet sind): ');
-  if (!email.includes('@')) {
-    throw new Error('Das sieht nicht nach einer E-Mail-Adresse aus. Abgebrochen.');
-  }
 
   const executablePath = await ensureChrome();
 
@@ -120,8 +148,15 @@ mich, Anthropic oder sonst jemanden gesendet.
   const { androidId, securityToken } = await gcmCheckin();
 
   console.log('Tausche Login-Token gegen langlebiges Konto-Token...');
-  const exchangeResult = await exchangeToken(email, oauthToken, androidId);
+  // Google derives the account from the token itself, so no email needs to
+  // be entered by hand - it comes back in the exchange response.
+  const exchangeResult = await exchangeToken('', oauthToken, androidId);
   const aasToken = exchangeResult.Token;
+  const email = exchangeResult.Email;
+
+  if (!email) {
+    throw new Error('Google hat keine Kontoadresse zurueckgegeben. Bitte erneut versuchen.');
+  }
 
   console.log('\n' + '='.repeat(70));
   console.log('Schritt 1 erfolgreich. Bitte sichere diese Werte (z.B. in einem');
