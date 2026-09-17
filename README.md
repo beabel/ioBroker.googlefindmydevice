@@ -16,9 +16,12 @@ adapter and may break if Google changes its internal protocol.
 
 Currently implemented and confirmed working against real Google accounts:
 
-- Reading a Google account's Find Hub device list (name, manufacturer, model,
-  Fast Pair ID, pairing date, device type) and keeping it updated on a poll
-  interval.
+- Reading a Google account's Bluetooth trackers (name, manufacturer, model,
+  Fast Pair ID, pairing date, device type) and keeping them updated on a poll
+  interval. Phones, tablets and other non-tracker devices linked to the
+  account are deliberately left out - Google's API returns no usable data for
+  them here, and phone location would need an entirely different, browser-
+  session-based API this adapter doesn't use (see below).
 - Decrypting real location reports once available (latitude, longitude,
   altitude, last-seen time, or a semantic location like "Home").
 - Actively requesting a fresh location per tracker ("locate now"), with an
@@ -80,6 +83,23 @@ configuration listing every discovered tracker with two settings each:
 Device names, manufacturer/model info and pairing date are always kept
 up to date on the regular poll interval regardless of these settings, since
 reading that doesn't touch the tracker itself.
+
+## Why not phone/tablet locations too?
+
+Investigated and deliberately not implemented. Phones and tablets linked to
+the account use a completely different Google system for location than
+Bluetooth trackers: the same web app as
+[google.com/android/find](https://www.google.com/android/find), authenticated
+with a full Google **browser session** (cookies) rather than the narrowly-
+scoped Android Device Manager token this adapter uses for everything else,
+talking to an undocumented internal RPC ("batchexecute") and push channel
+("Punctual") that the reference project this adapter is based on doesn't
+cover either. Storing a full browser session in the adapter config would be a
+meaningfully bigger security exposure than the current setup (it can do
+anything your Google account can, not just look up device locations), for a
+feature that could not be fully confirmed working even with live network
+capture. Bluetooth tracker locations (the actual point of this adapter) are
+unaffected by this.
 
 ## Attribution & License
 

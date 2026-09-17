@@ -186,10 +186,19 @@ class Googlefindmydevice extends utils.Adapter {
             DEFAULT_CLIENT_SIG,
         );
 
-        const devices = await listDevices(admToken);
-        this.log.debug(`${devices.length} Tracker gefunden.`);
+        const allDevices = await listDevices(admToken);
+
+        // Nova's SPOT_DEVICE listing also includes phones/tablets/other
+        // Fast Pair devices linked to the account, but never any usable data
+        // for them (information stays null - confirmed live). Only real
+        // Bluetooth/FMDN trackers get a canonicId out of listDevices(), so
+        // filtering on that also filters out everything that would otherwise
+        // show up as an empty, useless object branch in ioBroker.
+        const devices = allDevices.filter(d => d.canonicId);
+        this.log.debug(`${devices.length} Tracker gefunden (von ${allDevices.length} Geraeten im Konto).`);
 
         await this.syncDeviceSettings(devices);
+        await this.cleanupNonTrackerDevices(devices);
 
         const ownerKey = this.config.ownerKey ? Buffer.from(this.config.ownerKey, 'hex') : null;
 
@@ -212,12 +221,6 @@ class Googlefindmydevice extends utils.Adapter {
                     );
                     if (info && info.deviceRegistration) {
                         this.log.debug(`Vollstaendige "information" fuer "${device.name}": ${JSON.stringify(info)}`);
-                    } else {
-                        // No tracker registration - likely a phone/tablet. Dump
-                        // the whole raw device (not just .information) while
-                        // investigating how Google represents those, since none
-                        // of our current decoding assumes anything about them.
-                        this.log.debug(`Vollstaendiges Rohobjekt fuer "${device.name}": ${JSON.stringify(device.raw)}`);
                     }
                 } else {
                     this.log.debug(`Entschluesselter Standort fuer "${device.name}": ${JSON.stringify(location)}`);
@@ -262,6 +265,28 @@ class Googlefindmydevice extends utils.Adapter {
         await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, {
             native: { deviceSettings: existing.concat(missing) },
         });
+    }
+
+    /**
+     * Removes any devices.* channel that isn't a current tracker - phones,
+     * tablets and other non-tracker devices used to get one too (before
+     * listDevices() results were filtered down to actual trackers), and
+     * ioBroker doesn't drop objects on its own just because a poll stops
+     * touching them.
+     */
+    async cleanupNonTrackerDevices(devices) {
+        const currentIds = new Set(devices.map(d => this.canonicIdToStateId(d.canonicId)));
+        const allObjects = await this.getAdapterObjectsAsync();
+        const prefix = `${this.namespace}.devices.`;
+
+        for (const id of Object.keys(allObjects)) {
+            if (!id.startsWith(prefix) || allObjects[id].type !== 'channel') continue;
+            const deviceId = id.slice(prefix.length);
+            if (!currentIds.has(deviceId)) {
+                this.log.info(`Entferne "${deviceId}" aus dem Objektbaum (kein Bluetooth-Tracker).`);
+                await this.delObjectAsync(id, { recursive: true });
+            }
+        }
     }
 
     /**
