@@ -293,6 +293,15 @@ class Googlefindmydevice extends utils.Adapter {
                 warn: msg => this.log.warn(msg),
                 error: msg => this.log.error(msg),
             },
+            // adapter.setTimeout/setInterval (not the raw Node globals) so
+            // these get cleaned up automatically if the adapter is stopped
+            // mid-flight, same reasoning as the log wrapper above.
+            timers: {
+                setTimeout: (fn, ms) => this.setTimeout(fn, ms),
+                clearTimeout: timer => this.clearTimeout(timer),
+                setInterval: (fn, ms) => this.setInterval(fn, ms),
+                clearInterval: timer => this.clearInterval(timer),
+            },
         });
         this.fcmIdentity = null;
         this.fcmReadyPromise = null;
@@ -764,15 +773,27 @@ class Googlefindmydevice extends utils.Adapter {
         return String(raw || 'unknown').replace(/[^a-zA-Z0-9_-]/g, '_');
     }
 
+    /**
+     * Creates/updates the object tree for one device. Uses extendObjectAsync
+     * (not setObjectNotExistsAsync) so that object definitions - common.name,
+     * common.role, etc. - actually get updated on already-existing
+     * installations when this code changes between adapter versions,
+     * instead of silently keeping whatever was created by an older version
+     * forever. The extra writes on every poll are negligible at this scale
+     * (a handful of trackers, polled every few minutes).
+     *
+     * @param {string} id sanitized state id for this device (see canonicIdToStateId)
+     * @param {string} name the device's own display name
+     */
     async ensureDeviceStates(id, name) {
         // The channel's name is the device's own (arbitrary, user-chosen) name,
         // not translatable adapter text - a plain string, not an i18n object.
-        await this.setObjectNotExistsAsync(`devices.${id}`, {
+        await this.extendObjectAsync(`devices.${id}`, {
             type: 'channel',
             common: { name },
             native: {},
         });
-        await this.setObjectNotExistsAsync(`devices.${id}.name`, {
+        await this.extendObjectAsync(`devices.${id}.name`, {
             type: 'state',
             common: {
                 name: I18N.deviceName,
@@ -785,7 +806,7 @@ class Googlefindmydevice extends utils.Adapter {
         });
         await this.setStateAsync(`devices.${id}.name`, { val: name, ack: true });
 
-        await this.setObjectNotExistsAsync(`devices.${id}.manufacturer`, {
+        await this.extendObjectAsync(`devices.${id}.manufacturer`, {
             type: 'state',
             common: {
                 name: I18N.manufacturer,
@@ -796,12 +817,12 @@ class Googlefindmydevice extends utils.Adapter {
             },
             native: {},
         });
-        await this.setObjectNotExistsAsync(`devices.${id}.model`, {
+        await this.extendObjectAsync(`devices.${id}.model`, {
             type: 'state',
             common: { name: I18N.model, type: 'string', role: 'text', read: true, write: false },
             native: {},
         });
-        await this.setObjectNotExistsAsync(`devices.${id}.fastPairModelId`, {
+        await this.extendObjectAsync(`devices.${id}.fastPairModelId`, {
             type: 'state',
             common: {
                 name: I18N.fastPairModelId,
@@ -812,7 +833,7 @@ class Googlefindmydevice extends utils.Adapter {
             },
             native: {},
         });
-        await this.setObjectNotExistsAsync(`devices.${id}.deviceType`, {
+        await this.extendObjectAsync(`devices.${id}.deviceType`, {
             type: 'state',
             common: {
                 name: I18N.deviceType,
@@ -823,7 +844,7 @@ class Googlefindmydevice extends utils.Adapter {
             },
             native: {},
         });
-        await this.setObjectNotExistsAsync(`devices.${id}.pairDate`, {
+        await this.extendObjectAsync(`devices.${id}.pairDate`, {
             type: 'state',
             common: {
                 name: I18N.pairDate,
@@ -834,7 +855,7 @@ class Googlefindmydevice extends utils.Adapter {
             },
             native: {},
         });
-        await this.setObjectNotExistsAsync(`devices.${id}.sharedWithCount`, {
+        await this.extendObjectAsync(`devices.${id}.sharedWithCount`, {
             type: 'state',
             common: {
                 name: I18N.sharedWithCount,
@@ -846,7 +867,7 @@ class Googlefindmydevice extends utils.Adapter {
             native: {},
         });
 
-        await this.setObjectNotExistsAsync(`devices.${id}.latitude`, {
+        await this.extendObjectAsync(`devices.${id}.latitude`, {
             type: 'state',
             common: {
                 name: I18N.latitude,
@@ -857,7 +878,7 @@ class Googlefindmydevice extends utils.Adapter {
             },
             native: {},
         });
-        await this.setObjectNotExistsAsync(`devices.${id}.longitude`, {
+        await this.extendObjectAsync(`devices.${id}.longitude`, {
             type: 'state',
             common: {
                 name: I18N.longitude,
@@ -868,7 +889,7 @@ class Googlefindmydevice extends utils.Adapter {
             },
             native: {},
         });
-        await this.setObjectNotExistsAsync(`devices.${id}.altitude`, {
+        await this.extendObjectAsync(`devices.${id}.altitude`, {
             type: 'state',
             common: {
                 name: I18N.altitude,
@@ -880,7 +901,7 @@ class Googlefindmydevice extends utils.Adapter {
             },
             native: {},
         });
-        await this.setObjectNotExistsAsync(`devices.${id}.lastSeen`, {
+        await this.extendObjectAsync(`devices.${id}.lastSeen`, {
             type: 'state',
             common: {
                 name: I18N.lastSeen,
@@ -891,7 +912,7 @@ class Googlefindmydevice extends utils.Adapter {
             },
             native: {},
         });
-        await this.setObjectNotExistsAsync(`devices.${id}.semanticLocation`, {
+        await this.extendObjectAsync(`devices.${id}.semanticLocation`, {
             type: 'state',
             common: {
                 name: I18N.semanticLocation,
@@ -902,7 +923,7 @@ class Googlefindmydevice extends utils.Adapter {
             },
             native: {},
         });
-        await this.setObjectNotExistsAsync(`devices.${id}.accuracy`, {
+        await this.extendObjectAsync(`devices.${id}.accuracy`, {
             type: 'state',
             common: {
                 name: I18N.accuracy,
@@ -914,7 +935,7 @@ class Googlefindmydevice extends utils.Adapter {
             },
             native: {},
         });
-        await this.setObjectNotExistsAsync(`devices.${id}.isOwnReport`, {
+        await this.extendObjectAsync(`devices.${id}.isOwnReport`, {
             type: 'state',
             common: {
                 name: I18N.isOwnReport,
@@ -925,7 +946,7 @@ class Googlefindmydevice extends utils.Adapter {
             },
             native: {},
         });
-        await this.setObjectNotExistsAsync(`devices.${id}.mapsLink`, {
+        await this.extendObjectAsync(`devices.${id}.mapsLink`, {
             type: 'state',
             common: {
                 name: I18N.mapsLink,

@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "googlefindmydevice",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "news": {
+      "0.0.6": {
+        "en": "use extendObjectAsync so existing installs pick up object fixes; repochecker fixes",
+        "de": "extendObjectAsync verwendet, damit bestehende Installationen Objekt-Fixes erhalten; repochecker-Fixes",
+        "ru": "используется extendObjectAsync, чтобы существующие установки получали исправления объектов; исправления repochecker",
+        "pt": "uso de extendObjectAsync para que instalações existentes recebam correções de objetos; correções do repochecker",
+        "nl": "extendObjectAsync gebruikt zodat bestaande installaties objectfixes krijgen; repochecker-fixes",
+        "fr": "utilisation d'extendObjectAsync pour que les installations existantes reçoivent les correctifs d'objets ; corrections du repochecker",
+        "it": "uso di extendObjectAsync affinché le installazioni esistenti ricevano le correzioni degli oggetti; correzioni del repochecker",
+        "es": "uso de extendObjectAsync para que las instalaciones existentes reciban las correcciones de objetos; correcciones del repochecker",
+        "pl": "użycie extendObjectAsync, aby istniejące instalacje otrzymały poprawki obiektów; poprawki repochecker",
+        "uk": "використано extendObjectAsync, щоб наявні інсталяції отримали виправлення об'єктів; виправлення repochecker",
+        "zh-cn": "改用 extendObjectAsync,使现有安装也能获得对象修复;修复 repochecker 发现的问题"
+      },
       "0.0.5": {
         "en": "fix object hierarchy and role, full i18n on object names (repository review findings)",
         "de": "Objekthierarchie und Rolle korrigiert, vollstaendige i18n bei Objektnamen (Repository-Review-Funde)",
@@ -41,32 +54,6 @@
         "pl": "naprawa konfiguracji jest teraz samokorygująca zamiast jednorazowej flagi",
         "uk": "відновлення конфігурації тепер самокоригується, а не одноразовий прапорець",
         "zh-cn": "配置修复改为自我校正,不再依赖一次性标记"
-      },
-      "0.0.2": {
-        "en": "fix config corruption from the encryptedNative schema fix",
-        "de": "Konfigurationsfehler durch den encryptedNative-Schema-Fix behoben",
-        "ru": "исправлено повреждение конфигурации из-за фикса схемы encryptedNative",
-        "pt": "corrigida a corrupção de configuração causada pela correção do esquema encryptedNative",
-        "nl": "configuratiecorruptie door de encryptedNative-schemafix verholpen",
-        "fr": "correction de la corruption de configuration due au correctif du schéma encryptedNative",
-        "it": "corretta la corruzione della configurazione causata dalla correzione dello schema encryptedNative",
-        "es": "corregida la corrupción de configuración causada por la corrección del esquema encryptedNative",
-        "pl": "naprawiono uszkodzenie konfiguracji spowodowane poprawką schematu encryptedNative",
-        "uk": "виправлено пошкодження конфігурації через виправлення схеми encryptedNative",
-        "zh-cn": "修复因 encryptedNative 架构修正导致的配置损坏问题"
-      },
-      "0.0.1": {
-        "en": "initial development version",
-        "de": "erste Entwicklungsversion",
-        "ru": "начальная версия разработки",
-        "pt": "versão inicial de desenvolvimento",
-        "nl": "eerste ontwikkelingsversie",
-        "fr": "version de développement initiale",
-        "it": "versione di sviluppo iniziale",
-        "es": "versión de desarrollo inicial",
-        "pl": "wstępna wersja rozwojowa",
-        "uk": "початкова версія розробки",
-        "zh-cn": "初始开发版本"
       }
     },
     "titleLang": {

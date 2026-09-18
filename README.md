@@ -173,6 +173,32 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ### **WORK IN PROGRESS**
 
+### 0.0.6 (2026-09-18)
+
+* (beabel) The 0.0.5 fixes above only applied to newly-discovered
+  devices, since `ensureDeviceStates()` used `setObjectNotExistsAsync()`
+  - which creates an object once and then never touches it again, so
+  already-existing installations kept the old (incomplete/incorrect)
+  object definitions forever. Switched to `extendObjectAsync()`, which
+  merges in the current definition on every poll, so existing installs
+  self-heal automatically.
+* Also fixed everything flagged by the real ioBroker repository checker
+  on submission: two `node:`-prefix-less `require()` calls, a raw
+  `setInterval`/`setTimeout` in `lib/mcs-client.js` (now routed through
+  adapter-managed timers, same as the rest of the adapter), stale
+  `news` entries in `io-package.json` for versions that were never
+  actually published to npm, plus several suggestions (`tsconfig.json`
+  now extends `@tsconfig/node22`, `.vscode/settings.json` has
+  `json.schemas` for `io-package.json`/`jsonConfig.json`, a
+  `CHANGELOG_OLD.md` placeholder, and a Dependabot auto-merge workflow
+  for safe patch/minor updates).
+* One checker finding is a known false positive for any GPL-3.0
+  adapter and was deliberately left as-is: the license text's required
+  FSF preamble ("Copyright (C) 2007 Free Software Foundation...") has
+  no email address, which the checker flags the same way it would flag
+  a missing email on the adapter's own copyright line - removing or
+  altering that preamble would violate the GPL-3.0 license itself.
+
 ### 0.0.5 (2026-09-18)
 
 * (beabel) Fixes found by the ioBroker repository's automated object
@@ -222,6 +248,9 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 * (beabel) Initial development version - Bluetooth tracker names/metadata,
   location decryption, and active per-device location requests.
+
+Older entries, once this section grows too long, will move to
+[CHANGELOG_OLD.md](CHANGELOG_OLD.md).
 
 ## Attribution
 
