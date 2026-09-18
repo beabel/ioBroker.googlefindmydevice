@@ -170,6 +170,7 @@ This project is not affiliated with, endorsed by, or supported by Google.
 risk; Google's internal APIs are undocumented and may change without notice.
 
 ## Changelog
+
 ### 0.0.7 (2026-09-18)
 
 * (beabel) Replaced the `any`-casts introduced for the `@tsconfig/node22`
