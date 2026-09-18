@@ -12,6 +12,8 @@ device- and item-tracking service, and expose them as ioBroker states.
 > below for why. For those, keep using Google's own app or
 > [google.com/android/find](https://www.google.com/android/find).
 
+**Requirements:** Node.js >= 22, js-controller >= 6.0.11, Admin >= 7.8.23.
+
 ## Status: early development
 
 Google does not offer an official API for Find Hub. This adapter is being built
