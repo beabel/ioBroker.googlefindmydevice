@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "googlefindmydevice",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "news": {
+      "0.0.2": {
+        "en": "fix config corruption from the encryptedNative schema fix",
+        "de": "Konfigurationsfehler durch den encryptedNative-Schema-Fix behoben",
+        "ru": "исправлено повреждение конфигурации из-за фикса схемы encryptedNative",
+        "pt": "corrigida a corrupção de configuração causada pela correção do esquema encryptedNative",
+        "nl": "configuratiecorruptie door de encryptedNative-schemafix verholpen",
+        "fr": "correction de la corruption de configuration due au correctif du schéma encryptedNative",
+        "it": "corretta la corruzione della configurazione causata dalla correzione dello schema encryptedNative",
+        "es": "corregida la corrupción de configuración causada por la corrección del esquema encryptedNative",
+        "pl": "naprawiono uszkodzenie konfiguracji spowodowane poprawką schematu encryptedNative",
+        "uk": "виправлено пошкодження конфігурації через виправлення схеми encryptedNative",
+        "zh-cn": "修复因 encryptedNative 架构修正导致的配置损坏问题"
+      },
       "0.0.1": {
         "en": "initial development version",
         "de": "erste Entwicklungsversion",

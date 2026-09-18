@@ -152,6 +152,8 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ### **WORK IN PROGRESS**
 
+### 0.0.2 (2026-09-18)
+
 * (beabel) Fix a config-corruption bug introduced by the `protectedNative`/
   `encryptedNative` schema fix below: this adapter used to save the login
   token, security token, shared key and owner key with a plain
