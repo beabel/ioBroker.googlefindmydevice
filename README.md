@@ -173,6 +173,17 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ### **WORK IN PROGRESS**
 
+* (beabel) Replaced the `any`-casts introduced for the `@tsconfig/node22`
+  migration with specific types, and filled in a few missing JSDoc
+  parameter/return descriptions the CI linter flagged in the same
+  functions.
+* (beabel) Added `@alcalzone/release-script` (with its `iobroker` and
+  `license` plugins) as a devDependency for future releases - it
+  automates the version bump, the multi-language `news`/changelog sync
+  and the git tag in one step. Purely a release-time tool: it is not
+  part of the published npm package and does not touch the adapter's
+  runtime code. This release (0.0.7) is the first one cut with it.
+
 ### 0.0.6 (2026-09-18)
 
 * (beabel) The 0.0.5 fixes above only applied to newly-discovered
