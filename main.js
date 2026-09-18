@@ -34,6 +34,43 @@ const LOCATE_MAX_MINUTES = 1440; // 24h
 const LOCATE_INITIAL_DELAY_MS = 20000; // give the MCS connection time to log in first
 const LOCATE_RESPONSE_TIMEOUT_MS = 45000;
 
+// Fields js-controller auto-decrypts on every startup because they're
+// listed in io-package.json's top-level encryptedNative. See
+// repairDoubleDecryptedNative() for why that alone isn't enough to trust
+// them, and for the per-field validity check right below.
+const ENCRYPTED_NATIVE_FIELDS = ['oauthToken', 'aasToken', 'securityToken', 'sharedKeyJson', 'ownerKey'];
+
+/**
+ * Whether a decrypted encryptedNative value looks like garbage rather
+ * than the real thing. Google's tokens are always plain printable ASCII,
+ * ownerKey is always a hex string, and sharedKeyJson is always valid
+ * JSON (or empty) - a value that was accidentally run through the
+ * repeating-XOR legacy decrypt one extra time will practically always
+ * fail one of these checks.
+ *
+ * @param {string} field one of ENCRYPTED_NATIVE_FIELDS
+ * @param {string} value the (decrypted) value to check
+ * @returns {boolean}
+ */
+function looksCorrupted(field, value) {
+    if (!value) {
+        return false;
+    }
+    if (field === 'ownerKey') {
+        return !/^[0-9a-f]+$/i.test(value);
+    }
+    if (field === 'sharedKeyJson') {
+        try {
+            JSON.parse(value);
+            return false;
+        } catch {
+            return true;
+        }
+    }
+    // oauthToken, aasToken, securityToken: plain printable ASCII tokens
+    return /[^\x20-\x7E]/.test(value);
+}
+
 class Googlefindmydevice extends utils.Adapter {
     constructor(options) {
         super({
@@ -93,52 +130,58 @@ class Googlefindmydevice extends utils.Adapter {
     }
 
     /**
-     * One-time repair for instances configured before protectedNative/
-     * encryptedNative moved to their correct top-level location in
-     * io-package.json. js-controller auto-decrypts every field listed
-     * there on each startup - but this adapter used to write them with
-     * plain extendForeignObjectAsync() calls (now fixed to use
-     * updateConfig() instead, see bootstrapFromOauthToken/
-     * bootstrapOwnerKey), so already-plain values got run through
-     * decrypt() once for nothing, turning them to garbage. That legacy
-     * decrypt is a simple repeating-XOR and therefore its own inverse,
-     * so decrypting the garbage a second time restores the original
-     * value. Runs at most once per instance - new instances start with
-     * nativeEncryptionFixed already true (see io-package.json) and skip
-     * this entirely.
+     * Repairs instances configured before protectedNative/encryptedNative
+     * moved to their correct top-level location in io-package.json.
+     * js-controller auto-decrypts every field in ENCRYPTED_NATIVE_FIELDS
+     * on each startup - but this adapter used to write them with plain
+     * extendForeignObjectAsync() calls (now fixed to use updateConfig()
+     * instead, see bootstrapFromOauthToken/bootstrapOwnerKey), so
+     * already-plain values got run through decrypt() once for nothing,
+     * turning them to garbage. That legacy decrypt is a simple
+     * repeating-XOR and therefore its own inverse, so decrypting the
+     * garbage a second time restores the original value.
+     *
+     * Detection is content-based (looksCorrupted()) rather than a
+     * one-time-migration flag: a flag stored in native can end up
+     * merged into already-existing instances by the update/install
+     * process itself, which would make it look like a fresh instance
+     * that never needed the fix and skip it forever. Checking the
+     * actual values instead makes this self-correcting on every
+     * startup, for a negligible cost (a few regex/JSON checks on short
+     * strings) when there's nothing to fix.
      *
      * @returns {Promise<boolean>} true if a restart was triggered
      */
     async repairDoubleDecryptedNative() {
-        if (this.config.nativeEncryptionFixed) {
-            return false;
-        }
+        const patch = {};
 
-        const ENCRYPTED_FIELDS = ['oauthToken', 'aasToken', 'securityToken', 'sharedKeyJson', 'ownerKey'];
-        const patch = { nativeEncryptionFixed: true };
-        let repaired = false;
-
-        for (const field of ENCRYPTED_FIELDS) {
+        for (const field of ENCRYPTED_NATIVE_FIELDS) {
             const value = this.config[field];
-            if (typeof value === 'string' && value) {
-                try {
-                    patch[field] = this.decrypt(value);
-                    repaired = true;
-                } catch (err) {
-                    this.log.warn(
-                        `Could not repair stored "${field}" value, please redo the affected setup step: ${err.message}`,
-                    );
+            if (typeof value !== 'string' || !value || !looksCorrupted(field, value)) {
+                continue;
+            }
+            try {
+                const restored = this.decrypt(value);
+                if (looksCorrupted(field, restored)) {
+                    throw new Error('still looks corrupted after a second decrypt pass');
                 }
+                patch[field] = restored;
+            } catch (err) {
+                this.log.warn(
+                    `Could not repair stored "${field}" value (${err.message}) - please redo the affected setup step.`,
+                );
             }
         }
 
-        if (repaired) {
-            this.log.warn(
-                'Repairing configuration values that were corrupted by an earlier update (see the changelog) - the adapter will restart once more.',
-            );
+        if (Object.keys(patch).length === 0) {
+            return false;
         }
+
+        this.log.warn(
+            'Repairing configuration values that were corrupted by an earlier update (see the changelog) - the adapter will restart once more.',
+        );
         await this.updateConfig(patch);
-        return true; // updateConfig() always restarts the adapter, repaired or not
+        return true;
     }
 
     async logStep2Instructions() {

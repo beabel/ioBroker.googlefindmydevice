@@ -152,6 +152,17 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ### **WORK IN PROGRESS**
 
+### 0.0.3 (2026-09-18)
+
+* (beabel) The 0.0.2 repair below only ran once, gated by a flag stored
+  in the instance config - but some update paths merge new default
+  config keys into already-existing instances, which made that flag
+  read as already-set and skipped the repair entirely. It's now
+  content-based instead: on every startup, each affected field is
+  checked for whether it actually looks corrupted (not valid printable
+  text/hex/JSON) and only repaired if so, which fixes it regardless of
+  how the instance got its defaults.
+
 ### 0.0.2 (2026-09-18)
 
 * (beabel) Fix a config-corruption bug introduced by the `protectedNative`/

@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "googlefindmydevice",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "news": {
+      "0.0.3": {
+        "en": "make the config repair self-correcting instead of a one-time flag",
+        "de": "Konfigurationsreparatur selbstkorrigierend statt einmaliger Markierung",
+        "ru": "восстановление конфигурации теперь самокорректирующееся, а не разовый флаг",
+        "pt": "reparo de configuração agora é autocorretivo em vez de uma marcação única",
+        "nl": "configuratieherstel is nu zelfcorrigerend in plaats van een eenmalige vlag",
+        "fr": "la réparation de configuration est désormais autocorrective plutôt qu'un indicateur unique",
+        "it": "la riparazione della configurazione è ora autocorrettiva invece di un flag una tantum",
+        "es": "la reparación de la configuración ahora es autocorrectiva en lugar de una marca única",
+        "pl": "naprawa konfiguracji jest teraz samokorygująca zamiast jednorazowej flagi",
+        "uk": "відновлення конфігурації тепер самокоригується, а не одноразовий прапорець",
+        "zh-cn": "配置修复改为自我校正,不再依赖一次性标记"
+      },
       "0.0.2": {
         "en": "fix config corruption from the encryptedNative schema fix",
         "de": "Konfigurationsfehler durch den encryptedNative-Schema-Fix behoben",
@@ -92,8 +105,7 @@
     "ownerKey": "",
     "ownerKeyVersion": -1,
     "pollInterval": 15,
-    "deviceSettings": [],
-    "nativeEncryptionFixed": true
+    "deviceSettings": []
   },
   "objects": [],
   "instanceObjects": [
