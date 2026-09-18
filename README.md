@@ -193,11 +193,12 @@ risk; Google's internal APIs are undocumented and may change without notice.
   `CHANGELOG_OLD.md` placeholder, and a Dependabot auto-merge workflow
   for safe patch/minor updates).
 * One checker finding is a known false positive for any GPL-3.0
-  adapter and was deliberately left as-is: the license text's required
-  FSF preamble ("Copyright (C) 2007 Free Software Foundation...") has
-  no email address, which the checker flags the same way it would flag
-  a missing email on the adapter's own copyright line - removing or
-  altering that preamble would violate the GPL-3.0 license itself.
+  adapter and was deliberately left as-is: the mandatory FSF notice
+  inside the full license text names the Free Software Foundation and
+  a year, but a web address rather than an email address, which the
+  checker flags the same way it would flag a missing email on the
+  adapter's own copyright line - removing or altering that notice
+  would violate the GPL-3.0 license itself.
 
 ### 0.0.5 (2026-09-18)
 
