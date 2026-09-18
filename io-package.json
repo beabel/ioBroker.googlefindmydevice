@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "googlefindmydevice",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "news": {
+      "0.0.5": {
+        "en": "fix object hierarchy and role, full i18n on object names (repository review findings)",
+        "de": "Objekthierarchie und Rolle korrigiert, vollstaendige i18n bei Objektnamen (Repository-Review-Funde)",
+        "ru": "исправлена иерархия объектов и роль, полная i18n у имён объектов (по итогам ревью репозитория)",
+        "pt": "corrigida a hierarquia de objetos e a role, i18n completo nos nomes de objetos (achados da revisão do repositório)",
+        "nl": "objecthiërarchie en rol gecorrigeerd, volledige i18n op objectnamen (bevindingen repository-review)",
+        "fr": "hiérarchie d'objets et rôle corrigés, i18n complet sur les noms d'objets (constats de la revue du dépôt)",
+        "it": "corrette la gerarchia degli oggetti e il ruolo, i18n completo sui nomi degli oggetti (rilievi della revisione del repository)",
+        "es": "corregida la jerarquía de objetos y el rol, i18n completo en los nombres de objetos (hallazgos de la revisión del repositorio)",
+        "pl": "naprawiono hierarchię obiektów i rolę, pełne i18n dla nazw obiektów (wyniki przeglądu repozytorium)",
+        "uk": "виправлено ієрархію об'єктів і роль, повне i18n для назв об'єктів (результати перевірки репозиторію)",
+        "zh-cn": "修复对象层级和角色,对象名称补全全部语言(仓库审查发现)"
+      },
       "0.0.4": {
         "en": "invite bluefox as npm maintainer, verify the automated release pipeline",
         "de": "bluefox als npm-Maintainer eingeladen, automatisierte Release-Pipeline verifiziert",
@@ -126,6 +139,12 @@
       "_id": "info",
       "type": "channel",
       "common": { "name": "Information" },
+      "native": {}
+    },
+    {
+      "_id": "devices",
+      "type": "folder",
+      "common": { "name": "Devices" },
       "native": {}
     },
     {

@@ -71,6 +71,208 @@ function looksCorrupted(field, value) {
     return /[^\x20-\x7E]/.test(value);
 }
 
+// Full 11-language common.name translations for the states created in
+// ensureDeviceStates() below - the ioBroker repository checker's object
+// structure check (W1001) expects every i18n name object to carry all of
+// en/de/ru/pt/nl/fr/it/es/pl/uk/zh-cn, not just en/de.
+const I18N = {
+    deviceName: {
+        en: 'Device name',
+        de: 'Geraetename',
+        ru: 'Имя устройства',
+        pt: 'Nome do dispositivo',
+        nl: 'Apparaatnaam',
+        fr: "Nom de l'appareil",
+        it: 'Nome del dispositivo',
+        es: 'Nombre del dispositivo',
+        pl: 'Nazwa urządzenia',
+        uk: 'Назва пристрою',
+        'zh-cn': '设备名称',
+    },
+    manufacturer: {
+        en: 'Manufacturer',
+        de: 'Hersteller',
+        ru: 'Производитель',
+        pt: 'Fabricante',
+        nl: 'Fabrikant',
+        fr: 'Fabricant',
+        it: 'Produttore',
+        es: 'Fabricante',
+        pl: 'Producent',
+        uk: 'Виробник',
+        'zh-cn': '制造商',
+    },
+    model: {
+        en: 'Model',
+        de: 'Modell',
+        ru: 'Модель',
+        pt: 'Modelo',
+        nl: 'Model',
+        fr: 'Modèle',
+        it: 'Modello',
+        es: 'Modelo',
+        pl: 'Model',
+        uk: 'Модель',
+        'zh-cn': '型号',
+    },
+    fastPairModelId: {
+        en: 'Fast Pair model ID',
+        de: 'Fast-Pair-Modell-ID',
+        ru: 'ID модели Fast Pair',
+        pt: 'ID do modelo Fast Pair',
+        nl: 'Fast Pair-model-ID',
+        fr: 'ID de modèle Fast Pair',
+        it: 'ID modello Fast Pair',
+        es: 'ID de modelo Fast Pair',
+        pl: 'ID modelu Fast Pair',
+        uk: 'ID моделі Fast Pair',
+        'zh-cn': 'Fast Pair 型号 ID',
+    },
+    deviceType: {
+        en: 'Device type',
+        de: 'Geraetetyp',
+        ru: 'Тип устройства',
+        pt: 'Tipo de dispositivo',
+        nl: 'Apparaattype',
+        fr: "Type d'appareil",
+        it: 'Tipo di dispositivo',
+        es: 'Tipo de dispositivo',
+        pl: 'Typ urządzenia',
+        uk: 'Тип пристрою',
+        'zh-cn': '设备类型',
+    },
+    pairDate: {
+        en: 'Paired since',
+        de: 'Gekoppelt seit',
+        ru: 'Сопряжено с',
+        pt: 'Emparelhado desde',
+        nl: 'Gekoppeld sinds',
+        fr: 'Associé depuis',
+        it: 'Associato dal',
+        es: 'Emparejado desde',
+        pl: 'Sparowano od',
+        uk: 'Спарено з',
+        'zh-cn': '配对时间',
+    },
+    sharedWithCount: {
+        en: 'Shared with (people)',
+        de: 'Geteilt mit (Personen)',
+        ru: 'Общий доступ (люди)',
+        pt: 'Compartilhado com (pessoas)',
+        nl: 'Gedeeld met (personen)',
+        fr: 'Partagé avec (personnes)',
+        it: 'Condiviso con (persone)',
+        es: 'Compartido con (personas)',
+        pl: 'Udostępniono (osoby)',
+        uk: 'Спільний доступ (люди)',
+        'zh-cn': '共享给(人数)',
+    },
+    latitude: {
+        en: 'Latitude',
+        de: 'Breitengrad',
+        ru: 'Широта',
+        pt: 'Latitude',
+        nl: 'Breedtegraad',
+        fr: 'Latitude',
+        it: 'Latitudine',
+        es: 'Latitud',
+        pl: 'Szerokość geograficzna',
+        uk: 'Широта',
+        'zh-cn': '纬度',
+    },
+    longitude: {
+        en: 'Longitude',
+        de: 'Längengrad',
+        ru: 'Долгота',
+        pt: 'Longitude',
+        nl: 'Lengtegraad',
+        fr: 'Longitude',
+        it: 'Longitudine',
+        es: 'Longitud',
+        pl: 'Długość geograficzna',
+        uk: 'Довгота',
+        'zh-cn': '经度',
+    },
+    altitude: {
+        en: 'Altitude',
+        de: 'Höhe',
+        ru: 'Высота',
+        pt: 'Altitude',
+        nl: 'Hoogte',
+        fr: 'Altitude',
+        it: 'Altitudine',
+        es: 'Altitud',
+        pl: 'Wysokość',
+        uk: 'Висота',
+        'zh-cn': '海拔',
+    },
+    lastSeen: {
+        en: 'Last seen',
+        de: 'Zuletzt gesehen',
+        ru: 'Последнее обнаружение',
+        pt: 'Visto pela última vez',
+        nl: 'Laatst gezien',
+        fr: 'Vu pour la dernière fois',
+        it: 'Ultimo avvistamento',
+        es: 'Visto por última vez',
+        pl: 'Ostatnio widziany',
+        uk: 'Востаннє виявлено',
+        'zh-cn': '最后出现时间',
+    },
+    semanticLocation: {
+        en: 'Semantic location (e.g. "Home")',
+        de: 'Semantischer Standort (z.B. "Zuhause")',
+        ru: 'Смысловое местоположение (например, "Дом")',
+        pt: 'Localização semântica (ex.: "Casa")',
+        nl: 'Semantische locatie (bijv. "Thuis")',
+        fr: 'Emplacement sémantique (p. ex. « Domicile »)',
+        it: 'Posizione semantica (es. "Casa")',
+        es: 'Ubicación semántica (p. ej., "Casa")',
+        pl: 'Lokalizacja semantyczna (np. "Dom")',
+        uk: 'Смислове місцезнаходження (напр., "Дім")',
+        'zh-cn': '语义位置(例如"家")',
+    },
+    accuracy: {
+        en: 'Accuracy',
+        de: 'Genauigkeit',
+        ru: 'Точность',
+        pt: 'Precisão',
+        nl: 'Nauwkeurigheid',
+        fr: 'Précision',
+        it: 'Precisione',
+        es: 'Precisión',
+        pl: 'Dokładność',
+        uk: 'Точність',
+        'zh-cn': '精度',
+    },
+    isOwnReport: {
+        en: 'Reported directly by the tracker (not via a stranger nearby)',
+        de: 'Direkt vom Tracker gemeldet (nicht ueber ein fremdes Geraet in der Naehe)',
+        ru: 'Сообщено напрямую трекером (не через постороннее устройство поблизости)',
+        pt: 'Reportado diretamente pelo rastreador (não por meio de um dispositivo estranho por perto)',
+        nl: 'Direct gemeld door de tracker (niet via een onbekend apparaat in de buurt)',
+        fr: 'Signalé directement par le traceur (pas via un appareil étranger à proximité)',
+        it: 'Segnalato direttamente dal tracker (non tramite un dispositivo sconosciuto nelle vicinanze)',
+        es: 'Informado directamente por el rastreador (no a través de un dispositivo desconocido cercano)',
+        pl: 'Zgłoszone bezpośrednio przez lokalizator (nie za pośrednictwem obcego urządzenia w pobliżu)',
+        uk: 'Повідомлено безпосередньо трекером (не через сторонній пристрій поблизу)',
+        'zh-cn': '由追踪器直接报告(而非通过附近的陌生设备)',
+    },
+    mapsLink: {
+        en: 'Google Maps link',
+        de: 'Google-Maps-Link',
+        ru: 'Ссылка на Google Maps',
+        pt: 'Link do Google Maps',
+        nl: 'Google Maps-link',
+        fr: 'Lien Google Maps',
+        it: 'Link di Google Maps',
+        es: 'Enlace de Google Maps',
+        pl: 'Link do Google Maps',
+        uk: 'Посилання на Google Maps',
+        'zh-cn': 'Google 地图链接',
+    },
+};
+
 class Googlefindmydevice extends utils.Adapter {
     constructor(options) {
         super({
@@ -563,15 +765,17 @@ class Googlefindmydevice extends utils.Adapter {
     }
 
     async ensureDeviceStates(id, name) {
+        // The channel's name is the device's own (arbitrary, user-chosen) name,
+        // not translatable adapter text - a plain string, not an i18n object.
         await this.setObjectNotExistsAsync(`devices.${id}`, {
             type: 'channel',
-            common: { name: { en: name, de: name } },
+            common: { name },
             native: {},
         });
         await this.setObjectNotExistsAsync(`devices.${id}.name`, {
             type: 'state',
             common: {
-                name: { en: 'Device name', de: 'Geraetename' },
+                name: I18N.deviceName,
                 type: 'string',
                 role: 'text',
                 read: true,
@@ -584,7 +788,7 @@ class Googlefindmydevice extends utils.Adapter {
         await this.setObjectNotExistsAsync(`devices.${id}.manufacturer`, {
             type: 'state',
             common: {
-                name: { en: 'Manufacturer', de: 'Hersteller' },
+                name: I18N.manufacturer,
                 type: 'string',
                 role: 'text',
                 read: true,
@@ -594,13 +798,13 @@ class Googlefindmydevice extends utils.Adapter {
         });
         await this.setObjectNotExistsAsync(`devices.${id}.model`, {
             type: 'state',
-            common: { name: { en: 'Model', de: 'Modell' }, type: 'string', role: 'text', read: true, write: false },
+            common: { name: I18N.model, type: 'string', role: 'text', read: true, write: false },
             native: {},
         });
         await this.setObjectNotExistsAsync(`devices.${id}.fastPairModelId`, {
             type: 'state',
             common: {
-                name: { en: 'Fast Pair model ID', de: 'Fast-Pair-Modell-ID' },
+                name: I18N.fastPairModelId,
                 type: 'string',
                 role: 'text',
                 read: true,
@@ -611,7 +815,7 @@ class Googlefindmydevice extends utils.Adapter {
         await this.setObjectNotExistsAsync(`devices.${id}.deviceType`, {
             type: 'state',
             common: {
-                name: { en: 'Device type', de: 'Geraetetyp' },
+                name: I18N.deviceType,
                 type: 'string',
                 role: 'text',
                 read: true,
@@ -622,7 +826,7 @@ class Googlefindmydevice extends utils.Adapter {
         await this.setObjectNotExistsAsync(`devices.${id}.pairDate`, {
             type: 'state',
             common: {
-                name: { en: 'Paired since', de: 'Gekoppelt seit' },
+                name: I18N.pairDate,
                 type: 'number',
                 role: 'value.time',
                 read: true,
@@ -633,7 +837,7 @@ class Googlefindmydevice extends utils.Adapter {
         await this.setObjectNotExistsAsync(`devices.${id}.sharedWithCount`, {
             type: 'state',
             common: {
-                name: { en: 'Shared with (people)', de: 'Geteilt mit (Personen)' },
+                name: I18N.sharedWithCount,
                 type: 'number',
                 role: 'value',
                 read: true,
@@ -645,7 +849,7 @@ class Googlefindmydevice extends utils.Adapter {
         await this.setObjectNotExistsAsync(`devices.${id}.latitude`, {
             type: 'state',
             common: {
-                name: { en: 'Latitude', de: 'Breitengrad' },
+                name: I18N.latitude,
                 type: 'number',
                 role: 'value.gps.latitude',
                 read: true,
@@ -656,7 +860,7 @@ class Googlefindmydevice extends utils.Adapter {
         await this.setObjectNotExistsAsync(`devices.${id}.longitude`, {
             type: 'state',
             common: {
-                name: { en: 'Longitude', de: 'Längengrad' },
+                name: I18N.longitude,
                 type: 'number',
                 role: 'value.gps.longitude',
                 read: true,
@@ -667,7 +871,7 @@ class Googlefindmydevice extends utils.Adapter {
         await this.setObjectNotExistsAsync(`devices.${id}.altitude`, {
             type: 'state',
             common: {
-                name: { en: 'Altitude', de: 'Höhe' },
+                name: I18N.altitude,
                 type: 'number',
                 role: 'value.gps.elevation',
                 unit: 'm',
@@ -679,7 +883,7 @@ class Googlefindmydevice extends utils.Adapter {
         await this.setObjectNotExistsAsync(`devices.${id}.lastSeen`, {
             type: 'state',
             common: {
-                name: { en: 'Last seen', de: 'Zuletzt gesehen' },
+                name: I18N.lastSeen,
                 type: 'number',
                 role: 'value.time',
                 read: true,
@@ -690,7 +894,7 @@ class Googlefindmydevice extends utils.Adapter {
         await this.setObjectNotExistsAsync(`devices.${id}.semanticLocation`, {
             type: 'state',
             common: {
-                name: { en: 'Semantic location (e.g. "Home")', de: 'Semantischer Standort (z.B. "Zuhause")' },
+                name: I18N.semanticLocation,
                 type: 'string',
                 role: 'text',
                 read: true,
@@ -701,7 +905,7 @@ class Googlefindmydevice extends utils.Adapter {
         await this.setObjectNotExistsAsync(`devices.${id}.accuracy`, {
             type: 'state',
             common: {
-                name: { en: 'Accuracy', de: 'Genauigkeit' },
+                name: I18N.accuracy,
                 type: 'number',
                 role: 'value',
                 unit: 'm',
@@ -713,10 +917,7 @@ class Googlefindmydevice extends utils.Adapter {
         await this.setObjectNotExistsAsync(`devices.${id}.isOwnReport`, {
             type: 'state',
             common: {
-                name: {
-                    en: 'Reported directly by the tracker (not via a stranger nearby)',
-                    de: 'Direkt vom Tracker gemeldet (nicht ueber ein fremdes Geraet in der Naehe)',
-                },
+                name: I18N.isOwnReport,
                 type: 'boolean',
                 role: 'indicator',
                 read: true,
@@ -727,9 +928,9 @@ class Googlefindmydevice extends utils.Adapter {
         await this.setObjectNotExistsAsync(`devices.${id}.mapsLink`, {
             type: 'state',
             common: {
-                name: { en: 'Google Maps link', de: 'Google-Maps-Link' },
+                name: I18N.mapsLink,
                 type: 'string',
-                role: 'weblink',
+                role: 'text.url',
                 read: true,
                 write: false,
             },

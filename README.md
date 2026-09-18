@@ -173,6 +173,16 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ### **WORK IN PROGRESS**
 
+### 0.0.5 (2026-09-18)
+
+* (beabel) Fixes found by the ioBroker repository's automated object
+  structure check and cross-referenced against a sibling adapter's full
+  human review: added the missing `devices` parent folder object (the
+  per-device channels existed without it - an incomplete hierarchy),
+  changed the Google Maps link state's role from the invalid `weblink`
+  to the correct `text.url`, and expanded every code-created state's
+  `common.name` from `{en, de}` to all 11 recommended languages.
+
 ### 0.0.4 (2026-09-18)
 
 * (beabel) Invited `bluefox` as an npm maintainer, per ioBroker's
