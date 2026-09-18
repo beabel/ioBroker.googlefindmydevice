@@ -12,6 +12,9 @@
     "type": "git",
     "url": "git+https://github.com/beabel/ioBroker.googlefindmydevice.git"
   },
+  "bugs": {
+    "url": "https://github.com/beabel/ioBroker.googlefindmydevice/issues"
+  },
   "keywords": ["ioBroker", "google", "find my device", "find hub", "tracker", "location", "gps"],
   "engines": {
     "node": ">=22.0.0"

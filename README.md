@@ -142,6 +142,25 @@ feature that could not be fully confirmed working even with live network
 capture. Bluetooth tracker locations (the actual point of this adapter) are
 unaffected by this.
 
+## Publishing (maintainer notes)
+
+This package isn't on npm yet. To publish it:
+
+1. `npm login`, then `npm publish` once from a clean checkout to create the
+   package on npm and claim the name.
+2. On [npmjs.com](https://www.npmjs.com), open the package's Settings and
+   add a **Trusted Publisher**: GitHub Actions, this repository, workflow
+   file `.github/workflows/test-and-release.yml`. This lets the `deploy`
+   job in that workflow publish new versions via OIDC, without ever
+   storing an npm token as a GitHub secret.
+3. From then on, releasing is: bump the version in `package.json` and
+   `io-package.json` (and add a changelog entry above), commit, then push
+   a matching `vX.Y.Z` tag - the `deploy` job picks it up automatically.
+4. Once published, submitting it to
+   [ioBroker.repositories](https://github.com/ioBroker/ioBroker.repositories)
+   (a PR adding it to `sources-dist.json`) makes it installable from the
+   ioBroker Admin adapter list instead of only via npm/GitHub URL.
+
 ## Disclaimer
 
 This project is not affiliated with, endorsed by, or supported by Google.
