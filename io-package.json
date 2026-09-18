@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "googlefindmydevice",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "news": {
+      "0.0.4": {
+        "en": "invite bluefox as npm maintainer, verify the automated release pipeline",
+        "de": "bluefox als npm-Maintainer eingeladen, automatisierte Release-Pipeline verifiziert",
+        "ru": "bluefox приглашён как сопровождающий npm, конвейер автоматического релиза проверен",
+        "pt": "bluefox convidado como mantenedor no npm, pipeline de lançamento automatizado verificado",
+        "nl": "bluefox uitgenodigd als npm-maintainer, geautomatiseerde releasepijplijn geverifieerd",
+        "fr": "bluefox invité en tant que mainteneur npm, pipeline de publication automatisée vérifié",
+        "it": "bluefox invitato come maintainer npm, pipeline di rilascio automatizzata verificata",
+        "es": "bluefox invitado como mantenedor de npm, pipeline de lanzamiento automatizado verificado",
+        "pl": "zaproszono bluefox jako opiekuna npm, zweryfikowano zautomatyzowany potok wydań",
+        "uk": "bluefox запрошено як супровідника npm, перевірено автоматизований конвеєр релізів",
+        "zh-cn": "已邀请 bluefox 作为 npm 维护者,并验证了自动化发布流程"
+      },
       "0.0.3": {
         "en": "make the config repair self-correcting instead of a one-time flag",
         "de": "Konfigurationsreparatur selbstkorrigierend statt einmaliger Markierung",

@@ -171,6 +171,14 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ### **WORK IN PROGRESS**
 
+### 0.0.4 (2026-09-18)
+
+* (beabel) Invited `bluefox` as an npm maintainer, per ioBroker's
+  repository-acceptance requirements. This version also verifies the
+  automated release pipeline (git tag -> GitHub Actions -> npm publish
+  via trusted publisher -> GitHub release) end-to-end for the first
+  time - 0.0.1 through 0.0.3 were published manually.
+
 ### 0.0.3 (2026-09-18)
 
 * (beabel) The 0.0.2 repair below only ran once, gated by a flag stored

@@ -1,6 +1,6 @@
 {
   "name": "iobroker.googlefindmydevice",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "ioBroker adapter to read Google Find Hub / Find My Device tracker locations",
   "license": "GPL-3.0-only",
   "author": {
