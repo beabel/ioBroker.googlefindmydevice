@@ -61,9 +61,13 @@ class Googlefindmydevice extends utils.Adapter {
     }
 
     async onReady() {
+        if (await this.repairDoubleDecryptedNative()) {
+            return; // updateConfig() above already triggers a restart with the corrected values
+        }
+
         if (this.config.oauthToken) {
             await this.bootstrapFromOauthToken();
-            return; // extendForeignObjectAsync below triggers a restart with the new config
+            return; // updateConfig() inside it triggers a restart with the new config
         }
 
         if (!this.config.aasToken || !this.config.androidId || !this.config.email) {
@@ -76,7 +80,7 @@ class Googlefindmydevice extends utils.Adapter {
 
         if (this.config.sharedKeyJson) {
             await this.bootstrapOwnerKey();
-            return; // extendForeignObjectAsync below triggers a restart with the new config
+            return; // updateConfig() inside it triggers a restart with the new config
         }
 
         if (!this.config.ownerKey) {
@@ -86,6 +90,55 @@ class Googlefindmydevice extends utils.Adapter {
         }
 
         await this.pollLoop();
+    }
+
+    /**
+     * One-time repair for instances configured before protectedNative/
+     * encryptedNative moved to their correct top-level location in
+     * io-package.json. js-controller auto-decrypts every field listed
+     * there on each startup - but this adapter used to write them with
+     * plain extendForeignObjectAsync() calls (now fixed to use
+     * updateConfig() instead, see bootstrapFromOauthToken/
+     * bootstrapOwnerKey), so already-plain values got run through
+     * decrypt() once for nothing, turning them to garbage. That legacy
+     * decrypt is a simple repeating-XOR and therefore its own inverse,
+     * so decrypting the garbage a second time restores the original
+     * value. Runs at most once per instance - new instances start with
+     * nativeEncryptionFixed already true (see io-package.json) and skip
+     * this entirely.
+     *
+     * @returns {Promise<boolean>} true if a restart was triggered
+     */
+    async repairDoubleDecryptedNative() {
+        if (this.config.nativeEncryptionFixed) {
+            return false;
+        }
+
+        const ENCRYPTED_FIELDS = ['oauthToken', 'aasToken', 'securityToken', 'sharedKeyJson', 'ownerKey'];
+        const patch = { nativeEncryptionFixed: true };
+        let repaired = false;
+
+        for (const field of ENCRYPTED_FIELDS) {
+            const value = this.config[field];
+            if (typeof value === 'string' && value) {
+                try {
+                    patch[field] = this.decrypt(value);
+                    repaired = true;
+                } catch (err) {
+                    this.log.warn(
+                        `Could not repair stored "${field}" value, please redo the affected setup step: ${err.message}`,
+                    );
+                }
+            }
+        }
+
+        if (repaired) {
+            this.log.warn(
+                'Repairing configuration values that were corrupted by an earlier update (see the changelog) - the adapter will restart once more.',
+            );
+        }
+        await this.updateConfig(patch);
+        return true; // updateConfig() always restarts the adapter, repaired or not
     }
 
     async logStep2Instructions() {
@@ -134,12 +187,13 @@ class Googlefindmydevice extends utils.Adapter {
 
             const { ownerKey, ownerKeyVersion } = await retrieveOwnerKey(spotToken, sharedKey);
 
-            await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, {
-                native: {
-                    sharedKeyJson: '',
-                    ownerKey: ownerKey.toString('hex'),
-                    ownerKeyVersion,
-                },
+            // updateConfig() (not extendForeignObjectAsync) so these
+            // encryptedNative fields actually get encrypted at rest -
+            // js-controller decrypts them again on the next startup.
+            await this.updateConfig({
+                sharedKeyJson: '',
+                ownerKey: ownerKey.toString('hex'),
+                ownerKeyVersion,
             });
 
             this.log.info('Owner key set up successfully. Adapter is restarting...');
@@ -149,9 +203,7 @@ class Googlefindmydevice extends utils.Adapter {
             // Clear it so a bad/expired value doesn't get retried forever on
             // every restart, and so the field is guaranteed empty for a
             // fresh attempt instead of silently keeping the failed one.
-            await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, {
-                native: { sharedKeyJson: '' },
-            });
+            await this.updateConfig({ sharedKeyJson: '' });
         }
     }
 
@@ -168,14 +220,15 @@ class Googlefindmydevice extends utils.Adapter {
                 );
             }
 
-            await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, {
-                native: {
-                    oauthToken: '',
-                    email: exchangeResult.Email,
-                    androidId,
-                    securityToken,
-                    aasToken: exchangeResult.Token,
-                },
+            // updateConfig() (not extendForeignObjectAsync) so these
+            // encryptedNative fields actually get encrypted at rest -
+            // js-controller decrypts them again on the next startup.
+            await this.updateConfig({
+                oauthToken: '',
+                email: exchangeResult.Email,
+                androidId,
+                securityToken,
+                aasToken: exchangeResult.Token,
             });
 
             this.log.info(`Successfully connected as ${exchangeResult.Email}. Adapter is restarting...`);
@@ -185,9 +238,7 @@ class Googlefindmydevice extends utils.Adapter {
             // Clear it so an expired/invalid oauth_token doesn't get retried
             // forever on every restart, and so the field is guaranteed empty
             // for a fresh paste instead of silently keeping the failed one.
-            await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, {
-                native: { oauthToken: '' },
-            });
+            await this.updateConfig({ oauthToken: '' });
         }
     }
 

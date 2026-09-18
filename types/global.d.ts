@@ -14,6 +14,7 @@ declare global {
             ownerKey: string;
             ownerKeyVersion: number;
             pollInterval: number;
+            nativeEncryptionFixed: boolean;
             deviceSettings: {
                 canonicId: string;
                 name: string;
