@@ -50,38 +50,52 @@ Requirements: Node.js >= 22, js-controller >= 6.0.11, Admin >= 7.8.23.
 
 ## Configuration
 
-The adapter needs a one-time login to your Google account. No password is
-ever entered into the adapter - only a short-lived token you copy out of
-your own browser, exactly like you'd copy an API key from some other web
-dashboard.
+The adapter needs a one-time setup, done entirely in its own configuration
+page in ioBroker Admin. It has two parts, and the page always shows only the
+part you still have to do. No password is ever entered into the adapter - you
+only copy values out of your own browser, exactly like you'd copy an API key
+from some other web dashboard.
 
-### Step 1: log in
+### Part 1 of 2: connect your Google account
 
-1. Open `https://accounts.google.com/EmbeddedSetup` in your own browser (a
-   button for this is in the adapter's configuration page).
-2. Don't log in yet. First open your browser's developer tools (`F12`) →
-   "Application" tab → "Cookies" → `https://accounts.google.com`. The list is
-   still empty - that's expected, it fills in once you log in. Leave this
-   developer tools window open.
-3. Now log in with the Google account your trackers are linked to (including
-   two-factor confirmation if enabled). The page may look empty afterwards,
-   or get stuck on something like "I agree" and not visibly proceed - that's
-   normal (it isn't meant for humans), the token is already valid by then.
-4. Switch back to the already-open developer tools and find the row named
-   `oauth_token` (refresh the list if needed):
+This takes about two minutes. The adapter needs access to the Google account
+your trackers are linked to.
+
+1. Click **Open Google login page** in the configuration page (or open
+   `https://accounts.google.com/EmbeddedSetup` yourself). It opens in a new
+   browser tab. Do **not** log in there yet.
+2. In that tab open your browser's developer tools (`F12`) → "Application" tab
+   → "Cookies" → `https://accounts.google.com`. The list is empty at first -
+   that's expected, it fills in once you log in. Leave the developer tools
+   open.
+
+   **From now on the clock is ticking:** the value from step 4 only stays valid
+   for a short time, so do steps 3, 4 and 5 one right after the other.
+
+3. Log in on that page with the Google account your trackers are linked to
+   (including two-factor confirmation if enabled). The page may look empty
+   afterwards, or get stuck on something like "I agree" and not visibly
+   proceed - that's normal (it isn't meant for humans), the token is already
+   valid by then.
+4. Switch back to the open developer tools and refresh the cookie list until
+   a row named `oauth_token` appears:
 
    ![Finding oauth_token in DevTools' Application > Cookies panel](docs/step1-oauth-token.png)
 
-5. Copy its full value, paste it into the adapter instance's configuration
-   page (in ioBroker Admin) and save.
+5. Copy the complete value of that row, paste it into the field "Google login
+   token (oauth_token)" of the configuration page and click **Connect**.
 
-The `oauth_token` value only stays valid briefly, so do steps 3-5 in quick
-succession - step 2 can be done beforehand without any rush.
+The adapter exchanges the value for a long-lived token right away. If Google
+rejects it (usually because it expired), the page tells you immediately and
+you paste a fresh value. On success the page switches to Part 2 on its own
+and asks you to save the configuration. From then on the adapter refreshes
+what it needs by itself.
 
-The adapter exchanges that value for a long-lived token on its own, clears
-the pasted value from its configuration, and restarts. From then on it
-refreshes what it needs by itself - you only repeat this if Google
-invalidates the session at some point down the line.
+Once an account is connected, the Part 1 instructions and the token field
+disappear. If Google invalidates the session some day, or you want to use
+another account, click **Connect a different account**. It clears the saved
+login, the decryption key and the tracker table from the page and asks you to
+save; afterwards you repeat Part 1.
 
 **Why not automate this login?** An earlier version of this project tried
 driving a real browser (Puppeteer) through the login. Google reliably
@@ -91,32 +105,35 @@ evasion tooling, which this project deliberately does not use. Logging in
 yourself, in your own normal browser, sidesteps the problem entirely since
 there is nothing to detect.
 
-### Step 2: unlock location decryption
+### Part 2 of 2: unlock the locations
 
-Once Step 1 is done, the adapter restarts and the configuration page shows
-Step 2, which unlocks the end-to-end encryption key. This also happens
-entirely in your own browser:
+Google encrypts tracker locations end-to-end. Without this part the adapter
+still lists your trackers by name, but it cannot show real coordinates. Part 2
+unlocks that encryption once, again entirely in your own browser. There is no
+time pressure here - you can do Part 2 in your own time. The configuration
+page shows it as soon as Part 1 is done:
 
-1. Click **Open Google's unlock page** in the configuration page. It opens in
-   a new tab. (The same link is also written to the instance log, level
-   "warn".)
-2. On that page open developer tools (`F12`) and switch to the **Console** tab.
-3. Clear the console (the 🚫 icon), just to keep things tidy.
-4. Chrome blocks pasting into the console by default. Type `allow pasting`
-   manually and press Enter.
-5. Back in the configuration page click **Show the script for the console**,
-   copy the script with the copy button (it is also in the instance log) and
-   paste it into the console. Press Enter. Complete whatever Google asks for
-   on the page (e.g. entering a phone's screen-lock PIN to confirm it's
-   really you), then click "Weiter"/"Next":
+1. Click **Open Google's unlock page**. It opens in a new browser tab. (The
+   same link is also written to the instance log, level "warn".)
+2. In that tab open the developer tools (`F12`) and switch to the **Console**
+   tab. Chrome blocks pasting into the console by default: type
+   `allow pasting` manually and press Enter.
+3. Back in the configuration page click **Show the script for the console**,
+   copy the script with the copy button (it is also in the instance log), paste
+   it into the console and press Enter.
+4. Do what Google asks on that page (e.g. entering a phone's screen-lock PIN to
+   confirm it's really you) and click "Weiter"/"Next". A text field then
+   appears at the top of that page:
 
    ![Console tab with the pasted script, and the PIN/confirmation step of the encryption-unlock page](docs/step2-console.png)
 
-6. A text field appears at the top of the page with the captured result.
-   Copy it completely, paste it into the adapter's configuration page under
-   "Result from the browser console (JSON)" and save.
+5. Copy the complete content of that text field, paste it into the field
+   "Result from the browser console (JSON)" of the configuration page and
+   click **Verify and unlock**. A wrong or incomplete paste is reported in the
+   page right away. On success the page asks you to save the configuration,
+   and Part 2 disappears.
 
-The screenshots of both steps are also shown in the configuration page; click
+The screenshots of both parts are also shown in the configuration page; click
 one to enlarge it.
 
 ### Poll interval
@@ -134,7 +151,7 @@ Bluetooth (via whichever nearby Android phone hears it), which **noticeably
 uses that tracker's battery**. Because of that, this adapter does **not**
 request locations for any tracker automatically.
 
-Once Step 2 (location decryption) is set up, a table appears in the adapter
+Once Part 2 (location decryption) is set up, a table appears in the adapter
 configuration listing every discovered tracker with two settings each:
 
 - **Request location** - off by default for every newly discovered tracker.
@@ -220,8 +237,14 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ### **WORK IN PROGRESS**
 
-* (beabel) **NEW**: Step 2 of the setup is done from the configuration page: a button opens Google's unlock page,
-  another shows the console script with a copy button, and the screenshots of both steps are shown in the page.
+* (beabel) **ENHANCED**: the setup shows only what is still needed. The steps work through buttons (**Connect**,
+  **Verify and unlock**) whose result appears in the page at once, so Part 1 and its token field disappear as soon
+  as the account is connected and a wrong or expired value is reported immediately instead of only in the log.
+  **Connect a different account** starts over. The instructions are split into Part 1 (connect the account) and
+  Part 2 (unlock the locations), each with five numbered steps, and the token and console-result fields no longer
+  trigger the browser's password suggestions (they are still stored encrypted).
+* (beabel) **NEW**: Part 2 of the setup (unlocking locations) is done from the configuration page: a button opens Google's unlock page,
+  another shows the console script with a copy button, and the screenshots of both parts are shown in the page.
   The log still carries the same instructions.
 * (beabel) **ENHANCED**: BREAKING - every tracker is now a `device` object directly below the instance
   (`googlefindmydevice.0.<id>.*`) instead of a channel in a `devices` folder
