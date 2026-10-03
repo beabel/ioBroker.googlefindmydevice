@@ -93,25 +93,31 @@ there is nothing to detect.
 
 ### Step 2: unlock location decryption
 
-Once Step 1 is done, the adapter restarts and logs a link and a small script
-(see the instance log, level "warn") needed to unlock the end-to-end
-encryption key. This also happens entirely in your own browser:
+Once Step 1 is done, the adapter restarts and the configuration page shows
+Step 2, which unlocks the end-to-end encryption key. This also happens
+entirely in your own browser:
 
-1. Open the link from the log in your browser.
-2. Open developer tools (`F12`).
-3. Switch to the **Console** tab.
-4. Clear the console (the 🚫 icon), just to keep things tidy.
-5. Chrome blocks pasting into the console by default. Type `allow pasting`
+1. Click **Open Google's unlock page** in the configuration page. It opens in
+   a new tab. (The same link is also written to the instance log, level
+   "warn".)
+2. On that page open developer tools (`F12`) and switch to the **Console** tab.
+3. Clear the console (the 🚫 icon), just to keep things tidy.
+4. Chrome blocks pasting into the console by default. Type `allow pasting`
    manually and press Enter.
-6. Now paste the script from the log and press Enter. Complete whatever
-   Google asks for on the page (e.g. entering a phone's screen-lock PIN to
-   confirm it's really you), then click "Weiter"/"Next":
+5. Back in the configuration page click **Show the script for the console**,
+   copy the script with the copy button (it is also in the instance log) and
+   paste it into the console. Press Enter. Complete whatever Google asks for
+   on the page (e.g. entering a phone's screen-lock PIN to confirm it's
+   really you), then click "Weiter"/"Next":
 
    ![Console tab with the pasted script, and the PIN/confirmation step of the encryption-unlock page](docs/step2-console.png)
 
-7. A text field appears at the top of the page with the captured result.
+6. A text field appears at the top of the page with the captured result.
    Copy it completely, paste it into the adapter's configuration page under
    "Result from the browser console (JSON)" and save.
+
+The screenshots of both steps are also shown in the configuration page; click
+one to enlarge it.
 
 ### Poll interval
 
@@ -214,6 +220,9 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ### **WORK IN PROGRESS**
 
+* (beabel) **NEW**: Step 2 of the setup is done from the configuration page: a button opens Google's unlock page,
+  another shows the console script with a copy button, and the screenshots of both steps are shown in the page.
+  The log still carries the same instructions.
 * (beabel) **ENHANCED**: BREAKING - every tracker is now a `device` object directly below the instance
   (`googlefindmydevice.0.<id>.*`) instead of a channel in a `devices` folder
   (`googlefindmydevice.0.devices.<id>.*`). The old tree is removed automatically on the first start; update
