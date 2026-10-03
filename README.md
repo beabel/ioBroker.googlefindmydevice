@@ -236,10 +236,11 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ## Changelog
 
-### **WORK IN PROGRESS**
+### 0.1.2 (2026-10-03)
 
 * (beabel) **ENHANCED**: admin translations moved to the short i18n format (`admin/i18n/<lang>.json`); updated
   `@iobroker/testing` to 6.3.0.
+* (beabel) **ENHANCED**: the Google account's email address is no longer written to the log.
 
 ### 0.1.1 (2026-10-03)
 
@@ -286,12 +287,6 @@ risk; Google's internal APIs are undocumented and may change without notice.
   timers instead of raw `setInterval`/`setTimeout` in `lib/mcs-client.js`, stale `news` entries for versions that
   were never published, `tsconfig.json` extends `@tsconfig/node22`, `json.schemas` in `.vscode/settings.json`,
   `CHANGELOG_OLD.md`, Dependabot auto-merge workflow.
-
-### 0.0.5 (2026-09-18)
-
-* (beabel) **FIXED**: findings of the object structure check: added the missing parent object of the per-device
-  channels, replaced the invalid `weblink` role of the Google Maps link by `text.url`, and expanded all object
-  names to the 11 recommended languages.
 
 Older changelog entries: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
 

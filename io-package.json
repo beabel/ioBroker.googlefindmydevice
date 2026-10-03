@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "googlefindmydevice",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "news": {
+      "0.1.2": {
+        "en": "admin translations moved to the short i18n format; updated @iobroker/testing to 6.3.0; the Google email address is no longer logged",
+        "de": "Admin-Übersetzungen ins kurze i18n-Format verschoben; @iobroker/testing auf 6.3.0 aktualisiert; die Google-E-Mail-Adresse wird nicht mehr geloggt",
+        "ru": "переводы админ-интерфейса перенесены в короткий формат i18n; @iobroker/testing обновлён до 6.3.0; адрес электронной почты Google больше не пишется в журнал",
+        "pt": "traduções do admin movidas para o formato curto i18n; @iobroker/testing atualizado para 6.3.0; o e-mail da conta Google já não é registado no log",
+        "nl": "admin-vertalingen verplaatst naar het korte i18n-formaat; @iobroker/testing bijgewerkt naar 6.3.0; het Google-e-mailadres wordt niet meer gelogd",
+        "fr": "traductions de l'admin déplacées vers le format court i18n ; @iobroker/testing mis à jour vers 6.3.0; l'adresse e-mail Google n'est plus écrite dans le journal",
+        "it": "traduzioni dell'admin spostate nel formato breve i18n; @iobroker/testing aggiornato alla 6.3.0; l'indirizzo e-mail Google non viene più scritto nel log",
+        "es": "traducciones del admin movidas al formato corto i18n; @iobroker/testing actualizado a 6.3.0; el correo de Google ya no se escribe en el registro",
+        "pl": "tłumaczenia panelu admin przeniesiono do krótkiego formatu i18n; zaktualizowano @iobroker/testing do 6.3.0; adres e-mail Google nie jest już zapisywany w logu",
+        "uk": "переклади адмінки перенесено в короткий формат i18n; @iobroker/testing оновлено до 6.3.0; адресу електронної пошти Google більше не записують у журнал",
+        "zh-cn": "管理界面翻译已迁移到简短的 i18n 格式；@iobroker/testing 已更新到 6.3.0；不再将 Google 邮箱地址写入日志"
+      },
       "0.1.1": {
         "en": "the configuration page now tells you to start the instance first (its buttons only work while the instance is running)",
         "de": "Die Konfigurationsseite weist jetzt darauf hin, zuerst die Instanz zu starten (die Buttons funktionieren nur bei laufender Instanz)",
@@ -80,19 +93,6 @@
         "pl": "zaproszono bluefox jako opiekuna npm, zweryfikowano zautomatyzowany potok wydań",
         "uk": "bluefox запрошено як супровідника npm, перевірено автоматизований конвеєр релізів",
         "zh-cn": "已邀请 bluefox 作为 npm 维护者,并验证了自动化发布流程"
-      },
-      "0.0.3": {
-        "en": "make the config repair self-correcting instead of a one-time flag",
-        "de": "Konfigurationsreparatur selbstkorrigierend statt einmaliger Markierung",
-        "ru": "восстановление конфигурации теперь самокорректирующееся, а не разовый флаг",
-        "pt": "reparo de configuração agora é autocorretivo em vez de uma marcação única",
-        "nl": "configuratieherstel is nu zelfcorrigerend in plaats van een eenmalige vlag",
-        "fr": "la réparation de configuration est désormais autocorrective plutôt qu'un indicateur unique",
-        "it": "la riparazione della configurazione è ora autocorrettiva invece di un flag una tantum",
-        "es": "la reparación de la configuración ahora es autocorrectiva en lugar de una marca única",
-        "pl": "naprawa konfiguracji jest teraz samokorygująca zamiast jednorazowej flagi",
-        "uk": "відновлення конфігурації тепер самокоригується, а не одноразовий прапорець",
-        "zh-cn": "配置修复改为自我校正,不再依赖一次性标记"
       }
     },
     "titleLang": {

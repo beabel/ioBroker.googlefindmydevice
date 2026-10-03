@@ -322,7 +322,7 @@ class Googlefindmydevice extends utils.Adapter {
             // js-controller decrypts them again on the next startup.
             await this.updateConfig({ oauthToken: '', ...account });
 
-            this.log.info(`Successfully connected as ${account.email}. Adapter is restarting...`);
+            this.log.info('Successfully connected to the Google account. Adapter is restarting...');
         } catch (err) {
             this.log.error(`Setup failed: ${err.message}`);
             await this.setState('info.connection', false, true);
@@ -752,7 +752,7 @@ class Googlefindmydevice extends utils.Adapter {
             return { error: 'Please paste the oauth_token value first.' };
         }
         const account = await this.exchangeLoginToken(token.trim());
-        this.log.info(`Successfully connected as ${account.email}.`);
+        this.log.info('Successfully connected to the Google account.');
         return { native: { oauthToken: '', ...account }, saveConfig: true };
     }
 

@@ -3,6 +3,12 @@
 See the "Changelog" section in [README.md](README.md) for the current
 history. Entries move here once that section grows too long.
 
+## 0.0.5 (2026-09-18)
+
+* (beabel) **FIXED**: findings of the object structure check: added the missing parent object of the per-device
+  channels, replaced the invalid `weblink` role of the Google Maps link by `text.url`, and expanded all object
+  names to the 11 recommended languages.
+
 ## 0.0.4 (2026-09-18)
 
 * (beabel) **CI/CD**: verified the automated release pipeline (git tag, GitHub Actions, npm trusted publishing,
