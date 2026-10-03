@@ -235,7 +235,7 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ## Changelog
 
-### **WORK IN PROGRESS**
+### 0.1.0 (2026-10-03)
 
 * (beabel) **ENHANCED**: the setup shows only what is still needed. The steps work through buttons (**Connect**,
   **Verify and unlock**) whose result appears in the page at once, so Part 1 and its token field disappear as soon
@@ -285,11 +285,6 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 * (beabel) **CI/CD**: verified the automated release pipeline (git tag, GitHub Actions, npm trusted publishing,
   GitHub release) end to end; invited `bluefox` as npm maintainer.
-
-### 0.0.3 (2026-09-18)
-
-* (beabel) **FIXED**: the repair of corrupted configuration values now checks the actual values on every start
-  instead of relying on a one-time flag in the instance config.
 
 Older changelog entries: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
 

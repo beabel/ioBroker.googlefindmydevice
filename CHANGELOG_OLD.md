@@ -3,6 +3,11 @@
 See the "Changelog" section in [README.md](README.md) for the current
 history. Entries move here once that section grows too long.
 
+## 0.0.3 (2026-09-18)
+
+* (beabel) **FIXED**: the repair of corrupted configuration values now checks the actual values on every start
+  instead of relying on a one-time flag in the instance config.
+
 ## 0.0.2 (2026-09-18)
 
 * (beabel) Fix a config-corruption bug introduced by the `protectedNative`/

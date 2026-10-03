@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "googlefindmydevice",
-    "version": "0.0.7",
+    "version": "0.1.0",
     "news": {
+      "0.1.0": {
+        "en": "guided two-part setup that shows only what is still needed (buttons Connect / Verify and unlock); trackers are now devices directly below the instance (BREAKING: state IDs changed); more specific state roles; fewer database writes; fixes",
+        "de": "Geführte Einrichtung in zwei Teilen, die nur zeigt, was noch nötig ist (Buttons Verbinden / Prüfen und freischalten); Tracker sind jetzt Geräte direkt unter der Instanz (ACHTUNG: State-IDs geändert); genauere State-Rollen; weniger Schreibzugriffe; Fehlerkorrekturen",
+        "ru": "пошаговая настройка из двух частей, показывающая только то, что ещё нужно (кнопки «Подключить» / «Проверить и разблокировать»); трекеры теперь устройства непосредственно под экземпляром (ВАЖНО: идентификаторы состояний изменились); более точные роли состояний; меньше записей в базу данных; исправления",
+        "pt": "configuração guiada em duas partes que mostra apenas o que ainda é necessário (botões Conectar / Verificar e desbloquear); os rastreadores agora são dispositivos diretamente abaixo da instância (IMPORTANTE: IDs de estado alterados); funções de estado mais específicas; menos gravações no banco de dados; correções",
+        "nl": "begeleide installatie in twee delen die alleen toont wat nog nodig is (knoppen Verbinden / Controleren en ontgrendelen); trackers zijn nu apparaten direct onder de instantie (LET OP: state-ID's gewijzigd); specifiekere state-rollen; minder schrijfacties naar de database; fixes",
+        "fr": "configuration guidée en deux parties qui n'affiche que ce qui reste nécessaire (boutons Connecter / Vérifier et déverrouiller) ; les trackers sont désormais des appareils directement sous l'instance (IMPORTANT : ID d'état modifiés) ; rôles d'état plus précis ; moins d'écritures en base de données ; corrections",
+        "it": "configurazione guidata in due parti che mostra solo ciò che serve ancora (pulsanti Connetti / Verifica e sblocca); i tracker sono ora dispositivi direttamente sotto l'istanza (IMPORTANTE: ID di stato modificati); ruoli di stato più specifici; meno scritture nel database; correzioni",
+        "es": "configuración guiada en dos partes que solo muestra lo que aún hace falta (botones Conectar / Verificar y desbloquear); los rastreadores son ahora dispositivos directamente bajo la instancia (IMPORTANTE: ID de estado modificados); roles de estado más específicos; menos escrituras en la base de datos; correcciones",
+        "pl": "konfiguracja prowadzona w dwóch częściach, pokazująca tylko to, co jest jeszcze potrzebne (przyciski Połącz / Sprawdź i odblokuj); trackery są teraz urządzeniami bezpośrednio pod instancją (WAŻNE: zmieniono identyfikatory stanów); dokładniejsze role stanów; mniej zapisów do bazy danych; poprawki",
+        "uk": "покрокове налаштування з двох частин, що показує лише те, що ще потрібно (кнопки «Підключити» / «Перевірити та розблокувати»); трекери тепер пристрої безпосередньо під екземпляром (УВАГА: змінено ідентифікатори станів); точніші ролі станів; менше записів у базу даних; виправлення",
+        "zh-cn": "分两部分的引导式设置，仅显示仍然需要的内容（“连接”/“验证并解锁”按钮）；追踪器现在是实例下的直接设备（重要：状态 ID 已更改）；更精确的状态角色；减少数据库写入；问题修复"
+      },
       "0.0.7": {
         "en": "clean up ESLint/JSDoc findings; add @alcalzone/release-script for future releases",
         "de": "ESLint/JSDoc-Funde bereinigt; @alcalzone/release-script fuer kuenftige Releases hinzugefuegt",
