@@ -7,7 +7,7 @@
     "name": "Maik Ries",
     "email": "iobroker@ne-xt.de"
   },
-  "homepage": "https://github.com/beabel/ioBroker.googlefindmydevice",
+  "homepage": "https://iobrokergoogle.ne-xt.de/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/beabel/ioBroker.googlefindmydevice.git"
@@ -40,8 +40,9 @@
     "test:unit": "node --test ./test/*.test.js",
     "test:package": "mocha test/package --exit",
     "test:integration": "mocha test/integration --exit --timeout 60000",
+    "pretest": "node scripts/validate-translations.js",
     "test": "npm run test:unit && npm run test:package",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "check": "tsc --noEmit -p tsconfig.check.json",
     "release": "release-script"
   },
