@@ -12,8 +12,6 @@ device- and item-tracking service, and expose them as ioBroker states.
 > below for why. For those, keep using Google's own app or
 > [google.com/android/find](https://www.google.com/android/find).
 
-**Requirements:** Node.js >= 22, js-controller >= 6.0.11, Admin >= 7.8.23.
-
 ## Status: early development
 
 Google does not offer an official API for Find Hub. This adapter is being built
@@ -38,15 +36,26 @@ Currently implemented and confirmed working against real Google accounts:
   enable/interval setting per device in the adapter configuration - see
   **Requesting locations** below.
 - All setup happens inside the adapter's own configuration page in ioBroker
-  Admin - see **Setup** below. No separate program or browser automation is
-  needed or used.
+  Admin - see **Configuration** below. No separate program or browser
+  automation is needed or used.
 
-## Setup
+## Installation
+
+Requirements: Node.js >= 22, js-controller >= 6.0.11, Admin >= 7.8.23.
+
+1. In ioBroker Admin open **Adapters**, search for "Google Find My Device"
+   and install it.
+2. Create an instance. New instances start disabled; finish the
+   [Configuration](#configuration) below, then enable the instance.
+
+## Configuration
 
 The adapter needs a one-time login to your Google account. No password is
 ever entered into the adapter - only a short-lived token you copy out of
 your own browser, exactly like you'd copy an API key from some other web
-dashboard:
+dashboard.
+
+### Step 1: log in
 
 1. Open `https://accounts.google.com/EmbeddedSetup` in your own browser (a
    button for this is in the adapter's configuration page).
@@ -104,7 +113,13 @@ encryption key. This also happens entirely in your own browser:
    Copy it completely, paste it into the adapter's configuration page under
    "Result from the browser console (JSON)" and save.
 
-## Requesting locations
+### Poll interval
+
+How often tracker names and metadata are refreshed, in minutes (1 to 1440,
+default 15). This does not contact the trackers themselves - see below for
+that.
+
+### Requesting locations
 
 Google only ever hands out a location report if something actually asked the
 tracker for one recently - listing devices alone almost never returns
@@ -127,6 +142,43 @@ Device names, manufacturer/model info and pairing date are always kept
 up to date on the regular poll interval regardless of these settings, since
 reading that doesn't touch the tracker itself.
 
+## Usage
+
+### Objects
+
+Every tracker is a `device` object directly below the instance,
+`googlefindmydevice.0.<id>`, named like the tracker in Find Hub. `<id>` is
+Google's identifier of the tracker with unsafe characters replaced by `_`.
+
+| State | Type | Description |
+| --- | --- | --- |
+| `<id>.name` | string | Name of the tracker |
+| `<id>.manufacturer` | string | Manufacturer |
+| `<id>.model` | string | Model |
+| `<id>.fastPairModelId` | string | Fast Pair model ID |
+| `<id>.deviceType` | string | Device type |
+| `<id>.pairDate` | number | Pairing date (timestamp in ms) |
+| `<id>.sharedWithCount` | number | Number of people the tracker is shared with |
+| `<id>.latitude` / `<id>.longitude` | number | Coordinates of the last GPS report |
+| `<id>.altitude` | number | Altitude in metres |
+| `<id>.accuracy` | number | Accuracy in metres |
+| `<id>.lastSeen` | number | Time of the last report (timestamp in ms) |
+| `<id>.semanticLocation` | string | Named place such as "Home", if Google reports one instead of coordinates |
+| `<id>.isOwnReport` | boolean | `true` if the tracker reported directly, `false` if a stranger's device nearby relayed it |
+| `<id>.mapsLink` | string | Google Maps link to the last GPS position |
+| `info.connection` | boolean | `true` while the last poll succeeded |
+
+A report is either a GPS position or a semantic location. For a semantic
+report `accuracy`, `isOwnReport` and `mapsLink` are cleared so they never
+describe an older position; `lastSeen` is always updated.
+
+### Upgrading from 0.0.7 or older
+
+Earlier versions placed trackers in a `devices` folder
+(`googlefindmydevice.0.devices.<id>.*`). The IDs no longer contain `devices`.
+The old folder is removed automatically on the first start; update scripts,
+visualizations, aliases and history settings that still use the old IDs.
+
 ## Why not phone/tablet locations too?
 
 Investigated and deliberately not implemented. Phones and tablets linked to
@@ -144,24 +196,13 @@ feature that could not be fully confirmed working even with live network
 capture. Bluetooth tracker locations (the actual point of this adapter) are
 unaffected by this.
 
-## Publishing (maintainer notes)
+## Support
 
-This package isn't on npm yet. To publish it:
-
-1. `npm login`, then `npm publish` once from a clean checkout to create the
-   package on npm and claim the name.
-2. On [npmjs.com](https://www.npmjs.com), open the package's Settings and
-   add a **Trusted Publisher**: GitHub Actions, this repository, workflow
-   file `.github/workflows/test-and-release.yml`. This lets the `deploy`
-   job in that workflow publish new versions via OIDC, without ever
-   storing an npm token as a GitHub secret.
-3. From then on, releasing is: bump the version in `package.json` and
-   `io-package.json` (and add a changelog entry above), commit, then push
-   a matching `vX.Y.Z` tag - the `deploy` job picks it up automatically.
-4. Once published, submitting it to
-   [ioBroker.repositories](https://github.com/ioBroker/ioBroker.repositories)
-   (a PR adding it to `sources-dist.json`) makes it installable from the
-   ioBroker Admin adapter list instead of only via npm/GitHub URL.
+- Project website: [iobrokergoogle.ne-xt.de](https://iobrokergoogle.ne-xt.de/)
+- Bugs and feature requests:
+  [GitHub issues](https://github.com/beabel/ioBroker.googlefindmydevice/issues)
+- Questions and feedback:
+  [ioBroker forum thread](https://forum.iobroker.net/topic/85388/test-adapter-googlefindmydevice-v0.0.x-github)
 
 ## Disclaimer
 
@@ -171,76 +212,54 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ## Changelog
 
+### **WORK IN PROGRESS**
+
+* (beabel) **ENHANCED**: BREAKING - every tracker is now a `device` object directly below the instance
+  (`googlefindmydevice.0.<id>.*`) instead of a channel in a `devices` folder
+  (`googlefindmydevice.0.devices.<id>.*`). The old tree is removed automatically on the first start; update
+  scripts and visualizations that use the old state IDs.
+* (beabel) **ENHANCED**: more specific state roles (`info.name`, `info.model`, `value.gps.accuracy`).
+* (beabel) **ENHANCED**: objects are written once per run and states only when their value changes.
+* (beabel) **FIXED**: no new timers are started while the adapter is shutting down.
+* (beabel) **FIXED**: two error messages that reached the log in German are now English.
+* (beabel) **FIXED**: new instances start disabled.
+* (beabel) **ENHANCED**: README restructured (Installation, Configuration, Usage, Support); admin translations
+  moved to `admin/i18n/<lang>/translations.json`.
+* (beabel) **TESTING**: unit tests for location decryption (own and relayed reports, wrong key, tampering),
+  configuration repair, interval limits, object definitions and the MCS client; linting fails on any warning.
+
 ### 0.0.7 (2026-09-18)
 
-* (beabel) Replaced the `any`-casts introduced for the `@tsconfig/node22`
-  migration with specific types, and filled in a few missing JSDoc
-  parameter/return descriptions the CI linter flagged in the same
-  functions.
-* (beabel) Added `@alcalzone/release-script` (with its `iobroker` and
-  `license` plugins) as a devDependency for future releases - it
-  automates the version bump, the multi-language `news`/changelog sync
-  and the git tag in one step. Purely a release-time tool: it is not
-  part of the published npm package and does not touch the adapter's
-  runtime code. This release (0.0.7) is the first one cut with it.
+* (beabel) **ENHANCED**: replaced the `any`-casts introduced for the `@tsconfig/node22` migration with specific
+  types and filled in missing JSDoc descriptions.
+* (beabel) **CI/CD**: added `@alcalzone/release-script` (release-time tool only, not part of the published package).
 
 ### 0.0.6 (2026-09-18)
 
-* (beabel) The 0.0.5 fixes above only applied to newly-discovered
-  devices, since `ensureDeviceStates()` used `setObjectNotExistsAsync()`
-  - which creates an object once and then never touches it again, so
-  already-existing installations kept the old (incomplete/incorrect)
-  object definitions forever. Switched to `extendObjectAsync()`, which
-  merges in the current definition on every poll, so existing installs
-  self-heal automatically.
-* Also fixed everything flagged by the real ioBroker repository checker
-  on submission: two `node:`-prefix-less `require()` calls, a raw
-  `setInterval`/`setTimeout` in `lib/mcs-client.js` (now routed through
-  adapter-managed timers, same as the rest of the adapter), stale
-  `news` entries in `io-package.json` for versions that were never
-  actually published to npm, plus several suggestions (`tsconfig.json`
-  now extends `@tsconfig/node22`, `.vscode/settings.json` has
-  `json.schemas` for `io-package.json`/`jsonConfig.json`, a
-  `CHANGELOG_OLD.md` placeholder, and a Dependabot auto-merge workflow
-  for safe patch/minor updates).
-* One checker finding is a known false positive for any GPL-3.0
-  adapter and was deliberately left as-is: the mandatory FSF notice
-  inside the full license text names the Free Software Foundation and
-  a year, but a web address rather than an email address, which the
-  checker flags the same way it would flag a missing email on the
-  adapter's own copyright line - removing or altering that notice
-  would violate the GPL-3.0 license itself.
+* (beabel) **FIXED**: the 0.0.5 fixes only applied to newly discovered devices, because existing objects were
+  never updated. Object definitions are now merged in with `extendObject`, so existing installs pick up changes.
+* (beabel) **FIXED**: findings of the ioBroker repository checker: `node:`-prefixed built-in imports, adapter
+  timers instead of raw `setInterval`/`setTimeout` in `lib/mcs-client.js`, stale `news` entries for versions that
+  were never published, `tsconfig.json` extends `@tsconfig/node22`, `json.schemas` in `.vscode/settings.json`,
+  `CHANGELOG_OLD.md`, Dependabot auto-merge workflow.
 
 ### 0.0.5 (2026-09-18)
 
-* (beabel) Fixes found by the ioBroker repository's automated object
-  structure check and cross-referenced against a sibling adapter's full
-  human review: added the missing `devices` parent folder object (the
-  per-device channels existed without it - an incomplete hierarchy),
-  changed the Google Maps link state's role from the invalid `weblink`
-  to the correct `text.url`, and expanded every code-created state's
-  `common.name` from `{en, de}` to all 11 recommended languages.
+* (beabel) **FIXED**: findings of the object structure check: added the missing parent object of the per-device
+  channels, replaced the invalid `weblink` role of the Google Maps link by `text.url`, and expanded all object
+  names to the 11 recommended languages.
 
 ### 0.0.4 (2026-09-18)
 
-* (beabel) Invited `bluefox` as an npm maintainer, per ioBroker's
-  repository-acceptance requirements. This version also verifies the
-  automated release pipeline (git tag -> GitHub Actions -> npm publish
-  via trusted publisher -> GitHub release) end-to-end for the first
-  time - 0.0.1 through 0.0.3 were published manually.
+* (beabel) **CI/CD**: verified the automated release pipeline (git tag, GitHub Actions, npm trusted publishing,
+  GitHub release) end to end; invited `bluefox` as npm maintainer.
 
 ### 0.0.3 (2026-09-18)
 
-* (beabel) The 0.0.2 repair below only ran once, gated by a flag stored
-  in the instance config - but some update paths merge new default
-  config keys into already-existing instances, which made that flag
-  read as already-set and skipped the repair entirely. It's now
-  content-based instead: on every startup, each affected field is
-  checked for whether it actually looks corrupted (not valid printable
-  text/hex/JSON) and only repaired if so, which fixes it regardless of
-  how the instance got its defaults.
+* (beabel) **FIXED**: the repair of corrupted configuration values now checks the actual values on every start
+  instead of relying on a one-time flag in the instance config.
 
-[CHANGELOG_OLD.md](CHANGELOG_OLD.md).
+Older changelog entries: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
 
 ## Attribution
 
