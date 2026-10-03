@@ -17,8 +17,12 @@ class FakeAdapter {
     this.calls = [];
     this.objects = new Map();
     this.timers = [];
+    this.sent = [];
   }
   on() {}
+  sendTo(to, command, result, callback) {
+    this.sent.push({ to, command, result, callback });
+  }
   async extendObject(id, obj) {
     this.calls.push(['extendObject', id, obj]);
   }
@@ -168,4 +172,38 @@ test('polling schedules the next cycle, but never once the adapter is unloading'
   adapter.onUnload(() => {});
   await adapter.pollLoop();
   assert.equal(adapter.timers.length, 1, 'no timer may be started after unload');
+});
+
+test('Step 2 button: "open" answers with the unlock page to open in a new tab', async () => {
+  const adapter = createAdapter();
+  await adapter.onMessage({ command: 'getStep2Url', from: 'system.adapter.admin.0', callback: { id: 1 } });
+
+  assert.equal(adapter.sent.length, 1);
+  assert.equal(adapter.sent[0].to, 'system.adapter.admin.0');
+  assert.equal(adapter.sent[0].command, 'getStep2Url');
+  assert.deepEqual(adapter.sent[0].callback, { id: 1 });
+  assert.ok(
+    adapter.sent[0].result.openUrl.startsWith('https://accounts.google.com/encryption/unlock/android?kdi='),
+  );
+  assert.equal(adapter.sent[0].result.window, '_blank');
+});
+
+test('Step 2 button: "script" answers with the console script for the copy dialog', async () => {
+  const { CONSOLE_SNIPPET } = require('../lib/owner-key');
+  const adapter = createAdapter();
+  await adapter.onMessage({ command: 'getStep2Script', from: 'system.adapter.admin.0', callback: { id: 2 } });
+
+  const { copyDialog } = adapter.sent[0].result;
+  assert.equal(copyDialog.text, CONSOLE_SNIPPET);
+  assert.equal(copyDialog.type, 'javascript');
+  assert.ok(copyDialog.title);
+});
+
+test('messages for other commands, or without a callback, are ignored safely', async () => {
+  const adapter = createAdapter();
+  await adapter.onMessage({ command: 'somethingElse', from: 'x', callback: { id: 3 } });
+  await adapter.onMessage({ command: 'getStep2Script', from: 'x' });
+  await adapter.onMessage(null);
+  await adapter.onMessage({});
+  assert.equal(adapter.sent.length, 0);
 });

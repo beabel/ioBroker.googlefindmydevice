@@ -48,6 +48,7 @@ class Googlefindmydevice extends utils.Adapter {
             name: 'googlefindmydevice',
         });
         this.on('ready', this.onReady.bind(this));
+        this.on('message', this.onMessage.bind(this));
         this.on('unload', this.onUnload.bind(this));
         this.unloaded = false;
         this.pollTimeout = null;
@@ -650,6 +651,40 @@ class Googlefindmydevice extends utils.Adapter {
 
         this.ensuredDevices.set(id, name);
         await this.setStateChanged(`${id}.name`, { val: name, ack: true });
+    }
+
+    /**
+     * Answers the buttons of the configuration page's Step 2: one opens
+     * Google's unlock page, the other shows the console script in a dialog
+     * with a copy button. The log still carries the same instructions as a
+     * fallback.
+     *
+     * @param {ioBroker.Message} obj the message sent by the admin UI
+     */
+    async onMessage(obj) {
+        if (!obj || typeof obj !== 'object' || !obj.command) {
+            return;
+        }
+
+        let result;
+        try {
+            if (obj.command === 'getStep2Url') {
+                result = { openUrl: await buildEncryptionUnlockUrl(), window: '_blank' };
+            } else if (obj.command === 'getStep2Script') {
+                result = {
+                    copyDialog: { title: 'Script for the browser console', text: CONSOLE_SNIPPET, type: 'javascript' },
+                };
+            } else {
+                return; // not ours
+            }
+        } catch (err) {
+            this.log.error(`Could not answer "${obj.command}": ${err.message}`);
+            result = { error: err.message };
+        }
+
+        if (obj.callback) {
+            this.sendTo(obj.from, obj.command, result, obj.callback);
+        }
     }
 
     /**

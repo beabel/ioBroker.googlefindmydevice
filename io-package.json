@@ -125,6 +125,7 @@
     "compact": true,
     "connectionType": "cloud",
     "dataSource": "poll",
+    "messagebox": true,
     "adminUI": {
       "config": "json"
     },

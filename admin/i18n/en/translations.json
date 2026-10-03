@@ -22,6 +22,8 @@
 	"shared_key_json_label": "Result from the browser console (JSON)",
 	"step2_done": "Location decryption is set up - coordinates will appear as states on the next poll.",
 	"step2_headline": "Step 2: Enable location decryption",
-	"step2_intro": "One more manual step is needed to decrypt actual coordinates (device names already work without this). Check this adapter instance's log after it restarts: the link and the script each get their own log line (easy to select/copy in full) once this point is reached. Complete whatever Google asks for on that page, then paste the result it shows you into the field below and save.",
+	"step2_intro": "One more manual step is needed to decrypt actual coordinates (device names already work without this). 1) Click \"1) Open Google's unlock page\" - it opens in a new tab. 2) On that page open the developer tools (F12) and switch to the Console tab. Chrome blocks pasting at first: type \"allow pasting\" and press Enter. Then click \"2) Show the script for the console\" below, copy the script, paste it into the console and press Enter. 3) Complete whatever Google asks for on that page (for example your phone's screen-lock PIN). A text field then appears at the top of that page: copy it completely, paste it into the field below and save.",
+	"step2_open_button": "1) Open Google's unlock page",
+	"step2_script_button": "2) Show the script for the console",
 	"supported_devices_note": "This adapter only supports Bluetooth trackers (devices on the \"Find My Device\" network, e.g. Chipolo, Pebblebee). Phones, tablets and other devices linked to the same Google account are deliberately NOT shown here - Google provides no usable location data for them through this API, and phone location would require a completely different, less secure access method (a full browser session instead of a narrowly-scoped token). Keep using Google's own interface at google.com/android/find for those."
 }

@@ -77,6 +77,19 @@
       "lg": 12,
       "xl": 12
     },
+    "_setupStep4Image": {
+      "type": "staticImage",
+      "src": "img/step1-oauth-token.png",
+      "showInDialog": true,
+      "showInDialogSmallSize": 140,
+      "hidden": "data.aasToken",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
+    },
     "_setupStep5": {
       "type": "staticText",
       "text": "setup_step5",
@@ -147,6 +160,45 @@
     "_step2Intro": {
       "type": "staticText",
       "text": "step2_intro",
+      "hidden": "!data.aasToken || data.ownerKey",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
+    },
+    "_step2OpenUnlock": {
+      "type": "sendTo",
+      "command": "getStep2Url",
+      "label": "step2_open_button",
+      "openUrl": true,
+      "variant": "contained",
+      "hidden": "!data.aasToken || data.ownerKey",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 6,
+      "lg": 4,
+      "xl": 4
+    },
+    "_step2ShowScript": {
+      "type": "sendTo",
+      "command": "getStep2Script",
+      "label": "step2_script_button",
+      "variant": "outlined",
+      "hidden": "!data.aasToken || data.ownerKey",
+      "xs": 12,
+      "sm": 12,
+      "md": 6,
+      "lg": 4,
+      "xl": 4
+    },
+    "_step2Image": {
+      "type": "staticImage",
+      "src": "img/step2-console.png",
+      "showInDialog": true,
+      "showInDialogSmallSize": 140,
       "hidden": "!data.aasToken || data.ownerKey",
       "newLine": true,
       "xs": 12,
