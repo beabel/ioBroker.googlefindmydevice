@@ -236,6 +236,11 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ## Changelog
 
+### **WORK IN PROGRESS**
+
+* (beabel) **ENHANCED**: admin translations moved to the short i18n format (`admin/i18n/<lang>.json`); updated
+  `@iobroker/testing` to 6.3.0.
+
 ### 0.1.1 (2026-10-03)
 
 * (beabel) **FIXED**: the configuration page now tells you to start the instance first. Its buttons (Connect, Verify and

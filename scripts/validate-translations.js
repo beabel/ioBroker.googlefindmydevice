@@ -53,7 +53,7 @@ function collectKeys(node, keys) {
  * @returns {Record<string, string>} the parsed translations
  */
 function readLanguage(lang) {
-    const file = path.join(ROOT, 'admin', 'i18n', lang, 'translations.json');
+    const file = path.join(ROOT, 'admin', 'i18n', `${lang}.json`);
     return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
 
@@ -67,7 +67,7 @@ for (const lang of LANGUAGES) {
     try {
         translations = readLanguage(lang);
     } catch (err) {
-        problems.push(`${lang}: cannot read admin/i18n/${lang}/translations.json (${err.message})`);
+        problems.push(`${lang}: cannot read admin/i18n/${lang}.json (${err.message})`);
         continue;
     }
     if (lang === 'en') {
