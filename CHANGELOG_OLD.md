@@ -3,6 +3,11 @@
 See the "Changelog" section in [README.md](README.md) for the current
 history. Entries move here once that section grows too long.
 
+## 0.0.4 (2026-09-18)
+
+* (beabel) **CI/CD**: verified the automated release pipeline (git tag, GitHub Actions, npm trusted publishing,
+  GitHub release) end to end; invited `bluefox` as npm maintainer.
+
 ## 0.0.3 (2026-09-18)
 
 * (beabel) **FIXED**: the repair of corrupted configuration values now checks the actual values on every start

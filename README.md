@@ -236,7 +236,7 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ## Changelog
 
-### **WORK IN PROGRESS**
+### 0.1.1 (2026-10-03)
 
 * (beabel) **FIXED**: the configuration page now tells you to start the instance first. Its buttons (Connect, Verify and
   unlock, ...) only work while the instance is running, and a new instance starts disabled, so the **Connect** button
@@ -287,11 +287,6 @@ risk; Google's internal APIs are undocumented and may change without notice.
 * (beabel) **FIXED**: findings of the object structure check: added the missing parent object of the per-device
   channels, replaced the invalid `weblink` role of the Google Maps link by `text.url`, and expanded all object
   names to the 11 recommended languages.
-
-### 0.0.4 (2026-09-18)
-
-* (beabel) **CI/CD**: verified the automated release pipeline (git tag, GitHub Actions, npm trusted publishing,
-  GitHub release) end to end; invited `bluefox` as npm maintainer.
 
 Older changelog entries: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
 

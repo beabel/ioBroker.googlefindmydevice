@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "googlefindmydevice",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "news": {
+      "0.1.1": {
+        "en": "the configuration page now tells you to start the instance first (its buttons only work while the instance is running)",
+        "de": "Die Konfigurationsseite weist jetzt darauf hin, zuerst die Instanz zu starten (die Buttons funktionieren nur bei laufender Instanz)",
+        "ru": "страница конфигурации теперь напоминает сначала запустить экземпляр (её кнопки работают только при запущенном экземпляре)",
+        "pt": "a página de configuração agora avisa para iniciar primeiro a instância (os botões só funcionam com a instância em execução)",
+        "nl": "de configuratiepagina vermeldt nu dat eerst de instantie gestart moet worden (de knoppen werken alleen bij een draaiende instantie)",
+        "fr": "la page de configuration indique désormais de démarrer d'abord l'instance (ses boutons ne fonctionnent que lorsque l'instance est en cours d'exécution)",
+        "it": "la pagina di configurazione ora indica di avviare prima l'istanza (i suoi pulsanti funzionano solo con l'istanza in esecuzione)",
+        "es": "la página de configuración ahora indica que primero hay que iniciar la instancia (sus botones solo funcionan con la instancia en ejecución)",
+        "pl": "strona konfiguracji informuje teraz, aby najpierw uruchomić instancję (jej przyciski działają tylko przy uruchomionej instancji)",
+        "uk": "сторінка конфігурації тепер нагадує спочатку запустити екземпляр (її кнопки працюють лише за запущеного екземпляра)",
+        "zh-cn": "配置页面现在会提示先启动实例（页面上的按钮仅在实例运行时才可用）"
+      },
       "0.1.0": {
         "en": "guided two-part setup that shows only what is still needed (buttons Connect / Verify and unlock); trackers are now devices directly below the instance (BREAKING: state IDs changed); more specific state roles; fewer database writes; fixes",
         "de": "Geführte Einrichtung in zwei Teilen, die nur zeigt, was noch nötig ist (Buttons Verbinden / Prüfen und freischalten); Tracker sind jetzt Geräte direkt unter der Instanz (ACHTUNG: State-IDs geändert); genauere State-Rollen; weniger Schreibzugriffe; Fehlerkorrekturen",
