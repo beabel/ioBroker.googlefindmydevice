@@ -14,6 +14,8 @@ const {
 const { decryptLatestLocation } = require('./lib/decrypt-locations');
 const { registerFcm } = require('./lib/fcm-register');
 const { McsClient } = require('./lib/mcs-client');
+const { ENCRYPTED_NATIVE_FIELDS, looksCorrupted, clampMinutes, canonicIdToStateId } = require('./lib/util');
+const { buildDeviceObjects } = require('./lib/objects');
 
 const ADM_SERVICE_SCOPE = 'oauth2:https://www.googleapis.com/auth/android_device_manager';
 const ADM_APP = 'com.google.android.apps.adm';
@@ -34,246 +36,12 @@ const LOCATE_MAX_MINUTES = 1440; // 24h
 const LOCATE_INITIAL_DELAY_MS = 20000; // give the MCS connection time to log in first
 const LOCATE_RESPONSE_TIMEOUT_MS = 45000;
 
-// Fields js-controller auto-decrypts on every startup because they're
-// listed in io-package.json's top-level encryptedNative. See
-// repairDoubleDecryptedNative() for why that alone isn't enough to trust
-// them, and for the per-field validity check right below.
-const ENCRYPTED_NATIVE_FIELDS = ['oauthToken', 'aasToken', 'securityToken', 'sharedKeyJson', 'ownerKey'];
-
-/**
- * Whether a decrypted encryptedNative value looks like garbage rather
- * than the real thing. Google's tokens are always plain printable ASCII,
- * ownerKey is always a hex string, and sharedKeyJson is always valid
- * JSON (or empty) - a value that was accidentally run through the
- * repeating-XOR legacy decrypt one extra time will practically always
- * fail one of these checks.
- *
- * @param {string} field one of ENCRYPTED_NATIVE_FIELDS
- * @param {string} value the (decrypted) value to check
- * @returns {boolean}
- */
-function looksCorrupted(field, value) {
-    if (!value) {
-        return false;
-    }
-    if (field === 'ownerKey') {
-        return !/^[0-9a-f]+$/i.test(value);
-    }
-    if (field === 'sharedKeyJson') {
-        try {
-            JSON.parse(value);
-            return false;
-        } catch {
-            return true;
-        }
-    }
-    // oauthToken, aasToken, securityToken: plain printable ASCII tokens
-    return /[^\x20-\x7E]/.test(value);
-}
-
-// Full 11-language common.name translations for the states created in
-// ensureDeviceStates() below - the ioBroker repository checker's object
-// structure check (W1001) expects every i18n name object to carry all of
-// en/de/ru/pt/nl/fr/it/es/pl/uk/zh-cn, not just en/de.
-const I18N = {
-    deviceName: {
-        en: 'Device name',
-        de: 'Geraetename',
-        ru: 'Имя устройства',
-        pt: 'Nome do dispositivo',
-        nl: 'Apparaatnaam',
-        fr: "Nom de l'appareil",
-        it: 'Nome del dispositivo',
-        es: 'Nombre del dispositivo',
-        pl: 'Nazwa urządzenia',
-        uk: 'Назва пристрою',
-        'zh-cn': '设备名称',
-    },
-    manufacturer: {
-        en: 'Manufacturer',
-        de: 'Hersteller',
-        ru: 'Производитель',
-        pt: 'Fabricante',
-        nl: 'Fabrikant',
-        fr: 'Fabricant',
-        it: 'Produttore',
-        es: 'Fabricante',
-        pl: 'Producent',
-        uk: 'Виробник',
-        'zh-cn': '制造商',
-    },
-    model: {
-        en: 'Model',
-        de: 'Modell',
-        ru: 'Модель',
-        pt: 'Modelo',
-        nl: 'Model',
-        fr: 'Modèle',
-        it: 'Modello',
-        es: 'Modelo',
-        pl: 'Model',
-        uk: 'Модель',
-        'zh-cn': '型号',
-    },
-    fastPairModelId: {
-        en: 'Fast Pair model ID',
-        de: 'Fast-Pair-Modell-ID',
-        ru: 'ID модели Fast Pair',
-        pt: 'ID do modelo Fast Pair',
-        nl: 'Fast Pair-model-ID',
-        fr: 'ID de modèle Fast Pair',
-        it: 'ID modello Fast Pair',
-        es: 'ID de modelo Fast Pair',
-        pl: 'ID modelu Fast Pair',
-        uk: 'ID моделі Fast Pair',
-        'zh-cn': 'Fast Pair 型号 ID',
-    },
-    deviceType: {
-        en: 'Device type',
-        de: 'Geraetetyp',
-        ru: 'Тип устройства',
-        pt: 'Tipo de dispositivo',
-        nl: 'Apparaattype',
-        fr: "Type d'appareil",
-        it: 'Tipo di dispositivo',
-        es: 'Tipo de dispositivo',
-        pl: 'Typ urządzenia',
-        uk: 'Тип пристрою',
-        'zh-cn': '设备类型',
-    },
-    pairDate: {
-        en: 'Paired since',
-        de: 'Gekoppelt seit',
-        ru: 'Сопряжено с',
-        pt: 'Emparelhado desde',
-        nl: 'Gekoppeld sinds',
-        fr: 'Associé depuis',
-        it: 'Associato dal',
-        es: 'Emparejado desde',
-        pl: 'Sparowano od',
-        uk: 'Спарено з',
-        'zh-cn': '配对时间',
-    },
-    sharedWithCount: {
-        en: 'Shared with (people)',
-        de: 'Geteilt mit (Personen)',
-        ru: 'Общий доступ (люди)',
-        pt: 'Compartilhado com (pessoas)',
-        nl: 'Gedeeld met (personen)',
-        fr: 'Partagé avec (personnes)',
-        it: 'Condiviso con (persone)',
-        es: 'Compartido con (personas)',
-        pl: 'Udostępniono (osoby)',
-        uk: 'Спільний доступ (люди)',
-        'zh-cn': '共享给(人数)',
-    },
-    latitude: {
-        en: 'Latitude',
-        de: 'Breitengrad',
-        ru: 'Широта',
-        pt: 'Latitude',
-        nl: 'Breedtegraad',
-        fr: 'Latitude',
-        it: 'Latitudine',
-        es: 'Latitud',
-        pl: 'Szerokość geograficzna',
-        uk: 'Широта',
-        'zh-cn': '纬度',
-    },
-    longitude: {
-        en: 'Longitude',
-        de: 'Längengrad',
-        ru: 'Долгота',
-        pt: 'Longitude',
-        nl: 'Lengtegraad',
-        fr: 'Longitude',
-        it: 'Longitudine',
-        es: 'Longitud',
-        pl: 'Długość geograficzna',
-        uk: 'Довгота',
-        'zh-cn': '经度',
-    },
-    altitude: {
-        en: 'Altitude',
-        de: 'Höhe',
-        ru: 'Высота',
-        pt: 'Altitude',
-        nl: 'Hoogte',
-        fr: 'Altitude',
-        it: 'Altitudine',
-        es: 'Altitud',
-        pl: 'Wysokość',
-        uk: 'Висота',
-        'zh-cn': '海拔',
-    },
-    lastSeen: {
-        en: 'Last seen',
-        de: 'Zuletzt gesehen',
-        ru: 'Последнее обнаружение',
-        pt: 'Visto pela última vez',
-        nl: 'Laatst gezien',
-        fr: 'Vu pour la dernière fois',
-        it: 'Ultimo avvistamento',
-        es: 'Visto por última vez',
-        pl: 'Ostatnio widziany',
-        uk: 'Востаннє виявлено',
-        'zh-cn': '最后出现时间',
-    },
-    semanticLocation: {
-        en: 'Semantic location (e.g. "Home")',
-        de: 'Semantischer Standort (z.B. "Zuhause")',
-        ru: 'Смысловое местоположение (например, "Дом")',
-        pt: 'Localização semântica (ex.: "Casa")',
-        nl: 'Semantische locatie (bijv. "Thuis")',
-        fr: 'Emplacement sémantique (p. ex. « Domicile »)',
-        it: 'Posizione semantica (es. "Casa")',
-        es: 'Ubicación semántica (p. ej., "Casa")',
-        pl: 'Lokalizacja semantyczna (np. "Dom")',
-        uk: 'Смислове місцезнаходження (напр., "Дім")',
-        'zh-cn': '语义位置(例如"家")',
-    },
-    accuracy: {
-        en: 'Accuracy',
-        de: 'Genauigkeit',
-        ru: 'Точность',
-        pt: 'Precisão',
-        nl: 'Nauwkeurigheid',
-        fr: 'Précision',
-        it: 'Precisione',
-        es: 'Precisión',
-        pl: 'Dokładność',
-        uk: 'Точність',
-        'zh-cn': '精度',
-    },
-    isOwnReport: {
-        en: 'Reported directly by the tracker (not via a stranger nearby)',
-        de: 'Direkt vom Tracker gemeldet (nicht ueber ein fremdes Geraet in der Naehe)',
-        ru: 'Сообщено напрямую трекером (не через постороннее устройство поблизости)',
-        pt: 'Reportado diretamente pelo rastreador (não por meio de um dispositivo estranho por perto)',
-        nl: 'Direct gemeld door de tracker (niet via een onbekend apparaat in de buurt)',
-        fr: 'Signalé directement par le traceur (pas via un appareil étranger à proximité)',
-        it: 'Segnalato direttamente dal tracker (non tramite un dispositivo sconosciuto nelle vicinanze)',
-        es: 'Informado directamente por el rastreador (no a través de un dispositivo desconocido cercano)',
-        pl: 'Zgłoszone bezpośrednio przez lokalizator (nie za pośrednictwem obcego urządzenia w pobliżu)',
-        uk: 'Повідомлено безпосередньо трекером (не через сторонній пристрій поблизу)',
-        'zh-cn': '由追踪器直接报告(而非通过附近的陌生设备)',
-    },
-    mapsLink: {
-        en: 'Google Maps link',
-        de: 'Google-Maps-Link',
-        ru: 'Ссылка на Google Maps',
-        pt: 'Link do Google Maps',
-        nl: 'Google Maps-link',
-        fr: 'Lien Google Maps',
-        it: 'Link di Google Maps',
-        es: 'Enlace de Google Maps',
-        pl: 'Link do Google Maps',
-        uk: 'Посилання на Google Maps',
-        'zh-cn': 'Google 地图链接',
-    },
-};
-
 class Googlefindmydevice extends utils.Adapter {
+    /**
+     * Creates the adapter instance.
+     *
+     * @param {Partial<utils.AdapterOptions>} [options] adapter options passed in by js-controller
+     */
     constructor(options) {
         super({
             ...options,
@@ -281,8 +49,13 @@ class Googlefindmydevice extends utils.Adapter {
         });
         this.on('ready', this.onReady.bind(this));
         this.on('unload', this.onUnload.bind(this));
+        this.unloaded = false;
         this.pollTimeout = null;
         this.locateTimers = new Map();
+        // Tracker object tree already created in this run (id -> device name).
+        // Objects are written once per run, not on every poll.
+        this.ensuredDevices = new Map();
+        this.lastDeviceIds = null;
         // this.log isn't initialized yet at construction time - hand McsClient
         // a wrapper that reads it lazily on each call instead of a snapshot
         // taken before it exists (that snapshot would stay undefined forever).
@@ -308,10 +81,16 @@ class Googlefindmydevice extends utils.Adapter {
         this.fmdClientUuid = crypto.randomUUID();
     }
 
+    /**
+     * Starts the adapter once js-controller has initialised it: runs the
+     * one-off setup steps while they are pending, otherwise starts polling.
+     */
     async onReady() {
         if (await this.repairDoubleDecryptedNative()) {
             return; // updateConfig() above already triggers a restart with the corrected values
         }
+
+        await this.migrateLegacyDevicesTree();
 
         if (this.config.oauthToken) {
             await this.bootstrapFromOauthToken();
@@ -322,7 +101,7 @@ class Googlefindmydevice extends utils.Adapter {
             this.log.warn(
                 'Not set up yet: please enter the oauth_token value in the instance configuration (see README).',
             );
-            await this.setStateAsync('info.connection', false, true);
+            await this.setState('info.connection', false, true);
             return;
         }
 
@@ -345,7 +124,7 @@ class Googlefindmydevice extends utils.Adapter {
      * moved to their correct top-level location in io-package.json.
      * js-controller auto-decrypts every field in ENCRYPTED_NATIVE_FIELDS
      * on each startup - but this adapter used to write them with plain
-     * extendForeignObjectAsync() calls (now fixed to use updateConfig()
+     * extendForeignObject() calls (now fixed to use updateConfig()
      * instead, see bootstrapFromOauthToken/bootstrapOwnerKey), so
      * already-plain values got run through decrypt() once for nothing,
      * turning them to garbage. That legacy decrypt is a simple
@@ -395,6 +174,27 @@ class Googlefindmydevice extends utils.Adapter {
         return true;
     }
 
+    /**
+     * Removes the "devices" folder (and everything below it) that earlier
+     * versions created. Trackers now live directly below the instance as
+     * `device` objects, so the old tree would otherwise stay behind as a
+     * stale duplicate.
+     */
+    async migrateLegacyDevicesTree() {
+        const legacy = await this.getObjectAsync('devices');
+        if (!legacy) {
+            return;
+        }
+        this.log.info(
+            'Removing the legacy "devices" folder - trackers now live directly below the instance (see changelog).',
+        );
+        await this.delObject('devices', { recursive: true });
+    }
+
+    /**
+     * Logs the instructions for the second setup step (unlocking the
+     * end-to-end encryption key) as individual, copy-friendly log lines.
+     */
     async logStep2Instructions() {
         try {
             const url = await buildEncryptionUnlockUrl();
@@ -425,6 +225,10 @@ class Googlefindmydevice extends utils.Adapter {
         }
     }
 
+    /**
+     * Setup step 2: turns the pasted browser-console result into the
+     * decrypted owner key and stores it (encrypted) in the configuration.
+     */
     async bootstrapOwnerKey() {
         try {
             this.log.info('Step 2 result detected, fetching and decrypting the owner key...');
@@ -441,7 +245,7 @@ class Googlefindmydevice extends utils.Adapter {
 
             const { ownerKey, ownerKeyVersion } = await retrieveOwnerKey(spotToken, sharedKey);
 
-            // updateConfig() (not extendForeignObjectAsync) so these
+            // updateConfig() (not extendForeignObject) so these
             // encryptedNative fields actually get encrypted at rest -
             // js-controller decrypts them again on the next startup.
             await this.updateConfig({
@@ -453,7 +257,7 @@ class Googlefindmydevice extends utils.Adapter {
             this.log.info('Owner key set up successfully. Adapter is restarting...');
         } catch (err) {
             this.log.error(`Step 2 setup failed: ${err.message}`);
-            await this.setStateAsync('info.connection', false, true);
+            await this.setState('info.connection', false, true);
             // Clear it so a bad/expired value doesn't get retried forever on
             // every restart, and so the field is guaranteed empty for a
             // fresh attempt instead of silently keeping the failed one.
@@ -461,6 +265,10 @@ class Googlefindmydevice extends utils.Adapter {
         }
     }
 
+    /**
+     * Setup step 1: exchanges the pasted oauth_token for a long-lived
+     * account token and stores it (encrypted) in the configuration.
+     */
     async bootstrapFromOauthToken() {
         try {
             this.log.info('Login token detected, exchanging it for a long-lived account token...');
@@ -474,7 +282,7 @@ class Googlefindmydevice extends utils.Adapter {
                 );
             }
 
-            // updateConfig() (not extendForeignObjectAsync) so these
+            // updateConfig() (not extendForeignObject) so these
             // encryptedNative fields actually get encrypted at rest -
             // js-controller decrypts them again on the next startup.
             await this.updateConfig({
@@ -488,7 +296,7 @@ class Googlefindmydevice extends utils.Adapter {
             this.log.info(`Successfully connected as ${exchangeResult.Email}. Adapter is restarting...`);
         } catch (err) {
             this.log.error(`Setup failed: ${err.message}`);
-            await this.setStateAsync('info.connection', false, true);
+            await this.setState('info.connection', false, true);
             // Clear it so an expired/invalid oauth_token doesn't get retried
             // forever on every restart, and so the field is guaranteed empty
             // for a fresh paste instead of silently keeping the failed one.
@@ -496,19 +304,35 @@ class Googlefindmydevice extends utils.Adapter {
         }
     }
 
+    /**
+     * One poll cycle: refreshes all trackers, then schedules the next cycle
+     * (self-chaining timeout, so a slow cycle can never overlap the next).
+     */
     async pollLoop() {
-        try {
-            await this.updateDevices();
-            await this.setStateAsync('info.connection', true, true);
-        } catch (err) {
-            this.log.error(`Update failed: ${err.message}`);
-            await this.setStateAsync('info.connection', false, true);
+        if (this.unloaded) {
+            return;
         }
 
-        const minutes = Math.min(POLL_MAX_MINUTES, Math.max(POLL_MIN_MINUTES, Number(this.config.pollInterval) || 15));
+        try {
+            await this.updateDevices();
+            await this.setStateChanged('info.connection', { val: true, ack: true });
+        } catch (err) {
+            this.log.error(`Update failed: ${err.message}`);
+            await this.setStateChanged('info.connection', { val: false, ack: true });
+        }
+
+        if (this.unloaded) {
+            return; // stopped while the update was running - don't start a new timer
+        }
+
+        const minutes = clampMinutes(this.config.pollInterval, POLL_MIN_MINUTES, POLL_MAX_MINUTES, 15);
         this.pollTimeout = this.setTimeout(() => this.pollLoop(), minutes * 60 * 1000);
     }
 
+    /**
+     * Lists the account's trackers and writes their object trees, metadata
+     * and (if the owner key is set up) their latest decrypted location.
+     */
     async updateDevices() {
         const { Auth: admToken } = await performOAuth(
             this.config.email,
@@ -531,13 +355,13 @@ class Googlefindmydevice extends utils.Adapter {
         this.log.debug(`${devices.length} tracker(s) found (out of ${allDevices.length} devices in the account).`);
 
         await this.syncDeviceSettings(devices);
-        await this.cleanupNonTrackerDevices(devices);
+        await this.cleanupStaleDevices(devices);
 
         const ownerKey = this.config.ownerKey ? Buffer.from(this.config.ownerKey, 'hex') : null;
 
         for (const device of devices) {
-            const stateId = this.canonicIdToStateId(device.canonicId || device.name);
-            await this.ensureDeviceStates(stateId, device.name);
+            const stateId = canonicIdToStateId(device.canonicId);
+            await this.ensureDevice(stateId, device.name);
             await this.updateDeviceMetadataStates(stateId, device);
 
             if (!ownerKey) {
@@ -560,19 +384,23 @@ class Googlefindmydevice extends utils.Adapter {
         }
     }
 
+    /**
+     * Writes the static per-tracker information (manufacturer, model, ...).
+     * Uses setStateChanged so unchanged values don't cause database writes.
+     *
+     * @param {string} stateId sanitized id of the tracker's device object
+     * @param {object} device the tracker as returned by listDevices()
+     */
     async updateDeviceMetadataStates(stateId, device) {
-        await this.setStateAsync(`devices.${stateId}.manufacturer`, { val: device.manufacturer || '', ack: true });
-        await this.setStateAsync(`devices.${stateId}.model`, { val: device.model || '', ack: true });
-        await this.setStateAsync(`devices.${stateId}.fastPairModelId`, {
-            val: device.fastPairModelId || '',
-            ack: true,
-        });
-        await this.setStateAsync(`devices.${stateId}.deviceType`, { val: device.deviceType || '', ack: true });
-        await this.setStateAsync(`devices.${stateId}.pairDate`, {
+        await this.setStateChanged(`${stateId}.manufacturer`, { val: device.manufacturer || '', ack: true });
+        await this.setStateChanged(`${stateId}.model`, { val: device.model || '', ack: true });
+        await this.setStateChanged(`${stateId}.fastPairModelId`, { val: device.fastPairModelId || '', ack: true });
+        await this.setStateChanged(`${stateId}.deviceType`, { val: device.deviceType || '', ack: true });
+        await this.setStateChanged(`${stateId}.pairDate`, {
             val: device.pairDate ? device.pairDate * 1000 : null,
             ack: true,
         });
-        await this.setStateAsync(`devices.${stateId}.sharedWithCount`, { val: device.sharedWithCount || 0, ack: true });
+        await this.setStateChanged(`${stateId}.sharedWithCount`, { val: device.sharedWithCount || 0, ack: true });
     }
 
     /**
@@ -582,7 +410,7 @@ class Googlefindmydevice extends utils.Adapter {
      * BLE and costs it battery, so that has to be an opt-in per device
      * rather than something this adapter turns on automatically.
      *
-     * @param devices
+     * @param {Array<{canonicId: string, name: string}>} devices the account's current trackers
      */
     async syncDeviceSettings(devices) {
         const existing = Array.isArray(this.config.deviceSettings) ? this.config.deviceSettings : [];
@@ -597,33 +425,44 @@ class Googlefindmydevice extends utils.Adapter {
         }
 
         this.log.info(`${missing.length} new tracker(s) found, added to the device table in the configuration.`);
-        await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, {
+        await this.extendForeignObject(`system.adapter.${this.namespace}`, {
             native: { deviceSettings: existing.concat(missing) },
         });
     }
 
     /**
-     * Removes any devices.* channel that isn't a current tracker - phones,
-     * tablets and other non-tracker devices used to get one too (before
-     * listDevices() results were filtered down to actual trackers), and
-     * ioBroker doesn't drop objects on its own just because a poll stops
-     * touching them.
+     * Removes any tracker `device` object that isn't a current tracker any
+     * more (e.g. removed from the Google account) - ioBroker doesn't drop
+     * objects on its own just because a poll stops touching them. Only runs
+     * when the set of trackers changed since the last poll, and never for an
+     * empty list (that is far more likely a hiccup than "all trackers gone").
      *
-     * @param devices
+     * @param {Array<{canonicId: string}>} devices the account's current trackers
      */
-    async cleanupNonTrackerDevices(devices) {
-        const currentIds = new Set(devices.map(d => this.canonicIdToStateId(d.canonicId)));
+    async cleanupStaleDevices(devices) {
+        if (devices.length === 0) {
+            return;
+        }
+
+        const currentIds = new Set(devices.map(d => canonicIdToStateId(d.canonicId)));
+        const idsKey = [...currentIds].sort().join(',');
+        if (idsKey === this.lastDeviceIds) {
+            return;
+        }
+        this.lastDeviceIds = idsKey;
+
         const allObjects = await this.getAdapterObjectsAsync();
-        const prefix = `${this.namespace}.devices.`;
+        const prefix = `${this.namespace}.`;
 
         for (const id of Object.keys(allObjects)) {
-            if (!id.startsWith(prefix) || allObjects[id].type !== 'channel') {
+            if (!id.startsWith(prefix) || allObjects[id].type !== 'device') {
                 continue;
             }
             const deviceId = id.slice(prefix.length);
             if (!currentIds.has(deviceId)) {
-                this.log.info(`Removing "${deviceId}" from the object tree (not a Bluetooth tracker).`);
-                await this.delObjectAsync(id, { recursive: true });
+                this.log.info(`Removing "${deviceId}" from the object tree (no longer a tracker of this account).`);
+                await this.delObject(id, { recursive: true });
+                this.ensuredDevices.delete(deviceId);
             }
         }
     }
@@ -632,6 +471,8 @@ class Googlefindmydevice extends utils.Adapter {
      * Registers with FCM and opens the persistent MCS push connection, once
      * per adapter run, so triggerLocate() can wait for the asynchronous
      * answer to a "locate now" request.
+     *
+     * @returns {Promise<void>} resolves once the push connection is being established
      */
     async ensureFcmReady() {
         if (this.fcmReadyPromise) {
@@ -667,12 +508,12 @@ class Googlefindmydevice extends utils.Adapter {
                 continue;
             }
 
-            const minutes = Math.min(
-                LOCATE_MAX_MINUTES,
-                Math.max(LOCATE_MIN_MINUTES, Number(setting.intervalMinutes) || 60),
-            );
+            const minutes = clampMinutes(setting.intervalMinutes, LOCATE_MIN_MINUTES, LOCATE_MAX_MINUTES, 60);
 
             const scheduleNext = delayMs => {
+                if (this.unloaded) {
+                    return; // never start a new timer once the adapter is stopping
+                }
                 const timer = this.setTimeout(async () => {
                     try {
                         await this.triggerLocate(setting.canonicId, setting.name);
@@ -692,8 +533,8 @@ class Googlefindmydevice extends utils.Adapter {
      * Actively asks Google to ping one tracker for a fresh location, then
      * waits for the asynchronous FCM push answer and decrypts it.
      *
-     * @param canonicId
-     * @param name
+     * @param {string} canonicId Google's canonic id of the tracker
+     * @param {string} name the tracker's display name (for log messages)
      */
     async triggerLocate(canonicId, name) {
         await this.ensureFcmReady();
@@ -730,7 +571,11 @@ class Googlefindmydevice extends utils.Adapter {
             return;
         }
 
-        const stateId = this.canonicIdToStateId(canonicId);
+        const stateId = canonicIdToStateId(canonicId);
+        // The first poll normally created the objects already; make sure
+        // they exist even if it failed, so the states below never end up
+        // without an object.
+        await this.ensureDevice(stateId, name);
         const location = await decryptLatestLocation(ownerKey, { raw: deviceUpdate.deviceMetadata });
         await this.updateLocationStates(stateId, location);
         if (location) {
@@ -738,6 +583,12 @@ class Googlefindmydevice extends utils.Adapter {
         }
     }
 
+    /**
+     * Writes a decrypted location report into the tracker's states.
+     *
+     * @param {string} stateId sanitized id of the tracker's device object
+     * @param {object | null} location the decrypted report, or null if there is none yet
+     */
     async updateLocationStates(stateId, location) {
         if (!location) {
             return;
@@ -745,222 +596,70 @@ class Googlefindmydevice extends utils.Adapter {
 
         // The timestamp tells you how fresh this report actually is, whether
         // it's a semantic ("Home") or a GPS report - always set it either way.
-        await this.setStateAsync(`devices.${stateId}.lastSeen`, { val: location.timestamp * 1000, ack: true });
+        await this.setStateChanged(`${stateId}.lastSeen`, { val: location.timestamp * 1000, ack: true });
 
         if (location.semantic !== undefined) {
-            await this.setStateAsync(`devices.${stateId}.semanticLocation`, { val: location.semantic, ack: true });
+            await this.setStateChanged(`${stateId}.semanticLocation`, { val: location.semantic, ack: true });
             // A semantic report has no coordinates of its own - clear the
             // GPS-only fields so they don't keep showing an older report's
             // accuracy/link as if it still applied.
-            await this.setStateAsync(`devices.${stateId}.accuracy`, { val: null, ack: true });
-            await this.setStateAsync(`devices.${stateId}.isOwnReport`, { val: null, ack: true });
-            await this.setStateAsync(`devices.${stateId}.mapsLink`, { val: '', ack: true });
+            await this.setStateChanged(`${stateId}.accuracy`, { val: null, ack: true });
+            await this.setStateChanged(`${stateId}.isOwnReport`, { val: null, ack: true });
+            await this.setStateChanged(`${stateId}.mapsLink`, { val: '', ack: true });
             return;
         }
 
-        await this.setStateAsync(`devices.${stateId}.latitude`, { val: location.lat, ack: true });
-        await this.setStateAsync(`devices.${stateId}.longitude`, { val: location.lon, ack: true });
-        await this.setStateAsync(`devices.${stateId}.altitude`, { val: location.altitude, ack: true });
-        await this.setStateAsync(`devices.${stateId}.accuracy`, { val: location.accuracy, ack: true });
-        await this.setStateAsync(`devices.${stateId}.isOwnReport`, { val: !!location.isOwnReport, ack: true });
-        await this.setStateAsync(`devices.${stateId}.mapsLink`, {
+        await this.setStateChanged(`${stateId}.latitude`, { val: location.lat, ack: true });
+        await this.setStateChanged(`${stateId}.longitude`, { val: location.lon, ack: true });
+        await this.setStateChanged(`${stateId}.altitude`, { val: location.altitude, ack: true });
+        await this.setStateChanged(`${stateId}.accuracy`, { val: location.accuracy, ack: true });
+        await this.setStateChanged(`${stateId}.isOwnReport`, { val: !!location.isOwnReport, ack: true });
+        await this.setStateChanged(`${stateId}.mapsLink`, {
             val: `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lon}`,
             ack: true,
         });
     }
 
-    canonicIdToStateId(raw) {
-        return String(raw || 'unknown').replace(/[^a-zA-Z0-9_-]/g, '_');
+    /**
+     * Makes sure one tracker's object tree exists and is up to date.
+     *
+     * The full tree (the tracker as a `device` object plus all its states)
+     * is written once per adapter run with extendObject, so definition
+     * changes between adapter versions - names, roles, ... - still reach
+     * already-existing installations after the update, instead of
+     * silently keeping whatever an older version created. Within a run the
+     * objects are not touched again unless the tracker was renamed.
+     *
+     * @param {string} id sanitized id of the tracker's device object
+     * @param {string} name the tracker's own display name
+     */
+    async ensureDevice(id, name) {
+        name = name || id; // an unnamed tracker still needs a usable device name
+        const knownName = this.ensuredDevices.get(id);
+        if (knownName === name) {
+            return;
+        }
+
+        if (knownName === undefined) {
+            for (const { suffix, obj } of buildDeviceObjects(name)) {
+                await this.extendObject(suffix ? `${id}.${suffix}` : id, obj);
+            }
+        } else {
+            await this.extendObject(id, { common: { name } });
+        }
+
+        this.ensuredDevices.set(id, name);
+        await this.setStateChanged(`${id}.name`, { val: name, ack: true });
     }
 
     /**
-     * Creates/updates the object tree for one device. Uses extendObjectAsync
-     * (not setObjectNotExistsAsync) so that object definitions - common.name,
-     * common.role, etc. - actually get updated on already-existing
-     * installations when this code changes between adapter versions,
-     * instead of silently keeping whatever was created by an older version
-     * forever. The extra writes on every poll are negligible at this scale
-     * (a handful of trackers, polled every few minutes).
+     * Stops all timers and the push connection when the adapter shuts down.
      *
-     * @param {string} id sanitized state id for this device (see canonicIdToStateId)
-     * @param {string} name the device's own display name
+     * @param {() => void} callback js-controller's completion callback
      */
-    async ensureDeviceStates(id, name) {
-        // The channel's name is the device's own (arbitrary, user-chosen) name,
-        // not translatable adapter text - a plain string, not an i18n object.
-        await this.extendObjectAsync(`devices.${id}`, {
-            type: 'channel',
-            common: { name },
-            native: {},
-        });
-        await this.extendObjectAsync(`devices.${id}.name`, {
-            type: 'state',
-            common: {
-                name: I18N.deviceName,
-                type: 'string',
-                role: 'text',
-                read: true,
-                write: false,
-            },
-            native: {},
-        });
-        await this.setStateAsync(`devices.${id}.name`, { val: name, ack: true });
-
-        await this.extendObjectAsync(`devices.${id}.manufacturer`, {
-            type: 'state',
-            common: {
-                name: I18N.manufacturer,
-                type: 'string',
-                role: 'text',
-                read: true,
-                write: false,
-            },
-            native: {},
-        });
-        await this.extendObjectAsync(`devices.${id}.model`, {
-            type: 'state',
-            common: { name: I18N.model, type: 'string', role: 'text', read: true, write: false },
-            native: {},
-        });
-        await this.extendObjectAsync(`devices.${id}.fastPairModelId`, {
-            type: 'state',
-            common: {
-                name: I18N.fastPairModelId,
-                type: 'string',
-                role: 'text',
-                read: true,
-                write: false,
-            },
-            native: {},
-        });
-        await this.extendObjectAsync(`devices.${id}.deviceType`, {
-            type: 'state',
-            common: {
-                name: I18N.deviceType,
-                type: 'string',
-                role: 'text',
-                read: true,
-                write: false,
-            },
-            native: {},
-        });
-        await this.extendObjectAsync(`devices.${id}.pairDate`, {
-            type: 'state',
-            common: {
-                name: I18N.pairDate,
-                type: 'number',
-                role: 'value.time',
-                read: true,
-                write: false,
-            },
-            native: {},
-        });
-        await this.extendObjectAsync(`devices.${id}.sharedWithCount`, {
-            type: 'state',
-            common: {
-                name: I18N.sharedWithCount,
-                type: 'number',
-                role: 'value',
-                read: true,
-                write: false,
-            },
-            native: {},
-        });
-
-        await this.extendObjectAsync(`devices.${id}.latitude`, {
-            type: 'state',
-            common: {
-                name: I18N.latitude,
-                type: 'number',
-                role: 'value.gps.latitude',
-                read: true,
-                write: false,
-            },
-            native: {},
-        });
-        await this.extendObjectAsync(`devices.${id}.longitude`, {
-            type: 'state',
-            common: {
-                name: I18N.longitude,
-                type: 'number',
-                role: 'value.gps.longitude',
-                read: true,
-                write: false,
-            },
-            native: {},
-        });
-        await this.extendObjectAsync(`devices.${id}.altitude`, {
-            type: 'state',
-            common: {
-                name: I18N.altitude,
-                type: 'number',
-                role: 'value.gps.elevation',
-                unit: 'm',
-                read: true,
-                write: false,
-            },
-            native: {},
-        });
-        await this.extendObjectAsync(`devices.${id}.lastSeen`, {
-            type: 'state',
-            common: {
-                name: I18N.lastSeen,
-                type: 'number',
-                role: 'value.time',
-                read: true,
-                write: false,
-            },
-            native: {},
-        });
-        await this.extendObjectAsync(`devices.${id}.semanticLocation`, {
-            type: 'state',
-            common: {
-                name: I18N.semanticLocation,
-                type: 'string',
-                role: 'text',
-                read: true,
-                write: false,
-            },
-            native: {},
-        });
-        await this.extendObjectAsync(`devices.${id}.accuracy`, {
-            type: 'state',
-            common: {
-                name: I18N.accuracy,
-                type: 'number',
-                role: 'value',
-                unit: 'm',
-                read: true,
-                write: false,
-            },
-            native: {},
-        });
-        await this.extendObjectAsync(`devices.${id}.isOwnReport`, {
-            type: 'state',
-            common: {
-                name: I18N.isOwnReport,
-                type: 'boolean',
-                role: 'indicator',
-                read: true,
-                write: false,
-            },
-            native: {},
-        });
-        await this.extendObjectAsync(`devices.${id}.mapsLink`, {
-            type: 'state',
-            common: {
-                name: I18N.mapsLink,
-                type: 'string',
-                role: 'text.url',
-                read: true,
-                write: false,
-            },
-            native: {},
-        });
-    }
-
     onUnload(callback) {
         try {
+            this.unloaded = true;
             if (this.pollTimeout) {
                 this.clearTimeout(this.pollTimeout);
             }

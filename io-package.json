@@ -112,9 +112,12 @@
     },
     "platform": "Javascript/Node.js",
     "icon": "googlefindmydevice.png",
-    "enabled": true,
+    "enabled": false,
     "extIcon": "https://raw.githubusercontent.com/beabel/ioBroker.googlefindmydevice/main/admin/googlefindmydevice.png",
     "readme": "https://github.com/beabel/ioBroker.googlefindmydevice/blob/main/README.md",
+    "docs": {
+      "en": "README.md"
+    },
     "loglevel": "info",
     "tier": 3,
     "mode": "daemon",
@@ -169,14 +172,6 @@
       "type": "channel",
       "common": {
         "name": "Information"
-      },
-      "native": {}
-    },
-    {
-      "_id": "devices",
-      "type": "folder",
-      "common": {
-        "name": "Devices"
       },
       "native": {}
     },
