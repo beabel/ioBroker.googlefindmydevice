@@ -12,7 +12,17 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const LANGUAGES = ['en', 'de', 'ru', 'pt', 'nl', 'fr', 'it', 'es', 'pl', 'uk', 'zh-cn'];
-const I18N_PROPERTIES = new Set(['text', 'label', 'help', 'title', 'tooltip', 'placeholder', 'noDataText']);
+const I18N_PROPERTIES = new Set([
+    'text',
+    'label',
+    'help',
+    'title',
+    'tooltip',
+    'placeholder',
+    'noDataText',
+    'ok',
+    'cancel',
+]);
 // Language-neutral texts that are legitimately identical in every language.
 const SAME_IN_ALL_LANGUAGES = new Set(['device_id_col']);
 

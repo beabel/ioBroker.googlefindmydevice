@@ -219,45 +219,87 @@ class Googlefindmydevice extends utils.Adapter {
             this.log.warn(url);
             this.log.warn('1) Open this link in your browser (only the URL, nothing before/after):');
             this.log.warn(
-                'Location decryption not set up yet (Step 2). Device names are still being updated in the meantime.',
+                'Location decryption not set up yet (setup Part 2). Device names are still being updated in the meantime.',
             );
         } catch (err) {
-            this.log.error(`Could not generate Step 2 instructions: ${err.message}`);
+            this.log.error(`Could not generate the Part 2 instructions: ${err.message}`);
         }
     }
 
     /**
-     * Setup step 2: turns the pasted browser-console result into the
-     * decrypted owner key and stores it (encrypted) in the configuration.
+     * Setup step 2, the pure part: turns the pasted browser-console result
+     * into the decrypted owner key. Needs only the values passed in, so it
+     * works for the configuration page's button before anything is saved.
+     *
+     * @param {object} account the connected account
+     * @param {string} account.email account email
+     * @param {string} account.aasToken the long-lived account token
+     * @param {string} account.androidId the GCM android id
+     * @param {string} sharedKeyJson the pasted browser-console result
+     * @returns {Promise<{ownerKey: string, ownerKeyVersion: number}>} the owner key (hex) and its version
+     */
+    async deriveOwnerKey({ email, aasToken, androidId }, sharedKeyJson) {
+        const sharedKey = extractSharedKeyFromVaultKeys(sharedKeyJson);
+        const { Auth: spotToken } = await performOAuth(
+            email,
+            aasToken,
+            androidId,
+            SPOT_SERVICE_SCOPE,
+            SPOT_APP,
+            DEFAULT_CLIENT_SIG,
+        );
+        const { ownerKey, ownerKeyVersion } = await retrieveOwnerKey(spotToken, sharedKey);
+        return { ownerKey: ownerKey.toString('hex'), ownerKeyVersion };
+    }
+
+    /**
+     * Setup step 1, the pure part: exchanges the pasted oauth_token for a
+     * long-lived account token.
+     *
+     * @param {string} oauthToken the pasted oauth_token cookie value
+     * @returns {Promise<{email: string, androidId: string, securityToken: string, aasToken: string}>} the account data to store
+     */
+    async exchangeLoginToken(oauthToken) {
+        const { androidId, securityToken } = await gcmCheckin();
+        let exchangeResult;
+        try {
+            exchangeResult = await exchangeToken('', oauthToken, androidId);
+        } catch (err) {
+            if (/BadAuthentication/.test(err.message)) {
+                throw new Error(
+                    'Google rejected the oauth_token - it has probably expired or was copied incompletely. ' +
+                        'Please paste a fresh value (see README).',
+                );
+            }
+            throw err;
+        }
+
+        if (!exchangeResult.Token || !exchangeResult.Email) {
+            throw new Error(
+                'Google did not return a valid token - the oauth_token value has probably expired. ' +
+                    'Please enter a fresh value (see README).',
+            );
+        }
+        return { email: exchangeResult.Email, androidId, securityToken, aasToken: exchangeResult.Token };
+    }
+
+    /**
+     * Fallback for a configuration that was saved with a still unused
+     * step 2 result (the page's button normally handles this directly).
      */
     async bootstrapOwnerKey() {
         try {
-            this.log.info('Step 2 result detected, fetching and decrypting the owner key...');
-            const sharedKey = extractSharedKeyFromVaultKeys(this.config.sharedKeyJson);
-
-            const { Auth: spotToken } = await performOAuth(
-                this.config.email,
-                this.config.aasToken,
-                this.config.androidId,
-                SPOT_SERVICE_SCOPE,
-                SPOT_APP,
-                DEFAULT_CLIENT_SIG,
-            );
-
-            const { ownerKey, ownerKeyVersion } = await retrieveOwnerKey(spotToken, sharedKey);
+            this.log.info('Part 2 result detected, fetching and decrypting the owner key...');
+            const { ownerKey, ownerKeyVersion } = await this.deriveOwnerKey(this.config, this.config.sharedKeyJson);
 
             // updateConfig() (not extendForeignObject) so these
             // encryptedNative fields actually get encrypted at rest -
             // js-controller decrypts them again on the next startup.
-            await this.updateConfig({
-                sharedKeyJson: '',
-                ownerKey: ownerKey.toString('hex'),
-                ownerKeyVersion,
-            });
+            await this.updateConfig({ sharedKeyJson: '', ownerKey, ownerKeyVersion });
 
             this.log.info('Owner key set up successfully. Adapter is restarting...');
         } catch (err) {
-            this.log.error(`Step 2 setup failed: ${err.message}`);
+            this.log.error(`Part 2 setup failed: ${err.message}`);
             await this.setState('info.connection', false, true);
             // Clear it so a bad/expired value doesn't get retried forever on
             // every restart, and so the field is guaranteed empty for a
@@ -267,34 +309,20 @@ class Googlefindmydevice extends utils.Adapter {
     }
 
     /**
-     * Setup step 1: exchanges the pasted oauth_token for a long-lived
-     * account token and stores it (encrypted) in the configuration.
+     * Fallback for a configuration that was saved with a still unused
+     * oauth_token (the page's button normally handles this directly).
      */
     async bootstrapFromOauthToken() {
         try {
             this.log.info('Login token detected, exchanging it for a long-lived account token...');
-            const { androidId, securityToken } = await gcmCheckin();
-            const exchangeResult = await exchangeToken('', this.config.oauthToken, androidId);
-
-            if (!exchangeResult.Token || !exchangeResult.Email) {
-                throw new Error(
-                    'Google did not return a valid token - the oauth_token value has probably expired. ' +
-                        'Please enter a fresh value (see README).',
-                );
-            }
+            const account = await this.exchangeLoginToken(this.config.oauthToken);
 
             // updateConfig() (not extendForeignObject) so these
             // encryptedNative fields actually get encrypted at rest -
             // js-controller decrypts them again on the next startup.
-            await this.updateConfig({
-                oauthToken: '',
-                email: exchangeResult.Email,
-                androidId,
-                securityToken,
-                aasToken: exchangeResult.Token,
-            });
+            await this.updateConfig({ oauthToken: '', ...account });
 
-            this.log.info(`Successfully connected as ${exchangeResult.Email}. Adapter is restarting...`);
+            this.log.info(`Successfully connected as ${account.email}. Adapter is restarting...`);
         } catch (err) {
             this.log.error(`Setup failed: ${err.message}`);
             await this.setState('info.connection', false, true);
@@ -654,10 +682,13 @@ class Googlefindmydevice extends utils.Adapter {
     }
 
     /**
-     * Answers the buttons of the configuration page's Step 2: one opens
-     * Google's unlock page, the other shows the console script in a dialog
-     * with a copy button. The log still carries the same instructions as a
-     * fallback.
+     * Answers the buttons of the configuration page: the setup buttons
+     * ("Connect", "Verify and unlock", "Reconnect") work on the values the
+     * page sends and hand the result back to the page instead of writing
+     * the configuration themselves, so the page can show the next step right
+     * away. Two more buttons open Google's unlock page and show the console
+     * script in a dialog with a copy button. The log still carries the same
+     * instructions as a fallback.
      *
      * @param {ioBroker.Message} obj the message sent by the admin UI
      */
@@ -666,6 +697,7 @@ class Googlefindmydevice extends utils.Adapter {
             return;
         }
 
+        const message = obj.message && typeof obj.message === 'object' ? obj.message : {};
         let result;
         try {
             if (obj.command === 'getStep2Url') {
@@ -674,17 +706,73 @@ class Googlefindmydevice extends utils.Adapter {
                 result = {
                     copyDialog: { title: 'Script for the browser console', text: CONSOLE_SNIPPET, type: 'javascript' },
                 };
+            } else if (obj.command === 'connectAccount') {
+                result = await this.connectAccount(message);
+            } else if (obj.command === 'unlockEncryption') {
+                result = await this.unlockEncryption(message);
+            } else if (obj.command === 'resetLogin') {
+                result = {
+                    native: {
+                        oauthToken: '',
+                        email: '',
+                        androidId: '',
+                        securityToken: '',
+                        aasToken: '',
+                        sharedKeyJson: '',
+                        ownerKey: '',
+                        ownerKeyVersion: -1,
+                        deviceSettings: [],
+                    },
+                    saveConfig: true,
+                };
             } else {
                 return; // not ours
             }
         } catch (err) {
-            this.log.error(`Could not answer "${obj.command}": ${err.message}`);
+            // Mostly input problems (expired or wrongly pasted values), shown to the user in the page.
+            this.log.warn(`Could not answer "${obj.command}": ${err.message}`);
             result = { error: err.message };
         }
 
         if (obj.callback) {
             this.sendTo(obj.from, obj.command, result, obj.callback);
         }
+    }
+
+    /**
+     * Button "Connect": exchanges the pasted oauth_token and hands the
+     * account data back to the configuration page, which applies it to its
+     * form (so the page shows the next step right away) and asks to save.
+     *
+     * @param {{token?: string}} message what the page sent
+     * @returns {Promise<object>} the answer for the page
+     */
+    async connectAccount({ token }) {
+        if (typeof token !== 'string' || !token.trim()) {
+            return { error: 'Please paste the oauth_token value first.' };
+        }
+        const account = await this.exchangeLoginToken(token.trim());
+        this.log.info(`Successfully connected as ${account.email}.`);
+        return { native: { oauthToken: '', ...account }, saveConfig: true };
+    }
+
+    /**
+     * Button "Verify and unlock": turns the pasted browser-console result
+     * into the owner key and hands it back to the configuration page.
+     *
+     * @param {{json?: string, email?: string, aasToken?: string, androidId?: string}} message what the page sent
+     * @returns {Promise<object>} the answer for the page
+     */
+    async unlockEncryption({ json, email, aasToken, androidId }) {
+        if (typeof json !== 'string' || !json.trim()) {
+            return { error: 'Please paste the result from the browser console first.' };
+        }
+        if (!email || !aasToken || !androidId) {
+            return { error: 'The account is not connected yet - complete Part 1 of the setup first.' };
+        }
+        const { ownerKey, ownerKeyVersion } = await this.deriveOwnerKey({ email, aasToken, androidId }, json.trim());
+        this.log.info('Owner key set up successfully.');
+        return { native: { sharedKeyJson: '', ownerKey, ownerKeyVersion }, saveConfig: true };
     }
 
     /**

@@ -13,16 +13,16 @@
       "lg": 12,
       "xl": 12
     },
-    "_setupHeadline": {
+    "_part1Headline": {
       "type": "header",
-      "text": "setup_headline",
+      "text": "part1_headline",
       "size": 4,
       "hidden": "data.aasToken",
       "newLine": true
     },
-    "_setupIntro": {
+    "_part1Intro": {
       "type": "staticText",
-      "text": "setup_intro",
+      "text": "part1_intro",
       "hidden": "data.aasToken",
       "newLine": true,
       "xs": 12,
@@ -31,22 +31,46 @@
       "lg": 12,
       "xl": 12
     },
-    "_setupStep1Link": {
+    "_part1Step1": {
+      "type": "staticText",
+      "text": "part1_step1",
+      "hidden": "data.aasToken",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
+    },
+    "_part1Step1Note": {
+      "type": "staticText",
+      "text": "part1_step1_note",
+      "style": { "color": "#e53935", "fontWeight": "bold" },
+      "hidden": "data.aasToken",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
+    },
+    "_part1Open": {
       "type": "staticLink",
       "href": "https://accounts.google.com/EmbeddedSetup",
-      "text": "setup_step1_link",
+      "text": "part1_open_button",
       "button": true,
+      "variant": "contained",
       "hidden": "data.aasToken",
       "newLine": true,
       "xs": 12,
       "sm": 12,
-      "md": 12,
-      "lg": 12,
-      "xl": 12
+      "md": 6,
+      "lg": 4,
+      "xl": 4
     },
-    "_setupStep2": {
+    "_part1Step2": {
       "type": "staticText",
-      "text": "setup_step2",
+      "text": "part1_step2",
       "hidden": "data.aasToken",
       "newLine": true,
       "xs": 12,
@@ -55,9 +79,10 @@
       "lg": 12,
       "xl": 12
     },
-    "_setupStep3": {
+    "_part1TimeWarning": {
       "type": "staticText",
-      "text": "setup_step3",
+      "text": "part1_time_warning",
+      "style": { "color": "orange", "fontWeight": "bold" },
       "hidden": "data.aasToken",
       "newLine": true,
       "xs": 12,
@@ -66,9 +91,9 @@
       "lg": 12,
       "xl": 12
     },
-    "_setupStep4": {
+    "_part1Step3": {
       "type": "staticText",
-      "text": "setup_step4",
+      "text": "part1_step3",
       "hidden": "data.aasToken",
       "newLine": true,
       "xs": 12,
@@ -77,7 +102,18 @@
       "lg": 12,
       "xl": 12
     },
-    "_setupStep4Image": {
+    "_part1Step4": {
+      "type": "staticText",
+      "text": "part1_step4",
+      "hidden": "data.aasToken",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
+    },
+    "_part1Image": {
       "type": "staticImage",
       "src": "img/step1-oauth-token.png",
       "showInDialog": true,
@@ -90,21 +126,9 @@
       "lg": 12,
       "xl": 12
     },
-    "_setupStep5": {
+    "_part1Step5": {
       "type": "staticText",
-      "text": "setup_step5",
-      "hidden": "data.aasToken",
-      "newLine": true,
-      "xs": 12,
-      "sm": 12,
-      "md": 12,
-      "lg": 12,
-      "xl": 12
-    },
-    "_setupWarning": {
-      "type": "staticText",
-      "text": "setup_warning",
-      "style": { "color": "orange" },
+      "text": "part1_step5",
       "hidden": "data.aasToken",
       "newLine": true,
       "xs": 12,
@@ -114,10 +138,10 @@
       "xl": 12
     },
     "oauthToken": {
-      "type": "password",
+      "type": "text",
       "label": "oauth_token_label",
       "help": "oauth_token_help",
-      "visible": true,
+      "hidden": "data.aasToken",
       "newLine": true,
       "xs": 12,
       "sm": 12,
@@ -125,11 +149,204 @@
       "lg": 6,
       "xl": 6
     },
+    "_connectButton": {
+      "type": "sendTo",
+      "command": "connectAccount",
+      "label": "connect_button",
+      "jsonData": "${JSON.stringify({ token: data.oauthToken || '' })}",
+      "useNative": true,
+      "showProcess": true,
+      "variant": "contained",
+      "disabled": "!data.oauthToken",
+      "hidden": "data.aasToken",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 6,
+      "lg": 4,
+      "xl": 4
+    },
     "email": {
       "type": "text",
       "label": "connected_as",
       "readOnly": true,
       "hidden": "!data.aasToken",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 6,
+      "lg": 4,
+      "xl": 4
+    },
+    "_resetLogin": {
+      "type": "sendTo",
+      "command": "resetLogin",
+      "label": "reset_button",
+      "useNative": true,
+      "variant": "outlined",
+      "confirm": {
+        "text": "reset_confirm",
+        "title": "reset_confirm_title",
+        "ok": "reset_confirm_ok",
+        "cancel": "reset_confirm_cancel",
+        "type": "warning"
+      },
+      "hidden": "!data.aasToken",
+      "xs": 12,
+      "sm": 12,
+      "md": 6,
+      "lg": 4,
+      "xl": 4
+    },
+    "_part2Headline": {
+      "type": "header",
+      "text": "part2_headline",
+      "size": 4,
+      "hidden": "!data.aasToken || data.ownerKey",
+      "newLine": true
+    },
+    "_part2NoRush": {
+      "type": "staticText",
+      "text": "part2_no_rush",
+      "style": { "color": "#43a047", "fontWeight": "bold" },
+      "hidden": "!data.aasToken || data.ownerKey",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
+    },
+    "_part2Intro": {
+      "type": "staticText",
+      "text": "part2_intro",
+      "hidden": "!data.aasToken || data.ownerKey",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
+    },
+    "_part2Step1": {
+      "type": "staticText",
+      "text": "part2_step1",
+      "hidden": "!data.aasToken || data.ownerKey",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
+    },
+    "_part2OpenUnlock": {
+      "type": "sendTo",
+      "command": "getStep2Url",
+      "label": "part2_open_button",
+      "openUrl": true,
+      "variant": "contained",
+      "hidden": "!data.aasToken || data.ownerKey",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 6,
+      "lg": 4,
+      "xl": 4
+    },
+    "_part2Step2": {
+      "type": "staticText",
+      "text": "part2_step2",
+      "hidden": "!data.aasToken || data.ownerKey",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
+    },
+    "_part2Step3": {
+      "type": "staticText",
+      "text": "part2_step3",
+      "hidden": "!data.aasToken || data.ownerKey",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
+    },
+    "_part2ShowScript": {
+      "type": "sendTo",
+      "command": "getStep2Script",
+      "label": "part2_script_button",
+      "variant": "outlined",
+      "hidden": "!data.aasToken || data.ownerKey",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 6,
+      "lg": 4,
+      "xl": 4
+    },
+    "_part2Step4": {
+      "type": "staticText",
+      "text": "part2_step4",
+      "hidden": "!data.aasToken || data.ownerKey",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
+    },
+    "_part2Image": {
+      "type": "staticImage",
+      "src": "img/step2-console.png",
+      "showInDialog": true,
+      "showInDialogSmallSize": 140,
+      "hidden": "!data.aasToken || data.ownerKey",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
+    },
+    "_part2Step5": {
+      "type": "staticText",
+      "text": "part2_step5",
+      "hidden": "!data.aasToken || data.ownerKey",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
+    },
+    "sharedKeyJson": {
+      "type": "text",
+      "minRows": 3,
+      "maxRows": 8,
+      "label": "shared_key_json_label",
+      "help": "shared_key_json_help",
+      "hidden": "!data.aasToken || data.ownerKey",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 8,
+      "lg": 6,
+      "xl": 6
+    },
+    "_unlockButton": {
+      "type": "sendTo",
+      "command": "unlockEncryption",
+      "label": "unlock_button",
+      "jsonData": "${JSON.stringify({ json: data.sharedKeyJson || '', email: data.email || '', aasToken: data.aasToken || '', androidId: data.androidId || '' })}",
+      "useNative": true,
+      "showProcess": true,
+      "variant": "contained",
+      "disabled": "!data.sharedKeyJson",
+      "hidden": "!data.aasToken || data.ownerKey",
       "newLine": true,
       "xs": 12,
       "sm": 12,
@@ -150,78 +367,9 @@
       "lg": 3,
       "xl": 3
     },
-    "_step2Headline": {
-      "type": "header",
-      "text": "step2_headline",
-      "size": 4,
-      "hidden": "!data.aasToken || data.ownerKey",
-      "newLine": true
-    },
-    "_step2Intro": {
+    "_part2Done": {
       "type": "staticText",
-      "text": "step2_intro",
-      "hidden": "!data.aasToken || data.ownerKey",
-      "newLine": true,
-      "xs": 12,
-      "sm": 12,
-      "md": 12,
-      "lg": 12,
-      "xl": 12
-    },
-    "_step2OpenUnlock": {
-      "type": "sendTo",
-      "command": "getStep2Url",
-      "label": "step2_open_button",
-      "openUrl": true,
-      "variant": "contained",
-      "hidden": "!data.aasToken || data.ownerKey",
-      "newLine": true,
-      "xs": 12,
-      "sm": 12,
-      "md": 6,
-      "lg": 4,
-      "xl": 4
-    },
-    "_step2ShowScript": {
-      "type": "sendTo",
-      "command": "getStep2Script",
-      "label": "step2_script_button",
-      "variant": "outlined",
-      "hidden": "!data.aasToken || data.ownerKey",
-      "xs": 12,
-      "sm": 12,
-      "md": 6,
-      "lg": 4,
-      "xl": 4
-    },
-    "_step2Image": {
-      "type": "staticImage",
-      "src": "img/step2-console.png",
-      "showInDialog": true,
-      "showInDialogSmallSize": 140,
-      "hidden": "!data.aasToken || data.ownerKey",
-      "newLine": true,
-      "xs": 12,
-      "sm": 12,
-      "md": 12,
-      "lg": 12,
-      "xl": 12
-    },
-    "sharedKeyJson": {
-      "type": "password",
-      "label": "shared_key_json_label",
-      "help": "shared_key_json_help",
-      "hidden": "!data.aasToken || data.ownerKey",
-      "newLine": true,
-      "xs": 12,
-      "sm": 12,
-      "md": 8,
-      "lg": 6,
-      "xl": 6
-    },
-    "_step2Done": {
-      "type": "staticText",
-      "text": "step2_done",
+      "text": "part2_done",
       "hidden": "!data.ownerKey",
       "newLine": true,
       "xs": 12,

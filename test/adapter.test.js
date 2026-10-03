@@ -59,12 +59,28 @@ const fake = (resolved, exports) => {
   require.cache[resolved] = { id: resolved, filename: resolved, loaded: true, exports };
 };
 fake(require.resolve('@iobroker/adapter-core'), { Adapter: FakeAdapter });
+let exchangeResult = {};
+let exchangeError = null;
+const exchangeCalls = [];
 fake(lib('google-auth.js'), {
   performOAuth: async () => ({ Auth: 'token' }),
-  exchangeToken: async () => ({}),
+  exchangeToken: async (email, token) => {
+    exchangeCalls.push(token);
+    if (exchangeError) {
+      throw exchangeError;
+    }
+    return exchangeResult;
+  },
   DEFAULT_CLIENT_SIG: 'sig',
 });
+fake(lib('google-checkin.js'), { gcmCheckin: async () => ({ androidId: '111', securityToken: '222' }) });
 fake(lib('nova-api.js'), { listDevices: async () => trackers, executeLocateAction: async () => {} });
+// Real parsing and script/URL helpers, but no network call for the owner key itself.
+const realOwnerKey = require('../lib/owner-key');
+fake(lib('owner-key.js'), {
+  ...realOwnerKey,
+  retrieveOwnerKey: async () => ({ ownerKey: Buffer.from('0a0b', 'hex'), ownerKeyVersion: 3 }),
+});
 
 const createAdapter = require('../main.js');
 
@@ -206,4 +222,90 @@ test('messages for other commands, or without a callback, are ignored safely', a
   await adapter.onMessage(null);
   await adapter.onMessage({});
   assert.equal(adapter.sent.length, 0);
+});
+
+const ask = async (adapter, command, message) => {
+  adapter.sent.length = 0;
+  await adapter.onMessage({ command, message, from: 'system.adapter.admin.0', callback: { id: 9 } });
+  return adapter.sent[0].result;
+};
+
+test('Connect button: exchanges the pasted token and hands the account back to the page', async () => {
+  const adapter = createAdapter();
+  exchangeCalls.length = 0;
+  exchangeResult = { Token: 'aas-token', Email: 'me@example.org' };
+
+  const result = await ask(adapter, 'connectAccount', { token: '  pasted-token  ' });
+
+  assert.deepEqual(exchangeCalls, ['pasted-token'], 'the token is trimmed');
+  assert.deepEqual(result.native, {
+    oauthToken: '',
+    email: 'me@example.org',
+    androidId: '111',
+    securityToken: '222',
+    aasToken: 'aas-token',
+  });
+  assert.equal(result.saveConfig, true);
+});
+
+test('Connect button: an empty or rejected token produces a readable error, nothing is stored', async () => {
+  const adapter = createAdapter();
+  exchangeResult = { Token: 'x', Email: 'y' };
+  assert.match((await ask(adapter, 'connectAccount', { token: '   ' })).error, /paste the oauth_token/);
+  assert.match((await ask(adapter, 'connectAccount', {})).error, /paste the oauth_token/);
+
+  exchangeResult = {};
+  const rejected = await ask(adapter, 'connectAccount', { token: 'expired' });
+  assert.match(rejected.error, /probably expired/);
+  assert.equal(rejected.native, undefined);
+});
+
+test('Unlock button: derives the owner key from the values the page sends, before anything is saved', async () => {
+  const adapter = createAdapter();
+  const account = { email: 'me@example.org', aasToken: 'aas', androidId: '111' };
+  const pasted = JSON.stringify({ finder_hw: [{ key: { 0: 1, 1: 2 } }] });
+
+  const result = await ask(adapter, 'unlockEncryption', { json: pasted, ...account });
+
+  assert.deepEqual(result.native, { sharedKeyJson: '', ownerKey: '0a0b', ownerKeyVersion: 3 });
+  assert.equal(result.saveConfig, true);
+});
+
+test('Unlock button: explains what is missing or wrong instead of failing silently', async () => {
+  const adapter = createAdapter();
+  const account = { email: 'me@example.org', aasToken: 'aas', androidId: '111' };
+
+  assert.match((await ask(adapter, 'unlockEncryption', { json: '', ...account })).error, /paste the result/);
+  assert.match((await ask(adapter, 'unlockEncryption', { json: '{}' })).error, /Part 1 of the setup first/);
+  assert.match((await ask(adapter, 'unlockEncryption', { json: 'not json', ...account })).error, /not valid JSON/);
+  assert.match((await ask(adapter, 'unlockEncryption', { json: '{}', ...account })).error, /No "finder_hw" key/);
+});
+
+test('Reconnect button: clears the login, the key and the tracker table, then asks to save', async () => {
+  const adapter = createAdapter();
+  const result = await ask(adapter, 'resetLogin', {});
+
+  assert.equal(result.saveConfig, true);
+  assert.deepEqual(result.native, {
+    oauthToken: '',
+    email: '',
+    androidId: '',
+    securityToken: '',
+    aasToken: '',
+    sharedKeyJson: '',
+    ownerKey: '',
+    ownerKeyVersion: -1,
+    deviceSettings: [],
+  });
+});
+
+test('Connect button: a rejected token ("BadAuthentication") is explained in plain words', async () => {
+  const adapter = createAdapter();
+  exchangeError = new Error('Google auth error: BadAuthentication');
+  try {
+    const result = await ask(adapter, 'connectAccount', { token: 'whatever' });
+    assert.match(result.error, /rejected the oauth_token.*expired/);
+  } finally {
+    exchangeError = null;
+  }
 });
