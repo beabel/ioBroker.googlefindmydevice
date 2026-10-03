@@ -18,6 +18,13 @@ tests.integration(path.join(__dirname, '..', '..'), {
             it('should start and warn that setup is missing, without crashing', async () => {
                 await harness.startAdapterAndWait();
 
+                // The warning is logged right after start-up work that touches the
+                // database, so it can arrive a moment after the adapter is "alive".
+                const deadline = Date.now() + 10000;
+                while (!harness.hasLog(/Not set up yet/i, 'warn') && Date.now() < deadline) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+
                 expect(harness.hasLog(/Not set up yet/i, 'warn')).to.be.true;
             });
         });
