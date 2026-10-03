@@ -39,6 +39,7 @@
     "reset_confirm_title": "Connecter un autre compte ?",
     "shared_key_json_help": "C'est vérifié tout de suite. Ensuite, il vous est demandé de sauvegarder.",
     "shared_key_json_label": "Résultat de la console du navigateur (JSON)",
+    "start_instance_hint": "Démarrez d'abord l'instance (bouton play en haut de cette page ou dans la liste des instances). Les boutons ci-dessous ne fonctionnent que lorsque l'instance est en cours d'exécution. Il est normal qu'il enregistre uniquement \"Not set up yet\" jusqu'à ce que vous ayez terminé cette configuration.",
     "supported_devices_note": "Cet adaptateur ne prend en charge que les traceurs Bluetooth (appareils du réseau \"Find My Device\", par ex. Chipolo, Pebblebee). Les téléphones, tablettes et autres appareils liés au même compte Google ne sont volontairement PAS affichés ici - Google ne fournit pas de données de localisation exploitables pour eux via cette API, et la localisation d'un téléphone nécessiterait une méthode d'accès totalement différente et moins sécurisée (une session de navigateur complète au lieu d'un jeton à portée restreinte). Continuez à utiliser l'interface propre de Google sur google.com/android/find pour ces appareils.",
     "unlock_button": "Vérifier et déverrouiller"
 }

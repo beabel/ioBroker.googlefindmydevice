@@ -39,6 +39,7 @@
     "reset_confirm_title": "Połączyć inne konto?",
     "shared_key_json_help": "Jest to sprawdzane od razu. Następnie zostaniesz poproszony o zapisanie.",
     "shared_key_json_label": "Wynik z konsoli przeglądarki (JSON)",
+    "start_instance_hint": "Najpierw uruchom instancję (przycisk odtwarzania na górze tej strony lub na liście instancji). Poniższe przyciski działają tylko wtedy, gdy instancja jest uruchomiona. To normalne, że rejestruje tylko komunikat \"Not set up yet\", dopóki nie zakończysz tej konfiguracji.",
     "supported_devices_note": "Ten adapter obsługuje wyłącznie lokalizatory Bluetooth (urządzenia sieci \"Find My Device\", np. Chipolo, Pebblebee). Telefony, tablety i inne urządzenia powiązane z tym samym kontem Google celowo NIE są tutaj pokazywane - Google nie udostępnia dla nich użytecznych danych o lokalizacji przez to API, a lokalizowanie telefonu wymagałoby zupełnie innej, mniej bezpiecznej metody dostępu (pełnej sesji przeglądarki zamiast tokena o ograniczonym zakresie). Dla tych urządzeń nadal korzystaj z własnego interfejsu Google na google.com/android/find.",
     "unlock_button": "Sprawdź i odblokuj"
 }

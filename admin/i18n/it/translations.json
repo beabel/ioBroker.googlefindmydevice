@@ -39,6 +39,7 @@
     "reset_confirm_title": "Collegare un altro account?",
     "shared_key_json_help": "Viene controllato subito. Successivamente ti verrà chiesto di salvare.",
     "shared_key_json_label": "Risultato dalla console del browser (JSON)",
+    "start_instance_hint": "Avvia prima l'istanza (pulsante di riproduzione nella parte superiore di questa pagina o nell'elenco delle istanze). I pulsanti seguenti funzionano solo mentre l'istanza è in esecuzione. È normale che venga registrato solo \"Not set up yet\" fino al termine della configurazione.",
     "supported_devices_note": "Questo adattatore supporta solo i tracker Bluetooth (dispositivi della rete \"Find My Device\", ad es. Chipolo, Pebblebee). Telefoni, tablet e altri dispositivi collegati allo stesso account Google NON vengono mostrati qui intenzionalmente - Google non fornisce dati di posizione utilizzabili per essi tramite questa API, e la localizzazione del telefono richiederebbe un metodo di accesso completamente diverso e meno sicuro (una sessione completa del browser invece di un token con ambito limitato). Per questi dispositivi continuate a usare l'interfaccia di Google su google.com/android/find.",
     "unlock_button": "Verifica e sblocca"
 }

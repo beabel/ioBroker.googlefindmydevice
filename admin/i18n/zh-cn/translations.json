@@ -39,6 +39,7 @@
     "reset_confirm_title": "连接其他账号?",
     "shared_key_json_help": "立即进行检查。之后系统会要求您保存。",
     "shared_key_json_label": "浏览器控制台的结果 (JSON)",
+    "start_instance_hint": "首先启动实例（此页面顶部或实例列表中的播放按钮）。下面的按钮仅在实例运行时起作用。在您完成此设置之前，它只会记录\"Not set up yet\"，这是正常的。",
     "supported_devices_note": "此适配器仅支持蓝牙追踪器(\"Find My Device\" 网络中的设备,例如 Chipolo、Pebblebee)。链接到同一 Google 账号的手机、平板等其他设备在此处特意不予显示 - 对于这些设备,Google 并未通过此 API 提供可用的位置数据,而获取手机定位需要一种完全不同且安全性更低的访问方式(需要完整的浏览器会话,而不是范围受限的令牌)。这些设备请继续使用 Google 自己的界面 google.com/android/find。",
     "unlock_button": "验证并解锁"
 }

@@ -39,6 +39,7 @@
     "reset_confirm_title": "Ander account verbinden?",
     "shared_key_json_help": "Het wordt meteen gecontroleerd. Daarna wordt u gevraagd om op te slaan.",
     "shared_key_json_label": "Resultaat uit de browserconsole (JSON)",
+    "start_instance_hint": "Start eerst de instantie (afspeelknop bovenaan deze pagina of in de instantielijst). De onderstaande knoppen werken alleen terwijl de instantie actief is. Het is normaal dat er pas \"Not set up yet\" wordt geregistreerd totdat u deze installatie hebt voltooid.",
     "supported_devices_note": "Deze adapter ondersteunt alleen Bluetooth-trackers (apparaten in het \"Find My Device\"-netwerk, bijv. Chipolo, Pebblebee). Telefoons, tablets en andere apparaten die aan hetzelfde Google-account gekoppeld zijn, worden hier bewust NIET getoond - Google levert voor deze apparaten geen bruikbare locatiegegevens via deze API, en het bepalen van een telefoonlocatie zou een volledig andere, minder veilige toegangsmethode vereisen (een volledige browsersessie in plaats van een beperkt token). Gebruik voor die apparaten gewoon Google's eigen interface op google.com/android/find.",
     "unlock_button": "Controleren en ontgrendelen"
 }

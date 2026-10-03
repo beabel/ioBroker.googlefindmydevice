@@ -45,8 +45,9 @@ Requirements: Node.js >= 22, js-controller >= 6.0.11, Admin >= 7.8.23.
 
 1. In ioBroker Admin open **Adapters**, search for "Google Find My Device"
    and install it.
-2. Create an instance. New instances start disabled; finish the
-   [Configuration](#configuration) below, then enable the instance.
+2. Create an instance and start it (play button). New instances start disabled, and the buttons of the
+   configuration page only work while the instance is running. Until the setup is finished the instance only logs
+   that it is not set up yet - that is expected. Then follow the [Configuration](#configuration) below.
 
 ## Configuration
 
@@ -234,6 +235,12 @@ This project is not affiliated with, endorsed by, or supported by Google.
 risk; Google's internal APIs are undocumented and may change without notice.
 
 ## Changelog
+
+### **WORK IN PROGRESS**
+
+* (beabel) **FIXED**: the configuration page now tells you to start the instance first. Its buttons (Connect, Verify and
+  unlock, ...) only work while the instance is running, and a new instance starts disabled, so the **Connect** button
+  looked broken. The README says the same.
 
 ### 0.1.0 (2026-10-03)
 

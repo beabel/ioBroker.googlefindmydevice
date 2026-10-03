@@ -13,6 +13,18 @@
       "lg": 12,
       "xl": 12
     },
+    "_startHint": {
+      "type": "staticText",
+      "text": "start_instance_hint",
+      "style": { "color": "#fb8c00", "fontWeight": "bold" },
+      "hidden": "_alive || (data.aasToken && data.ownerKey)",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
+    },
     "_part1Headline": {
       "type": "header",
       "text": "part1_headline",

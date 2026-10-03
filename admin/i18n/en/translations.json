@@ -39,6 +39,7 @@
 	"reset_confirm_title": "Connect a different account?",
 	"shared_key_json_help": "It is checked right away. Afterwards you are asked to save.",
 	"shared_key_json_label": "Result from the browser console (JSON)",
+	"start_instance_hint": "Start the instance first (play button at the top of this page or in the instance list). The buttons below only work while the instance is running. It is normal that it only logs \"Not set up yet\" until you have finished this setup.",
 	"supported_devices_note": "This adapter only supports Bluetooth trackers (devices on the \"Find My Device\" network, e.g. Chipolo, Pebblebee). Phones, tablets and other devices linked to the same Google account are deliberately NOT shown here - Google provides no usable location data for them through this API, and phone location would require a completely different, less secure access method (a full browser session instead of a narrowly-scoped token). Keep using Google's own interface at google.com/android/find for those.",
 	"unlock_button": "Verify and unlock"
 }

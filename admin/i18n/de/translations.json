@@ -39,6 +39,7 @@
     "reset_confirm_title": "Anderes Konto verbinden?",
     "shared_key_json_help": "Wird sofort geprüft. Danach wirst du zum Speichern aufgefordert.",
     "shared_key_json_label": "Ergebnis aus der Browser-Konsole (JSON)",
+    "start_instance_hint": "Starte zuerst die Instanz (Play-Button oben auf dieser Seite oder in der Instanzliste). Die Buttons unten funktionieren nur bei laufender Instanz. Dass sie bis zum Abschluss dieser Einrichtung nur \"Not set up yet\" loggt, ist normal.",
     "supported_devices_note": "Dieser Adapter unterstützt nur Bluetooth-Tracker (Geräte im \"Find My Device\"-Netzwerk, z.B. Chipolo, Pebblebee). Handys, Tablets und andere Geräte, die mit demselben Google-Konto verbunden sind, erscheinen absichtlich NICHT in diesem Adapter - Google liefert dafür keine nutzbaren Standortdaten über diesen Weg, und eine Handy-Ortung würde einen komplett anderen, unsichereren Zugangsweg (volle Browser-Sitzung statt eng begrenztem Token) erfordern. Nutze dafür weiterhin die Google-eigene Oberfläche unter google.com/android/find.",
     "unlock_button": "Prüfen und freischalten"
 }
