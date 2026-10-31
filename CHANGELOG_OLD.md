@@ -3,6 +3,12 @@
 See the "Changelog" section in [README.md](README.md) for the current
 history. Entries move here once that section grows too long.
 
+## 0.0.7 (2026-09-18)
+
+* (beabel) **ENHANCED**: replaced the `any`-casts introduced for the `@tsconfig/node22` migration with specific
+  types and filled in missing JSDoc descriptions.
+* (beabel) **CI/CD**: added `@alcalzone/release-script` (release-time tool only, not part of the published package).
+
 ## 0.0.6 (2026-09-18)
 
 * (beabel) **FIXED**: the 0.0.5 fixes only applied to newly discovered devices, because existing objects were

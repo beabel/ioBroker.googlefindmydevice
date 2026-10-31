@@ -289,7 +289,7 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ## Changelog
 
-### **WORK IN PROGRESS**
+### 0.1.4 (2026-10-31)
 
 * (beabel) **NEW**: optional BLE identifier (EID) states for trackers (off by default, switch on per tracker in the device table).
 * (beabel) **FIXED**: push messages are now read correctly even if Google adds extra parameters to the encryption headers; if a push message still cannot be decrypted, the debug log says why (sizes and parameter names only).
@@ -338,12 +338,6 @@ risk; Google's internal APIs are undocumented and may change without notice.
   moved to `admin/i18n/<lang>/translations.json`.
 * (beabel) **TESTING**: unit tests for location decryption (own and relayed reports, wrong key, tampering),
   configuration repair, interval limits, object definitions and the MCS client; linting fails on any warning.
-
-### 0.0.7 (2026-09-18)
-
-* (beabel) **ENHANCED**: replaced the `any`-casts introduced for the `@tsconfig/node22` migration with specific
-  types and filled in missing JSDoc descriptions.
-* (beabel) **CI/CD**: added `@alcalzone/release-script` (release-time tool only, not part of the published package).
 
 Older changelog entries: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
 

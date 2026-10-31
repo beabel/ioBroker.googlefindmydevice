@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "googlefindmydevice",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "news": {
+      "0.1.4": {
+        "en": "optional BLE identifier (EID) states per tracker (off by default); push messages with extra header parameters are read correctly; debug log shows the identifier layout of devices",
+        "de": "optionale BLE-Kennung (EID) pro Tracker (standardmäßig aus); Push-Nachrichten mit zusätzlichen Header-Parametern werden korrekt gelesen; Debug-Log zeigt den Kennungsaufbau der Geräte",
+        "ru": "необязательный идентификатор BLE (EID) для каждого трекера (по умолчанию выключен); push-сообщения с дополнительными параметрами заголовка читаются правильно; в журнале отладки показана структура идентификатора устройств",
+        "pt": "identificador BLE (EID) opcional por rastreador (desativado por padrão); mensagens push com parâmetros extras no cabeçalho são lidas corretamente; o log de depuração mostra a estrutura do identificador dos dispositivos",
+        "nl": "optionele BLE-identificatie (EID) per tracker (standaard uit); pushberichten met extra headerparameters worden correct gelezen; het debuglogboek toont de opbouw van de apparaat-ID",
+        "fr": "identifiant BLE (EID) facultatif par traceur (désactivé par défaut) ; les messages push avec des paramètres d'en-tête supplémentaires sont lus correctement ; le journal de débogage montre la structure de l'identifiant des appareils",
+        "it": "identificatore BLE (EID) facoltativo per tracker (disattivato di default); i messaggi push con parametri di intestazione aggiuntivi vengono letti correttamente; il log di debug mostra la struttura dell'identificatore dei dispositivi",
+        "es": "identificador BLE (EID) opcional por rastreador (desactivado por defecto); los mensajes push con parámetros de cabecera adicionales se leen correctamente; el registro de depuración muestra la estructura del identificador de los dispositivos",
+        "pl": "opcjonalny identyfikator BLE (EID) dla każdego lokalizatora (domyślnie wyłączony); wiadomości push z dodatkowymi parametrami nagłówka są odczytywane poprawnie; dziennik debugowania pokazuje strukturę identyfikatora urządzeń",
+        "uk": "необов’язковий ідентифікатор BLE (EID) для кожного трекера (за замовчуванням вимкнено); push-повідомлення з додатковими параметрами заголовка читаються правильно; журнал налагодження показує структуру ідентифікатора пристроїв",
+        "zh-cn": "每个追踪器可选的 BLE 标识符 (EID)(默认关闭);带有额外标头参数的推送消息现在可正确读取;调试日志显示设备标识符的结构"
+      },
       "0.1.3": {
         "en": "debug log lists devices that are left out (manufacturer, model, type); README explains that saving restarts the instance between the setup parts and which devices appear",
         "de": "Debug-Log nennt ausgelassene Geräte (Hersteller, Modell, Typ); README erklärt, dass das Speichern zwischen den Einrichtungsteilen die Instanz neu startet und welche Geräte erscheinen",
@@ -80,19 +93,6 @@
         "pl": "użycie extendObjectAsync, aby istniejące instalacje otrzymały poprawki obiektów; poprawki repochecker",
         "uk": "використано extendObjectAsync, щоб наявні інсталяції отримали виправлення об'єктів; виправлення repochecker",
         "zh-cn": "改用 extendObjectAsync,使现有安装也能获得对象修复;修复 repochecker 发现的问题"
-      },
-      "0.0.5": {
-        "en": "fix object hierarchy and role, full i18n on object names (repository review findings)",
-        "de": "Objekthierarchie und Rolle korrigiert, vollstaendige i18n bei Objektnamen (Repository-Review-Funde)",
-        "ru": "исправлена иерархия объектов и роль, полная i18n у имён объектов (по итогам ревью репозитория)",
-        "pt": "corrigida a hierarquia de objetos e a role, i18n completo nos nomes de objetos (achados da revisão do repositório)",
-        "nl": "objecthiërarchie en rol gecorrigeerd, volledige i18n op objectnamen (bevindingen repository-review)",
-        "fr": "hiérarchie d'objets et rôle corrigés, i18n complet sur les noms d'objets (constats de la revue du dépôt)",
-        "it": "corrette la gerarchia degli oggetti e il ruolo, i18n completo sui nomi degli oggetti (rilievi della revisione del repository)",
-        "es": "corregida la jerarquía de objetos y el rol, i18n completo en los nombres de objetos (hallazgos de la revisión del repositorio)",
-        "pl": "naprawiono hierarchię obiektów i rolę, pełne i18n dla nazw obiektów (wyniki przeglądu repozytorium)",
-        "uk": "виправлено ієрархію об'єктів і роль, повне i18n для назв об'єктів (результати перевірки репозиторію)",
-        "zh-cn": "修复对象层级和角色,对象名称补全全部语言(仓库审查发现)"
       }
     },
     "titleLang": {
