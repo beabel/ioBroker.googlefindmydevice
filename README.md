@@ -164,9 +164,51 @@ configuration listing every discovered tracker with two settings each:
   request one relatively often for something like an actively-moving bike,
   without hammering it constantly).
 
+A third column, **Publish BLE identifier (EID)**, is described in
+[Publishing BLE identifiers](#publishing-ble-identifiers-eid).
+
 Device names, manufacturer/model info and pairing date are always kept
 up to date on the regular poll interval regardless of these settings, since
 reading that doesn't touch the tracker itself.
+
+### Publishing BLE identifiers (EID)
+
+A tracker in the Find Hub network does not broadcast a fixed Bluetooth
+address. Instead it sends a 20-byte *ephemeral identifier* (EID) in its
+advertisements (Eddystone service `0xFEAA`, frame type `0x40` or `0x41`) and
+changes it every 1024 seconds. Only the owner can calculate which EID belongs
+to which tracker, because the calculation needs the tracker's secret identity
+key. With the option **Publish BLE identifier (EID)** switched on for a
+tracker, the adapter calculates its current EID and publishes it, so that your
+own Bluetooth scanners (for example an ESP32 or a Shelly) can recognise exactly
+that tracker in the radio traffic, even if several trackers lie next to each
+other.
+
+The option is **off by default** for every tracker and needs Part 2 of the
+setup. It does not contact the tracker or Google; it is calculated locally.
+Disabling it removes the states again after the next start.
+
+| State | Type | Description |
+| --- | --- | --- |
+| `<id>.eid.current` | string | EID of the current time window, 40 hex characters (20 bytes) |
+| `<id>.eid.previous` | string | EID of the previous window |
+| `<id>.eid.next` | string | EID of the next window |
+| `<id>.eid.windowStart` | number | Start of the current window (timestamp in ms) |
+| `<id>.eid.windowSeconds` | number | Length of a window in seconds (1024) |
+
+The tracker's own clock may differ a little from the clock of the ioBroker
+host, so a scanner should accept all three values (`previous`, `current`,
+`next`). The values change at every window boundary.
+
+Privacy: the identity key itself is never stored in a state, in the
+configuration or in the log - it only lives in the memory of the running
+adapter. The EID is public while the tracker advertises it, but anybody who
+knows it can recognise that tracker nearby for as long as it is valid, so treat
+the states as you would a device address and restrict who can read them if
+that matters to you.
+
+Not every tracker type is supported: trackers that do not rotate their
+identifier are skipped (the debug log says so).
 
 ## Usage
 
@@ -192,6 +234,7 @@ Google's identifier of the tracker with unsafe characters replaced by `_`.
 | `<id>.semanticLocation` | string | Named place such as "Home", if Google reports one instead of coordinates |
 | `<id>.isOwnReport` | boolean | `true` if the tracker reported directly, `false` if a stranger's device nearby relayed it |
 | `<id>.mapsLink` | string | Google Maps link to the last GPS position |
+| `<id>.eid.*` | | Optional BLE identifier states, see [Publishing BLE identifiers](#publishing-ble-identifiers-eid) |
 | `info.connection` | boolean | `true` while the last poll succeeded |
 
 Only devices that Google lists with a tracker identifier appear. Phones and tablets
@@ -248,6 +291,7 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ### **WORK IN PROGRESS**
 
+* (beabel) **NEW**: optional BLE identifier (EID) states for trackers (off by default, switch on per tracker in the device table).
 * (beabel) **FIXED**: push messages are now read correctly even if Google adds extra parameters to the encryption headers; if a push message still cannot be decrypted, the debug log says why (sizes and parameter names only).
 * (beabel) **ENHANCED**: the debug log shows the structure of the identifier block of every device (field numbers and sizes only, never names or ids) to help support devices such as headphones.
 

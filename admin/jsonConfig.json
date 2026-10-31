@@ -429,7 +429,7 @@
           "type": "text",
           "attr": "name",
           "title": "device_name_col",
-          "width": "40%",
+          "width": "30%",
           "readOnly": true
         },
         {
@@ -442,9 +442,15 @@
           "type": "number",
           "attr": "intervalMinutes",
           "title": "device_interval_col",
-          "width": "25%",
+          "width": "20%",
           "min": 5,
           "max": 1440
+        },
+        {
+          "type": "checkbox",
+          "attr": "publishEid",
+          "title": "device_publish_eid_col",
+          "width": "25%"
         }
       ]
     }

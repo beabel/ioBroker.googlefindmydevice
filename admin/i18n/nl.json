@@ -5,6 +5,7 @@
 	"device_interval_col": "Interval (minuten)",
 	"device_locate_col": "Locatie opvragen (accu!)",
 	"device_name_col": "Apparaat",
+	"device_publish_eid_col": "BLE-identificatie (EID) publiceren",
 	"device_settings_headline": "Actieve locatieverzoeken per apparaat - kost accu!",
 	"device_settings_intro": "Dit is een aparte, tweede timer - onafhankelijk van het interval \"Apparatenlijst bijwerken\" hierboven. Alleen deze tabel benadert de tracker daadwerkelijk via Bluetooth om een echte coördinaat te verkrijgen - dit belast de accu merkbaar. Schakel dit per tracker afzonderlijk in en kies een interval dat bij het apparaat past (bijv. zelden voor een fiets die meestal thuis staat). Nieuw gevonden trackers worden hier automatisch toegevoegd, maar standaard uitgeschakeld. Telefoons/tablets van hetzelfde Google-account verschijnen hier bewust niet (zie de opmerking hierboven).",
 	"oauth_token_help": "Het wordt meteen gecontroleerd. Daarna wordt u gevraagd om op te slaan.",

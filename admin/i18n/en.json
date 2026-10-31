@@ -5,6 +5,7 @@
 	"device_interval_col": "Interval (minutes)",
 	"device_locate_col": "Request location (battery!)",
 	"device_name_col": "Device",
+	"device_publish_eid_col": "Publish BLE identifier (EID)",
 	"device_settings_headline": "Active per-device location requests - costs battery!",
 	"device_settings_intro": "This is a separate, second timer - independent from the \"Update device list\" interval above. Only this table actually pings the tracker over Bluetooth to get a real coordinate - this noticeably drains its battery. Please enable this individually per tracker and pick an interval that fits the device (e.g. rarely for a bike that mostly sits at home). Newly found trackers are added here automatically, but disabled by default. Phones/tablets from the same Google account deliberately don't show up here (see the note above).",
 	"oauth_token_help": "It is checked right away. Afterwards you are asked to save.",
