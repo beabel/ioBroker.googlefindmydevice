@@ -6,7 +6,7 @@ const {
   looksCorrupted,
   clampMinutes,
   canonicIdToStateId,
-  describeSkippedDevice,
+  describeDevice,
   ENCRYPTED_NATIVE_FIELDS,
 } = require('../lib/util');
 
@@ -76,8 +76,8 @@ test('canonicIdToStateId: never yields dots or an empty id', () => {
   assert.ok(!canonicIdToStateId('x.y.z').includes('.'));
 });
 
-test('describeSkippedDevice: describes a phone-like device without its name or ids', () => {
-  const text = describeSkippedDevice({
+test('describeDevice: describes a phone-like device without its name or ids', () => {
+  const text = describeDevice({
     name: 'Maik private phone',
     manufacturer: 'Google',
     model: 'Pixel 8',
@@ -91,10 +91,17 @@ test('describeSkippedDevice: describes a phone-like device without its name or i
   assert.ok(!text.includes('Maik'));
 });
 
-test('describeSkippedDevice: copes with missing fields', () => {
+test('describeDevice: copes with missing fields', () => {
   assert.equal(
-    describeSkippedDevice({ raw: {} }),
+    describeDevice({ raw: {} }),
     'manufacturer=unknown, model=unknown, deviceType=unknown, identifier=none',
   );
-  assert.equal(describeSkippedDevice(undefined), 'manufacturer=unknown, model=unknown, deviceType=unknown, identifier=none');
+  assert.equal(describeDevice(undefined), 'manufacturer=unknown, model=unknown, deviceType=unknown, identifier=none');
+});
+
+test('describeDevice: adds the identifier field layout when known', () => {
+  assert.equal(
+    describeDevice({ identifierLayout: '2=5,3{1:len12}', raw: { identifierInformation: { type: 5 } } }),
+    'manufacturer=unknown, model=unknown, deviceType=unknown, identifier=5, identifier fields: 2=5,3{1:len12}',
+  );
 });

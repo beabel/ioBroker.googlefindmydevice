@@ -246,6 +246,11 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ## Changelog
 
+### **WORK IN PROGRESS**
+
+* (beabel) **FIXED**: push messages are now read correctly even if Google adds extra parameters to the encryption headers; if a push message still cannot be decrypted, the debug log says why (sizes and parameter names only).
+* (beabel) **ENHANCED**: the debug log shows the structure of the identifier block of every device (field numbers and sizes only, never names or ids) to help support devices such as headphones.
+
 ### 0.1.3 (2026-10-31)
 
 * (beabel) **ENHANCED**: the debug log now lists every device that is left out because Google gives it no tracker

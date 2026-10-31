@@ -19,7 +19,7 @@ const {
     looksCorrupted,
     clampMinutes,
     canonicIdToStateId,
-    describeSkippedDevice,
+    describeDevice,
 } = require('./lib/util');
 const { buildDeviceObjects } = require('./lib/objects');
 
@@ -388,8 +388,11 @@ class Googlefindmydevice extends utils.Adapter {
         // show up as an empty, useless object branch in ioBroker.
         const devices = allDevices.filter(d => d.canonicId);
         this.log.debug(`${devices.length} tracker(s) found (out of ${allDevices.length} devices in the account).`);
+        for (const tracker of devices) {
+            this.log.debug(`Tracker: ${describeDevice(tracker)}`);
+        }
         for (const skipped of allDevices.filter(d => !d.canonicId)) {
-            this.log.debug(`Skipped a device without tracker identifier: ${describeSkippedDevice(skipped)}`);
+            this.log.debug(`Skipped a device without tracker identifier: ${describeDevice(skipped)}`);
         }
 
         await this.syncDeviceSettings(devices);
