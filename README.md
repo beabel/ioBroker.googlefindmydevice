@@ -89,8 +89,9 @@ your trackers are linked to.
 The adapter exchanges the value for a long-lived token right away. If Google
 rejects it (usually because it expired), the page tells you immediately and
 you paste a fresh value. On success the page switches to Part 2 on its own
-and asks you to save the configuration. From then on the adapter refreshes
-what it needs by itself.
+and asks you to save the configuration. **Save now:** saving restarts the
+instance, and it has to restart with the connected account before Part 2 can
+be finished. From then on the adapter refreshes what it needs by itself.
 
 Once an account is connected, the Part 1 instructions and the token field
 disappear. If Google invalidates the session some day, or you want to use
@@ -132,7 +133,8 @@ page shows it as soon as Part 1 is done:
    "Result from the browser console (JSON)" of the configuration page and
    click **Verify and unlock**. A wrong or incomplete paste is reported in the
    page right away. On success the page asks you to save the configuration,
-   and Part 2 disappears.
+   and Part 2 disappears. Saving restarts the instance once more; the first
+   locations appear after the next poll.
 
 The screenshots of both parts are also shown in the configuration page; click
 one to enlarge it.
@@ -192,6 +194,14 @@ Google's identifier of the tracker with unsafe characters replaced by `_`.
 | `<id>.mapsLink` | string | Google Maps link to the last GPS position |
 | `info.connection` | boolean | `true` while the last poll succeeded |
 
+Only devices that Google lists with a tracker identifier appear. Phones and tablets
+have none and are left out on purpose. Some headphones and earbuds are listed
+without one as well (for example when they only report the last location of
+their phone connection instead of being part of the Find Hub network) and do
+not appear either. If a device you expect is missing, set the instance's log
+level to *debug*: every skipped device is logged with its manufacturer, model
+and type (without its name), which helps to tell why it was left out.
+
 A report is either a GPS position or a semantic location. For a semantic
 report `accuracy`, `isOwnReport` and `mapsLink` are cleared so they never
 describe an older position; `lastSeen` is always updated.
@@ -235,6 +245,12 @@ This project is not affiliated with, endorsed by, or supported by Google.
 risk; Google's internal APIs are undocumented and may change without notice.
 
 ## Changelog
+
+### **WORK IN PROGRESS**
+
+* (beabel) **ENHANCED**: the debug log now lists every device that is left out because Google gives it no tracker
+  identifier (manufacturer, model and type, never its name), and the README explains which devices appear.
+* (beabel) **ENHANCED**: the README says explicitly that saving after "Connect" restarts the instance before Part 2.
 
 ### 0.1.2 (2026-10-03)
 

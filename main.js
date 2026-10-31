@@ -14,7 +14,13 @@ const {
 const { decryptLatestLocation } = require('./lib/decrypt-locations');
 const { registerFcm } = require('./lib/fcm-register');
 const { McsClient } = require('./lib/mcs-client');
-const { ENCRYPTED_NATIVE_FIELDS, looksCorrupted, clampMinutes, canonicIdToStateId } = require('./lib/util');
+const {
+    ENCRYPTED_NATIVE_FIELDS,
+    looksCorrupted,
+    clampMinutes,
+    canonicIdToStateId,
+    describeSkippedDevice,
+} = require('./lib/util');
 const { buildDeviceObjects } = require('./lib/objects');
 
 const ADM_SERVICE_SCOPE = 'oauth2:https://www.googleapis.com/auth/android_device_manager';
@@ -382,6 +388,9 @@ class Googlefindmydevice extends utils.Adapter {
         // show up as an empty, useless object branch in ioBroker.
         const devices = allDevices.filter(d => d.canonicId);
         this.log.debug(`${devices.length} tracker(s) found (out of ${allDevices.length} devices in the account).`);
+        for (const skipped of allDevices.filter(d => !d.canonicId)) {
+            this.log.debug(`Skipped a device without tracker identifier: ${describeSkippedDevice(skipped)}`);
+        }
 
         await this.syncDeviceSettings(devices);
         await this.cleanupStaleDevices(devices);

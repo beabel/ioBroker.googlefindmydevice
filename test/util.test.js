@@ -2,7 +2,13 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { looksCorrupted, clampMinutes, canonicIdToStateId, ENCRYPTED_NATIVE_FIELDS } = require('../lib/util');
+const {
+  looksCorrupted,
+  clampMinutes,
+  canonicIdToStateId,
+  describeSkippedDevice,
+  ENCRYPTED_NATIVE_FIELDS,
+} = require('../lib/util');
 
 test('looksCorrupted: empty values are never considered corrupted', () => {
   for (const field of ENCRYPTED_NATIVE_FIELDS) {
@@ -68,4 +74,27 @@ test('canonicIdToStateId: never yields dots or an empty id', () => {
   assert.equal(canonicIdToStateId(undefined), 'unknown');
   assert.equal(canonicIdToStateId(null), 'unknown');
   assert.ok(!canonicIdToStateId('x.y.z').includes('.'));
+});
+
+test('describeSkippedDevice: describes a phone-like device without its name or ids', () => {
+  const text = describeSkippedDevice({
+    name: 'Maik private phone',
+    manufacturer: 'Google',
+    model: 'Pixel 8',
+    deviceType: '1',
+    raw: { identifierInformation: { type: 'IDENTIFIER_ANDROID', phoneInformation: {} } },
+  });
+  assert.equal(
+    text,
+    'manufacturer="Google", model="Pixel 8", deviceType=1, identifier=IDENTIFIER_ANDROID, phone information present',
+  );
+  assert.ok(!text.includes('Maik'));
+});
+
+test('describeSkippedDevice: copes with missing fields', () => {
+  assert.equal(
+    describeSkippedDevice({ raw: {} }),
+    'manufacturer=unknown, model=unknown, deviceType=unknown, identifier=none',
+  );
+  assert.equal(describeSkippedDevice(undefined), 'manufacturer=unknown, model=unknown, deviceType=unknown, identifier=none');
 });
