@@ -246,11 +246,12 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ## Changelog
 
-### **WORK IN PROGRESS**
+### 0.1.3 (2026-10-31)
 
 * (beabel) **ENHANCED**: the debug log now lists every device that is left out because Google gives it no tracker
   identifier (manufacturer, model and type, never its name), and the README explains which devices appear.
 * (beabel) **ENHANCED**: the README says explicitly that saving after "Connect" restarts the instance before Part 2.
+* (beabel) **TESTING**: updated `@iobroker/testing` to 6.3.1.
 
 ### 0.1.2 (2026-10-03)
 
@@ -294,15 +295,6 @@ risk; Google's internal APIs are undocumented and may change without notice.
 * (beabel) **ENHANCED**: replaced the `any`-casts introduced for the `@tsconfig/node22` migration with specific
   types and filled in missing JSDoc descriptions.
 * (beabel) **CI/CD**: added `@alcalzone/release-script` (release-time tool only, not part of the published package).
-
-### 0.0.6 (2026-09-18)
-
-* (beabel) **FIXED**: the 0.0.5 fixes only applied to newly discovered devices, because existing objects were
-  never updated. Object definitions are now merged in with `extendObject`, so existing installs pick up changes.
-* (beabel) **FIXED**: findings of the ioBroker repository checker: `node:`-prefixed built-in imports, adapter
-  timers instead of raw `setInterval`/`setTimeout` in `lib/mcs-client.js`, stale `news` entries for versions that
-  were never published, `tsconfig.json` extends `@tsconfig/node22`, `json.schemas` in `.vscode/settings.json`,
-  `CHANGELOG_OLD.md`, Dependabot auto-merge workflow.
 
 Older changelog entries: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
 

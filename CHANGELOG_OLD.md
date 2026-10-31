@@ -3,6 +3,15 @@
 See the "Changelog" section in [README.md](README.md) for the current
 history. Entries move here once that section grows too long.
 
+## 0.0.6 (2026-09-18)
+
+* (beabel) **FIXED**: the 0.0.5 fixes only applied to newly discovered devices, because existing objects were
+  never updated. Object definitions are now merged in with `extendObject`, so existing installs pick up changes.
+* (beabel) **FIXED**: findings of the ioBroker repository checker: `node:`-prefixed built-in imports, adapter
+  timers instead of raw `setInterval`/`setTimeout` in `lib/mcs-client.js`, stale `news` entries for versions that
+  were never published, `tsconfig.json` extends `@tsconfig/node22`, `json.schemas` in `.vscode/settings.json`,
+  `CHANGELOG_OLD.md`, Dependabot auto-merge workflow.
+
 ## 0.0.5 (2026-09-18)
 
 * (beabel) **FIXED**: findings of the object structure check: added the missing parent object of the per-device

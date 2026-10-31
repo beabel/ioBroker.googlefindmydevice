@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "googlefindmydevice",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "news": {
+      "0.1.3": {
+        "en": "debug log lists devices that are left out (manufacturer, model, type); README explains that saving restarts the instance between the setup parts and which devices appear",
+        "de": "Debug-Log nennt ausgelassene Geräte (Hersteller, Modell, Typ); README erklärt, dass das Speichern zwischen den Einrichtungsteilen die Instanz neu startet und welche Geräte erscheinen",
+        "ru": "в журнале отладки перечислены пропущенные устройства (производитель, модель, тип); в README объяснено, что сохранение между частями настройки перезапускает экземпляр, и какие устройства отображаются",
+        "pt": "o log de depuração lista os dispositivos ignorados (fabricante, modelo, tipo); o README explica que guardar entre as partes da configuração reinicia a instância e quais dispositivos aparecem",
+        "nl": "het debuglogboek toont overgeslagen apparaten (fabrikant, model, type); de README legt uit dat opslaan tussen de installatiedelen de instantie herstart en welke apparaten verschijnen",
+        "fr": "le journal de débogage liste les appareils ignorés (fabricant, modèle, type) ; le README explique que l'enregistrement entre les parties de la configuration redémarre l'instance et quels appareils apparaissent",
+        "it": "il log di debug elenca i dispositivi esclusi (produttore, modello, tipo); il README spiega che salvare tra le parti della configurazione riavvia l'istanza e quali dispositivi compaiono",
+        "es": "el registro de depuración lista los dispositivos omitidos (fabricante, modelo, tipo); el README explica que guardar entre las partes de la configuración reinicia la instancia y qué dispositivos aparecen",
+        "pl": "dziennik debugowania wymienia pominięte urządzenia (producent, model, typ); README wyjaśnia, że zapis między częściami konfiguracji restartuje instancję, i które urządzenia się pojawiają",
+        "uk": "журнал налагодження перелічує пропущені пристрої (виробник, модель, тип); у README пояснено, що збереження між частинами налаштування перезапускає екземпляр, і які пристрої відображаються",
+        "zh-cn": "调试日志会列出被跳过的设备（制造商、型号、类型）；README 说明了在设置各部分之间保存会重启实例，以及哪些设备会显示"
+      },
       "0.1.2": {
         "en": "admin translations moved to the short i18n format; updated @iobroker/testing to 6.3.0; the Google email address is no longer logged",
         "de": "Admin-Übersetzungen ins kurze i18n-Format verschoben; @iobroker/testing auf 6.3.0 aktualisiert; die Google-E-Mail-Adresse wird nicht mehr geloggt",
@@ -80,19 +93,6 @@
         "pl": "naprawiono hierarchię obiektów i rolę, pełne i18n dla nazw obiektów (wyniki przeglądu repozytorium)",
         "uk": "виправлено ієрархію об'єктів і роль, повне i18n для назв об'єктів (результати перевірки репозиторію)",
         "zh-cn": "修复对象层级和角色,对象名称补全全部语言(仓库审查发现)"
-      },
-      "0.0.4": {
-        "en": "invite bluefox as npm maintainer, verify the automated release pipeline",
-        "de": "bluefox als npm-Maintainer eingeladen, automatisierte Release-Pipeline verifiziert",
-        "ru": "bluefox приглашён как сопровождающий npm, конвейер автоматического релиза проверен",
-        "pt": "bluefox convidado como mantenedor no npm, pipeline de lançamento automatizado verificado",
-        "nl": "bluefox uitgenodigd als npm-maintainer, geautomatiseerde releasepijplijn geverifieerd",
-        "fr": "bluefox invité en tant que mainteneur npm, pipeline de publication automatisée vérifié",
-        "it": "bluefox invitato come maintainer npm, pipeline di rilascio automatizzata verificata",
-        "es": "bluefox invitado como mantenedor de npm, pipeline de lanzamiento automatizado verificado",
-        "pl": "zaproszono bluefox jako opiekuna npm, zweryfikowano zautomatyzowany potok wydań",
-        "uk": "bluefox запрошено як супровідника npm, перевірено автоматизований конвеєр релізів",
-        "zh-cn": "已邀请 bluefox 作为 npm 维护者,并验证了自动化发布流程"
       }
     },
     "titleLang": {
