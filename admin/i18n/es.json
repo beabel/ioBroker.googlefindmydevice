@@ -5,7 +5,6 @@
 	"device_interval_col": "Intervalo (minutos)",
 	"device_locate_col": "Solicitar ubicación (¡batería!)",
 	"device_name_col": "Dispositivo",
-	"device_publish_eid_col": "Publicar identificador BLE (EID)",
 	"device_settings_headline": "Solicitudes activas de ubicación por dispositivo - ¡consume batería!",
 	"device_settings_intro": "Este es un segundo temporizador independiente del intervalo \"Actualizar lista de dispositivos\" de arriba. Solo esta tabla consulta realmente al rastreador por Bluetooth para obtener una coordenada real - esto consume notablemente su batería. Active esto individualmente para cada rastreador y elija un intervalo adecuado al dispositivo (p. ej. rara vez para una bicicleta que suele estar en casa). Los rastreadores recién encontrados se añaden aquí automáticamente, pero deshabilitados de forma predeterminada. Los teléfonos/tablets de la misma cuenta de Google no aparecen aquí intencionadamente (vea la nota de arriba).",
 	"oauth_token_help": "Se comprueba enseguida. Luego se le pedirá que guarde.",

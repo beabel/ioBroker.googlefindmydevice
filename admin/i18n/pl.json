@@ -5,7 +5,6 @@
 	"device_interval_col": "Interwał (minuty)",
 	"device_locate_col": "Żądaj lokalizacji (bateria!)",
 	"device_name_col": "Urządzenie",
-	"device_publish_eid_col": "Publikuj identyfikator BLE (EID)",
 	"device_settings_headline": "Aktywne żądania lokalizacji dla poszczególnych urządzeń - zużywa baterię!",
 	"device_settings_intro": "To osobny, drugi licznik czasu - niezależny od powyższego interwału \"Aktualizacja listy urządzeń\". Tylko ta tabela faktycznie odpytuje lokalizator przez Bluetooth, aby uzyskać rzeczywistą współrzędną - zauważalnie obciąża to jego baterię. Włącz tę opcję indywidualnie dla każdego lokalizatora i wybierz interwał dopasowany do urządzenia (np. rzadko dla roweru, który zwykle stoi w domu). Nowo znalezione lokalizatory są dodawane tutaj automatycznie, ale domyślnie wyłączone. Telefony/tablety z tego samego konta Google celowo się tu nie pojawiają (patrz uwaga powyżej).",
 	"oauth_token_help": "Jest to sprawdzane od razu. Następnie zostaniesz poproszony o zapisanie.",

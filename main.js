@@ -11,8 +11,7 @@ const {
     buildEncryptionUnlockUrl,
     CONSOLE_SNIPPET,
 } = require('./lib/owner-key');
-const { decryptLatestLocation, retrieveIdentityKey, isMcuTracker } = require('./lib/decrypt-locations');
-const { computeEidWindows, msUntilNextWindow } = require('./lib/eid-states');
+const { decryptLatestLocation } = require('./lib/decrypt-locations');
 const { registerFcm } = require('./lib/fcm-register');
 const { McsClient } = require('./lib/mcs-client');
 const {
@@ -22,7 +21,7 @@ const {
     canonicIdToStateId,
     describeDevice,
 } = require('./lib/util');
-const { buildDeviceObjects, buildEidObjects } = require('./lib/objects');
+const { buildDeviceObjects, PUSH_IDS_STATE_ID, buildPushIdsObject } = require('./lib/objects');
 
 const ADM_SERVICE_SCOPE = 'oauth2:https://www.googleapis.com/auth/android_device_manager';
 const ADM_APP = 'com.google.android.apps.adm';
@@ -60,11 +59,7 @@ class Googlefindmydevice extends utils.Adapter {
         this.unloaded = false;
         this.pollTimeout = null;
         this.locateTimers = new Map();
-        // Identity keys of the trackers with "publish EID" enabled (tracker id -> key).
-        // They live in memory only: never written to a state, the configuration or the log.
-        this.eidKeys = new Map();
-        this.eidTimer = null;
-        this.eidNotes = new Set(); // trackers already mentioned in the debug log or cleaned up in this run
+        this.legacyChecked = new Set(); // trackers already checked for the removed EID states in this run
         // Tracker object tree already created in this run (id -> device name).
         // Objects are written once per run, not on every poll.
         this.ensuredDevices = new Map();
@@ -410,7 +405,7 @@ class Googlefindmydevice extends utils.Adapter {
             const stateId = canonicIdToStateId(device.canonicId);
             await this.ensureDevice(stateId, device.name);
             await this.updateDeviceMetadataStates(stateId, device);
-            await this.setupEid(stateId, device, ownerKey);
+            await this.removeLegacyEidStates(stateId);
 
             if (!ownerKey) {
                 continue;
@@ -430,105 +425,23 @@ class Googlefindmydevice extends utils.Adapter {
                 this.log.warn(`Could not decrypt location for "${device.name}": ${err.message}`);
             }
         }
-
-        await this.updateEidStates();
-        this.scheduleEidUpdate();
     }
 
     /**
-     * Prepares the optional EID states of one tracker: when "publish EID" is
-     * enabled for it, creates the states and keeps its identity key in memory;
-     * when it is not, removes states left over from an earlier run.
+     * Version 0.1.4 could publish BLE identifier (EID) states below a tracker.
+     * That option was removed again (the values did not match what the tracker
+     * broadcasts), so remove what an earlier run may have left behind.
      *
      * @param {string} stateId sanitized id of the tracker's device object
-     * @param {{canonicId: string, name: string, raw: object}} device the tracker as returned by listDevices()
-     * @param {Buffer | null} ownerKey the account's owner key, null while setup is incomplete
      */
-    async setupEid(stateId, device, ownerKey) {
-        const settings = Array.isArray(this.config.deviceSettings) ? this.config.deviceSettings : [];
-        const setting = settings.find(s => s.canonicId === device.canonicId);
-
-        if (!setting || !setting.publishEid) {
-            this.eidKeys.delete(stateId);
-            if (!this.eidNotes.has(`clean:${stateId}`)) {
-                this.eidNotes.add(`clean:${stateId}`);
-                if (await this.getObjectAsync(`${stateId}.eid`)) {
-                    await this.delObject(`${stateId}.eid`, { recursive: true });
-                }
-            }
+    async removeLegacyEidStates(stateId) {
+        if (this.legacyChecked.has(stateId)) {
             return;
         }
-
-        if (this.eidKeys.has(stateId)) {
-            return;
+        this.legacyChecked.add(stateId);
+        if (await this.getObjectAsync(`${stateId}.eid`)) {
+            await this.delObject(`${stateId}.eid`, { recursive: true });
         }
-
-        const note = reason => {
-            if (!this.eidNotes.has(`skip:${stateId}`)) {
-                this.eidNotes.add(`skip:${stateId}`);
-                this.log.debug(`No BLE identifier (EID) published for "${device.name}": ${reason}`);
-            }
-        };
-
-        const registration = device.raw && device.raw.information && device.raw.information.deviceRegistration;
-        if (!ownerKey || !registration) {
-            note('the owner key or the device registration is not available yet.');
-            return;
-        }
-        if (isMcuTracker(registration)) {
-            note('this tracker type does not rotate its identifier.');
-            return;
-        }
-
-        try {
-            this.eidKeys.set(stateId, retrieveIdentityKey(ownerKey, registration));
-        } catch (err) {
-            note(`the identity key could not be derived (${err.message}).`);
-            return;
-        }
-
-        for (const { suffix, obj } of buildEidObjects()) {
-            await this.extendObject(`${stateId}.${suffix}`, obj);
-        }
-    }
-
-    /** Writes the current, previous and next EID of every tracker that publishes them. */
-    async updateEidStates() {
-        const now = Date.now();
-        for (const [stateId, identityKey] of this.eidKeys) {
-            const windows = computeEidWindows(identityKey, now);
-            if (!windows) {
-                continue;
-            }
-            for (const [key, val] of Object.entries(windows)) {
-                await this.setStateChanged(`${stateId}.eid.${key}`, { val, ack: true });
-            }
-        }
-    }
-
-    /**
-     * Schedules the next EID update for the start of the next rotation window
-     * (self-chaining timeout, one timer for all trackers).
-     */
-    scheduleEidUpdate() {
-        if (this.unloaded || this.eidTimer || this.eidKeys.size === 0) {
-            return;
-        }
-        this.eidTimer = this.setTimeout(
-            async () => {
-                this.eidTimer = null;
-                if (this.unloaded) {
-                    return;
-                }
-                try {
-                    await this.updateEidStates();
-                } catch (err) {
-                    this.log.debug(`Could not update the EID states: ${err.message}`);
-                }
-                this.scheduleEidUpdate();
-            },
-            msUntilNextWindow(Date.now()) + 250,
-        );
     }
 
     /**
@@ -570,7 +483,6 @@ class Googlefindmydevice extends utils.Adapter {
                 name: d.name,
                 locate: false,
                 intervalMinutes: 60,
-                publishEid: false,
             }));
 
         if (missing.length === 0) {
@@ -638,6 +550,7 @@ class Googlefindmydevice extends utils.Adapter {
                 androidId: this.config.androidId,
                 securityToken: this.config.securityToken,
             });
+            await this.restoreReceivedPushIds();
             await this.mcsClient.start({
                 androidId: this.config.androidId,
                 securityToken: this.config.securityToken,
@@ -646,6 +559,28 @@ class Googlefindmydevice extends utils.Adapter {
         })();
 
         return this.fcmReadyPromise;
+    }
+
+    /**
+     * Loads the ids of the push messages received in earlier runs and keeps
+     * them up to date, so the login can tell Google which messages not to
+     * deliver again.
+     */
+    async restoreReceivedPushIds() {
+        let ids = [];
+        try {
+            await this.extendObject(PUSH_IDS_STATE_ID, buildPushIdsObject());
+            const state = await this.getStateAsync(PUSH_IDS_STATE_ID);
+            ids = state && typeof state.val === 'string' ? JSON.parse(state.val) : [];
+        } catch (err) {
+            this.log.debug(`Could not read the list of received push messages: ${err.message}`);
+        }
+        this.mcsClient.setReceivedIds(ids, list => {
+            this.setState(PUSH_IDS_STATE_ID, { val: JSON.stringify(list), ack: true }).catch(err =>
+                this.log.debug(`Could not save the list of received push messages: ${err.message}`),
+            );
+        });
+        this.log.debug(`${Array.isArray(ids) ? ids.length : 0} received push message id(s) restored.`);
     }
 
     /**
@@ -914,10 +849,6 @@ class Googlefindmydevice extends utils.Adapter {
                 this.clearTimeout(timer);
             }
             this.locateTimers.clear();
-            if (this.eidTimer) {
-                this.clearTimeout(this.eidTimer);
-            }
-            this.eidKeys.clear();
             this.mcsClient.stop();
             callback();
         } catch (err) {

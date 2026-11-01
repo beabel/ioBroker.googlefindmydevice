@@ -5,7 +5,6 @@
 	"device_interval_col": "Abstand (Minuten)",
 	"device_locate_col": "Standort abfragen (Akku!)",
 	"device_name_col": "Gerät",
-	"device_publish_eid_col": "BLE-Kennung (EID) veröffentlichen",
 	"device_settings_headline": "Aktive Standortabfrage pro Gerät - kostet Akku!",
 	"device_settings_intro": "Das ist ein separater, zweiter Timer - unabhängig vom \"Geräteliste aktualisieren\"-Intervall oben. Nur diese Tabelle hier pingt den Tracker tatsächlich per Bluetooth an, um eine echte Koordinate zu bekommen - das kostet spürbar Akku. Bitte pro Tracker einzeln aktivieren und einen Abstand wählen, der zum Gerät passt (z.B. selten für ein Fahrrad, das meist zuhause steht). Neu gefundene Tracker werden hier automatisch ergänzt, aber standardmäßig deaktiviert. Handys/Tablets aus demselben Google-Konto tauchen hier bewusst nicht auf (siehe Hinweis oben).",
 	"oauth_token_help": "Wird sofort geprüft. Danach wirst du zum Speichern aufgefordert.",

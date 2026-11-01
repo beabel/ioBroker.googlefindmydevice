@@ -5,7 +5,6 @@
 	"device_interval_col": "Intervalle (minutes)",
 	"device_locate_col": "Demander la localisation (batterie !)",
 	"device_name_col": "Appareil",
-	"device_publish_eid_col": "Publier l'identifiant BLE (EID)",
 	"device_settings_headline": "Demandes de localisation actives par appareil - consomme de la batterie !",
 	"device_settings_intro": "Il s'agit d'une seconde minuterie distincte, indépendante de l'intervalle \"Mise à jour de la liste des appareils\" ci-dessus. Seul ce tableau sollicite réellement le traceur via Bluetooth pour obtenir une coordonnée réelle - cela draine sensiblement sa batterie. Activez ceci individuellement pour chaque traceur et choisissez un intervalle adapté à l'appareil (par ex. rarement pour un vélo qui reste surtout à la maison). Les traceurs nouvellement détectés sont ajoutés ici automatiquement, mais désactivés par défaut. Les téléphones/tablettes du même compte Google n'apparaissent volontairement pas ici (voir la remarque ci-dessus).",
 	"oauth_token_help": "C'est vérifié tout de suite. Ensuite, il vous est demandé de sauvegarder.",

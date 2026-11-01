@@ -57,3 +57,27 @@ test('a client that was never started is not logged in', () => {
   const { client } = createClient();
   assert.equal(client.isLoggedIn(), false);
 });
+
+test('received message ids are remembered, deduplicated and capped, and reported on change', () => {
+  const { client } = createClient();
+  const seen = [];
+  client.setReceivedIds(['old-1', '', 5, 'old-2'], list => seen.push(list));
+  assert.deepEqual(client._receivedIds, ['old-1', 'old-2']);
+
+  client._rememberReceivedId('new-1');
+  client._rememberReceivedId('new-1');
+  assert.equal(seen.length, 1, 'a known id must not trigger another save');
+  assert.deepEqual(seen[0], ['old-1', 'old-2', 'new-1']);
+
+  for (let i = 0; i < 150; i++) {
+    client._rememberReceivedId(`id-${i}`);
+  }
+  assert.equal(client._receivedIds.length, 100);
+  assert.equal(client._receivedIds.at(-1), 'id-149');
+});
+
+test('a list that is not an array is ignored instead of throwing', () => {
+  const { client } = createClient();
+  client.setReceivedIds('garbage');
+  assert.deepEqual(client._receivedIds, []);
+});

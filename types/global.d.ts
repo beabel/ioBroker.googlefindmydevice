@@ -19,7 +19,6 @@ declare global {
                 name: string;
                 locate: boolean;
                 intervalMinutes: number;
-                publishEid?: boolean;
             }[];
         }
     }

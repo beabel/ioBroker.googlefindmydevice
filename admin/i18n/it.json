@@ -5,7 +5,6 @@
 	"device_interval_col": "Intervallo (minuti)",
 	"device_locate_col": "Richiedi posizione (batteria!)",
 	"device_name_col": "Dispositivo",
-	"device_publish_eid_col": "Pubblica identificatore BLE (EID)",
 	"device_settings_headline": "Richieste attive di posizione per dispositivo - consuma batteria!",
 	"device_settings_intro": "Questo è un secondo timer separato, indipendente dall'intervallo \"Aggiornamento elenco dispositivi\" sopra. Solo questa tabella interroga effettivamente il tracker via Bluetooth per ottenere una coordinata reale - questo ne consuma sensibilmente la batteria. Abilitate questa opzione singolarmente per ogni tracker e scegliete un intervallo adatto al dispositivo (ad es. raramente per una bicicletta che resta perlopiù a casa). I tracker appena trovati vengono aggiunti qui automaticamente, ma disabilitati per impostazione predefinita. Telefoni/tablet dello stesso account Google non compaiono qui intenzionalmente (vedi la nota sopra).",
 	"oauth_token_help": "Viene controllato subito. Successivamente ti verrà chiesto di salvare.",
