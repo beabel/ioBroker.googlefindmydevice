@@ -59,6 +59,8 @@ class Googlefindmydevice extends utils.Adapter {
         this.unloaded = false;
         this.pollTimeout = null;
         this.locateTimers = new Map();
+        this.currentCanonicIds = null; // ids of the trackers in the account, once the first list has arrived
+        this.staleWarned = new Set(); // ids already reported as gone from the account
         this.legacyChecked = new Set(); // trackers already checked for the removed EID states in this run
         // Tracker object tree already created in this run (id -> device name).
         // Objects are written once per run, not on every poll.
@@ -388,6 +390,7 @@ class Googlefindmydevice extends utils.Adapter {
         // filtering on that also filters out everything that would otherwise
         // show up as an empty, useless object branch in ioBroker.
         const devices = allDevices.filter(d => d.canonicId);
+        this.currentCanonicIds = new Set(devices.map(d => d.canonicId));
         this.log.debug(`${devices.length} tracker(s) found (out of ${allDevices.length} devices in the account).`);
         for (const tracker of devices) {
             this.log.debug(`Tracker: ${describeDevice(tracker)}`);
@@ -625,6 +628,17 @@ class Googlefindmydevice extends utils.Adapter {
      * @param {string} name the tracker's display name (for log messages)
      */
     async triggerLocate(canonicId, name) {
+        // A device that was paired again gets a new id; asking Google for the
+        // old one only ends in an HTTP 500 every time.
+        if (this.currentCanonicIds && !this.currentCanonicIds.has(canonicId)) {
+            if (!this.staleWarned.has(canonicId)) {
+                this.staleWarned.add(canonicId);
+                this.log.warn(
+                    `"${name}" is no longer in the Google account (paired again under a new id, or removed). Its location is not requested any more; remove its row from the device table.`,
+                );
+            }
+            return;
+        }
         await this.ensureFcmReady();
 
         const { Auth: admToken } = await performOAuth(
