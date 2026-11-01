@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "googlefindmydevice",
-    "version": "0.1.5",
+    "version": "0.1.6",
     "news": {
+      "0.1.6": {
+        "en": "headphones, speakers and other Fast Pair devices with a Find Hub key are now listed and located like trackers; no more requests for devices that were paired again under a new id",
+        "de": "Kopfhörer, Lautsprecher und andere Fast-Pair-Geräte mit Find-Hub-Schlüssel werden jetzt wie Tracker aufgelistet und geortet; keine Anfragen mehr für Geräte, die unter neuer Kennung neu gekoppelt wurden",
+        "ru": "наушники, колонки и другие устройства Fast Pair с ключом Find Hub теперь отображаются и определяются как трекеры; больше нет запросов для устройств, которые были заново подключены под новым идентификатором",
+        "pt": "fones de ouvido, alto-falantes e outros dispositivos Fast Pair com chave do Find Hub agora são listados e localizados como rastreadores; sem mais solicitações para dispositivos emparelhados novamente com um novo id",
+        "nl": "koptelefoons, luidsprekers en andere Fast Pair-apparaten met een Find Hub-sleutel worden nu zoals trackers weergegeven en gelokaliseerd; geen verzoeken meer voor apparaten die opnieuw met een nieuwe id zijn gekoppeld",
+        "fr": "les écouteurs, enceintes et autres appareils Fast Pair avec clé Find Hub sont désormais listés et localisés comme des traceurs ; plus de requêtes pour les appareils appairés de nouveau sous un nouvel identifiant",
+        "it": "cuffie, altoparlanti e altri dispositivi Fast Pair con chiave Find Hub vengono ora elencati e localizzati come i tracker; niente più richieste per i dispositivi accoppiati di nuovo con un nuovo id",
+        "es": "los auriculares, altavoces y otros dispositivos Fast Pair con clave de Find Hub ahora se listan y localizan como rastreadores; ya no se piden datos de dispositivos emparejados de nuevo con un id nuevo",
+        "pl": "słuchawki, głośniki i inne urządzenia Fast Pair z kluczem Find Hub są teraz wyświetlane i lokalizowane jak lokalizatory; koniec zapytań o urządzenia sparowane ponownie z nowym identyfikatorem",
+        "uk": "навушники, колонки та інші пристрої Fast Pair із ключем Find Hub тепер відображаються й визначаються як трекери; більше немає запитів для пристроїв, підключених заново під новим ідентифікатором",
+        "zh-cn": "带有 Find Hub 密钥的耳机、音箱和其他 Fast Pair 设备现在会像追踪器一样列出并定位;不再为以新 ID 重新配对的设备发送请求"
+      },
       "0.1.5": {
         "en": "remembers received push messages so Google no longer redelivers old ones at every start; optional BLE identifier (EID) states removed again; debug log describes skipped devices in more detail",
         "de": "merkt sich empfangene Push-Nachrichten, damit Google alte nicht mehr bei jedem Start erneut zustellt; optionale BLE-Kennung (EID) wieder entfernt; Debug-Log beschreibt übersprungene Geräte genauer",
@@ -80,19 +93,6 @@
         "pl": "konfiguracja prowadzona w dwóch częściach, pokazująca tylko to, co jest jeszcze potrzebne (przyciski Połącz / Sprawdź i odblokuj); trackery są teraz urządzeniami bezpośrednio pod instancją (WAŻNE: zmieniono identyfikatory stanów); dokładniejsze role stanów; mniej zapisów do bazy danych; poprawki",
         "uk": "покрокове налаштування з двох частин, що показує лише те, що ще потрібно (кнопки «Підключити» / «Перевірити та розблокувати»); трекери тепер пристрої безпосередньо під екземпляром (УВАГА: змінено ідентифікатори станів); точніші ролі станів; менше записів у базу даних; виправлення",
         "zh-cn": "分两部分的引导式设置，仅显示仍然需要的内容（“连接”/“验证并解锁”按钮）；追踪器现在是实例下的直接设备（重要：状态 ID 已更改）；更精确的状态角色；减少数据库写入；问题修复"
-      },
-      "0.0.7": {
-        "en": "clean up ESLint/JSDoc findings; add @alcalzone/release-script for future releases",
-        "de": "ESLint/JSDoc-Funde bereinigt; @alcalzone/release-script fuer kuenftige Releases hinzugefuegt",
-        "ru": "устранены замечания ESLint/JSDoc; добавлен @alcalzone/release-script для будущих релизов",
-        "pt": "correcao de achados do ESLint/JSDoc; adicionado @alcalzone/release-script para futuros lancamentos",
-        "nl": "ESLint/JSDoc-bevindingen opgeschoond; @alcalzone/release-script toegevoegd voor toekomstige releases",
-        "fr": "nettoyage des constats ESLint/JSDoc ; ajout d'@alcalzone/release-script pour les prochaines versions",
-        "it": "risolti i rilievi ESLint/JSDoc; aggiunto @alcalzone/release-script per le versioni future",
-        "es": "correccion de hallazgos de ESLint/JSDoc; anadido @alcalzone/release-script para futuros lanzamientos",
-        "pl": "poprawiono uwagi ESLint/JSDoc; dodano @alcalzone/release-script dla przyszlych wydan",
-        "uk": "усунено зауваження ESLint/JSDoc; додано @alcalzone/release-script для майбутніх релізів",
-        "zh-cn": "修复 ESLint/JSDoc 发现的问题；为未来版本添加 @alcalzone/release-script"
       }
     },
     "titleLang": {

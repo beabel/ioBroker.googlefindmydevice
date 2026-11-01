@@ -246,7 +246,7 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ## Changelog
 
-### **WORK IN PROGRESS**
+### 0.1.6 (2026-11-01)
 
 * (beabel) **NEW**: headphones, speakers and other Fast Pair devices that carry a Find Hub key are now listed and located like trackers (experimental; Google only returns a location if one of its devices has seen them recently).
 * (beabel) **FIXED**: a device that was paired again (and so got a new id) is no longer asked for its location under the old id every time; the log says once that its row can be removed from the device table.
@@ -275,12 +275,6 @@ risk; Google's internal APIs are undocumented and may change without notice.
 * (beabel) **ENHANCED**: admin translations moved to the short i18n format (`admin/i18n/<lang>.json`); updated
   `@iobroker/testing` to 6.3.0.
 * (beabel) **ENHANCED**: the Google account's email address is no longer written to the log.
-
-### 0.1.1 (2026-10-03)
-
-* (beabel) **FIXED**: the configuration page now tells you to start the instance first. Its buttons (Connect, Verify and
-  unlock, ...) only work while the instance is running, and a new instance starts disabled, so the **Connect** button
-  looked broken. The README says the same.
 
 Older changelog entries: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
 

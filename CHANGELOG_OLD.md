@@ -3,6 +3,12 @@
 See the "Changelog" section in [README.md](README.md) for the current
 history. Entries move here once that section grows too long.
 
+## 0.1.1 (2026-10-03)
+
+* (beabel) **FIXED**: the configuration page now tells you to start the instance first. Its buttons (Connect, Verify and
+  unlock, ...) only work while the instance is running, and a new instance starts disabled, so the **Connect** button
+  looked broken. The README says the same.
+
 ## 0.1.0 (2026-10-03)
 
 * (beabel) **ENHANCED**: the setup shows only what is still needed. The steps work through buttons (**Connect**,
@@ -27,7 +33,6 @@ history. Entries move here once that section grows too long.
   moved to `admin/i18n/<lang>/translations.json`.
 * (beabel) **TESTING**: unit tests for location decryption (own and relayed reports, wrong key, tampering),
   configuration repair, interval limits, object definitions and the MCS client; linting fails on any warning.
-
 
 ## 0.0.7 (2026-09-18)
 
