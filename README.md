@@ -246,6 +246,10 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ## Changelog
 
+### **WORK IN PROGRESS**
+
+* (beabel) **NEW**: headphones, speakers and other Fast Pair devices that carry a Find Hub key are now listed and located like trackers (experimental; Google only returns a location if one of its devices has seen them recently).
+
 ### 0.1.5 (2026-11-01)
 
 * (beabel) **ENHANCED**: the adapter remembers which push messages it already received, so Google does not deliver them again at every start.

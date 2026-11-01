@@ -666,9 +666,9 @@ class Googlefindmydevice extends utils.Adapter {
         await this.ensureDevice(stateId, name);
         const location = await decryptLatestLocation(ownerKey, { raw: deviceUpdate.deviceMetadata });
         await this.updateLocationStates(stateId, location);
-        if (location) {
-            this.log.debug(`Location for "${name}" updated.`);
-        }
+        this.log.debug(
+            location ? `Location for "${name}" updated.` : `Google has no location report for "${name}" at the moment.`,
+        );
     }
 
     /**

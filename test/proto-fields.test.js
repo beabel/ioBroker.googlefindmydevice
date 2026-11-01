@@ -7,7 +7,11 @@ const {
   describeIdentifierBlocks,
   describeDeviceEntries,
   findIdentifierIds,
+  readNested,
+  fillAlternativeInformation,
 } = require('../lib/proto-fields');
+const path = require('node:path');
+const protobuf = require('protobufjs');
 const { parseHeaderParams } = require('../lib/webpush-decrypt');
 
 // field 1 = varint 5, field 2 = string "secret-id"
@@ -51,6 +55,46 @@ test('describeDeviceEntries: whole entry, deeper than the identifier view, witho
   const [text] = describeDeviceEntries(listOf(entry));
   assert.equal(text, '1{2=5,5{2{1{1:len36}}}},4{2:len18}');
   assert.ok(!text.includes(UUID));
+});
+
+async function informationType() {
+  const root = await protobuf.load(path.join(__dirname, '..', 'lib', 'proto', 'device_update.proto'));
+  return root.lookupType('googlefindmydevice.DeviceInformation');
+}
+
+test('fillAlternativeInformation: takes the device information from field 10 -> 11 when field 4 is missing', async () => {
+  const Information = await informationType();
+  const info = Buffer.from(
+    Information.encode(
+      Information.create({ deviceRegistration: { manufacturer: 'Acme', model: 'Buds', fastPairModelId: 'abc123' } }),
+    ).finish(),
+  );
+  const entry = Buffer.concat([headphones, lenField(10, lenField(11, info))]);
+  const metadata = { information: null };
+  assert.equal(fillAlternativeInformation(metadata, entry, Information), true);
+  assert.equal(metadata.information.deviceRegistration.manufacturer, 'Acme');
+  assert.equal(metadata.information.deviceRegistration.model, 'Buds');
+});
+
+test('fillAlternativeInformation: leaves entries alone that have field 4 or nothing in field 10', async () => {
+  const Information = await informationType();
+  const existing = { deviceRegistration: { manufacturer: 'Own' } };
+  const withInfo = { information: existing };
+  assert.equal(fillAlternativeInformation(withInfo, headphones, Information), false);
+  assert.equal(withInfo.information, existing);
+  const without = { information: null };
+  assert.equal(fillAlternativeInformation(without, headphones, Information), false);
+  assert.equal(without.information, null);
+  // a field 10 that is not a device information message must not throw
+  const garbage = Buffer.concat([headphones, lenField(10, lenField(11, Buffer.from([0xff, 0xff, 0xff])))]);
+  assert.equal(fillAlternativeInformation({ information: null }, garbage, Information), false);
+});
+
+test('readNested: follows a path of fields, null when it does not exist', () => {
+  const buf = lenField(3, lenField(1, Buffer.from('x')));
+  assert.deepEqual(readNested(buf, [3, 1]), Buffer.from('x'));
+  assert.equal(readNested(buf, [3, 2]), null);
+  assert.equal(readNested(buf, [4]), null);
 });
 
 test('parseHeaderParams: ignores extra parameters after the key', () => {
