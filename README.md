@@ -246,7 +246,7 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ## Changelog
 
-### **WORK IN PROGRESS**
+### 0.1.5 (2026-11-01)
 
 * (beabel) **ENHANCED**: the adapter remembers which push messages it already received, so Google does not deliver them again at every start.
 * (beabel) **CHANGED**: removed the optional BLE identifier (EID) states of version 0.1.4 again; their values did not match what a tracker really broadcasts. States left over from 0.1.4 are deleted at the start.
@@ -276,31 +276,6 @@ risk; Google's internal APIs are undocumented and may change without notice.
 * (beabel) **FIXED**: the configuration page now tells you to start the instance first. Its buttons (Connect, Verify and
   unlock, ...) only work while the instance is running, and a new instance starts disabled, so the **Connect** button
   looked broken. The README says the same.
-
-### 0.1.0 (2026-10-03)
-
-* (beabel) **ENHANCED**: the setup shows only what is still needed. The steps work through buttons (**Connect**,
-  **Verify and unlock**) whose result appears in the page at once, so Part 1 and its token field disappear as soon
-  as the account is connected and a wrong or expired value is reported immediately instead of only in the log.
-  **Connect a different account** starts over. The instructions are split into Part 1 (connect the account) and
-  Part 2 (unlock the locations), each with five numbered steps, and the token and console-result fields no longer
-  trigger the browser's password suggestions (they are still stored encrypted).
-* (beabel) **NEW**: Part 2 of the setup (unlocking locations) is done from the configuration page: a button opens Google's unlock page,
-  another shows the console script with a copy button, and the screenshots of both parts are shown in the page.
-  The log still carries the same instructions.
-* (beabel) **ENHANCED**: BREAKING - every tracker is now a `device` object directly below the instance
-  (`googlefindmydevice.0.<id>.*`) instead of a channel in a `devices` folder
-  (`googlefindmydevice.0.devices.<id>.*`). The old tree is removed automatically on the first start; update
-  scripts and visualizations that use the old state IDs.
-* (beabel) **ENHANCED**: more specific state roles (`info.name`, `info.model`, `value.gps.accuracy`).
-* (beabel) **ENHANCED**: objects are written once per run and states only when their value changes.
-* (beabel) **FIXED**: no new timers are started while the adapter is shutting down.
-* (beabel) **FIXED**: two error messages that reached the log in German are now English.
-* (beabel) **FIXED**: new instances start disabled.
-* (beabel) **ENHANCED**: README restructured (Installation, Configuration, Usage, Support); admin translations
-  moved to `admin/i18n/<lang>/translations.json`.
-* (beabel) **TESTING**: unit tests for location decryption (own and relayed reports, wrong key, tampering),
-  configuration repair, interval limits, object definitions and the MCS client; linting fails on any warning.
 
 Older changelog entries: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
 

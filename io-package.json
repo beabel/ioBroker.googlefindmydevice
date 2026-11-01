@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "googlefindmydevice",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "news": {
+      "0.1.5": {
+        "en": "remembers received push messages so Google no longer redelivers old ones at every start; optional BLE identifier (EID) states removed again; debug log describes skipped devices in more detail",
+        "de": "merkt sich empfangene Push-Nachrichten, damit Google alte nicht mehr bei jedem Start erneut zustellt; optionale BLE-Kennung (EID) wieder entfernt; Debug-Log beschreibt übersprungene Geräte genauer",
+        "ru": "запоминает полученные push-сообщения, поэтому Google больше не доставляет старые при каждом запуске; необязательный идентификатор BLE (EID) снова удалён; журнал отладки подробнее описывает пропущенные устройства",
+        "pt": "lembra as mensagens push recebidas, para que o Google não reenvie as antigas a cada início; identificador BLE (EID) opcional removido novamente; o log de depuração descreve melhor os dispositivos ignorados",
+        "nl": "onthoudt ontvangen pushberichten zodat Google oude berichten niet meer bij elke start opnieuw bezorgt; optionele BLE-identificatie (EID) weer verwijderd; het debuglogboek beschrijft overgeslagen apparaten uitgebreider",
+        "fr": "mémorise les messages push reçus pour que Google ne renvoie plus les anciens à chaque démarrage ; identifiant BLE (EID) facultatif supprimé à nouveau ; le journal de débogage décrit plus en détail les appareils ignorés",
+        "it": "ricorda i messaggi push ricevuti, così Google non recapita più quelli vecchi ad ogni avvio; identificatore BLE (EID) facoltativo rimosso di nuovo; il log di debug descrive più in dettaglio i dispositivi ignorati",
+        "es": "recuerda los mensajes push recibidos para que Google ya no reenvíe los antiguos en cada inicio; identificador BLE (EID) opcional eliminado de nuevo; el registro de depuración describe con más detalle los dispositivos omitidos",
+        "pl": "zapamiętuje odebrane wiadomości push, więc Google nie dostarcza starych przy każdym uruchomieniu; opcjonalny identyfikator BLE (EID) ponownie usunięty; dziennik debugowania dokładniej opisuje pominięte urządzenia",
+        "uk": "запам’ятовує отримані push-повідомлення, тому Google більше не доставляє старі при кожному запуску; необов’язковий ідентифікатор BLE (EID) знову видалено; журнал налагодження докладніше описує пропущені пристрої",
+        "zh-cn": "记住已收到的推送消息,Google 不再在每次启动时重新发送旧消息;再次移除可选的 BLE 标识符 (EID);调试日志更详细地描述被跳过的设备"
+      },
       "0.1.4": {
         "en": "optional BLE identifier (EID) states per tracker (off by default); push messages with extra header parameters are read correctly; debug log shows the identifier layout of devices",
         "de": "optionale BLE-Kennung (EID) pro Tracker (standardmäßig aus); Push-Nachrichten mit zusätzlichen Header-Parametern werden korrekt gelesen; Debug-Log zeigt den Kennungsaufbau der Geräte",
@@ -80,19 +93,6 @@
         "pl": "poprawiono uwagi ESLint/JSDoc; dodano @alcalzone/release-script dla przyszlych wydan",
         "uk": "усунено зауваження ESLint/JSDoc; додано @alcalzone/release-script для майбутніх релізів",
         "zh-cn": "修复 ESLint/JSDoc 发现的问题；为未来版本添加 @alcalzone/release-script"
-      },
-      "0.0.6": {
-        "en": "use extendObjectAsync so existing installs pick up object fixes; repochecker fixes",
-        "de": "extendObjectAsync verwendet, damit bestehende Installationen Objekt-Fixes erhalten; repochecker-Fixes",
-        "ru": "используется extendObjectAsync, чтобы существующие установки получали исправления объектов; исправления repochecker",
-        "pt": "uso de extendObjectAsync para que instalações existentes recebam correções de objetos; correções do repochecker",
-        "nl": "extendObjectAsync gebruikt zodat bestaande installaties objectfixes krijgen; repochecker-fixes",
-        "fr": "utilisation d'extendObjectAsync pour que les installations existantes reçoivent les correctifs d'objets ; corrections du repochecker",
-        "it": "uso di extendObjectAsync affinché le installazioni esistenti ricevano le correzioni degli oggetti; correzioni del repochecker",
-        "es": "uso de extendObjectAsync para que las instalaciones existentes reciban las correcciones de objetos; correcciones del repochecker",
-        "pl": "użycie extendObjectAsync, aby istniejące instalacje otrzymały poprawki obiektów; poprawki repochecker",
-        "uk": "використано extendObjectAsync, щоб наявні інсталяції отримали виправлення об'єктів; виправлення repochecker",
-        "zh-cn": "改用 extendObjectAsync,使现有安装也能获得对象修复;修复 repochecker 发现的问题"
       }
     },
     "titleLang": {
