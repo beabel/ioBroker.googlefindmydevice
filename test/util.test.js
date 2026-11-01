@@ -105,3 +105,16 @@ test('describeDevice: adds the identifier field layout when known', () => {
     'manufacturer=unknown, model=unknown, deviceType=unknown, identifier=5, identifier fields: 2=5,3{1:len12}',
   );
 });
+
+test('describeDevice: reports an id outside the known fields by length only, plus the entry layout', () => {
+  const text = describeDevice({
+    otherCanonicId: '0b8f0d0e-1c2d-4e3f-8a9b-0c1d2e3f4a5b',
+    entryLayout: '1{2=5},4{2:len18}',
+    raw: { identifierInformation: { type: 5 } },
+  });
+  assert.equal(
+    text,
+    'manufacturer=unknown, model=unknown, deviceType=unknown, identifier=5, id outside the known fields: 36 chars, entry fields: 1{2=5},4{2:len18}',
+  );
+  assert.ok(!text.includes('0b8f'));
+});

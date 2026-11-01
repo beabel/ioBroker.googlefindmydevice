@@ -250,6 +250,7 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 * (beabel) **ENHANCED**: the adapter remembers which push messages it already received, so Google does not deliver them again at every start.
 * (beabel) **CHANGED**: removed the optional BLE identifier (EID) states of version 0.1.4 again; their values did not match what a tracker really broadcasts. States left over from 0.1.4 are deleted at the start.
+* (beabel) **ENHANCED**: the debug log describes the structure of skipped devices (such as headphones) in more detail, field numbers and sizes only, to prepare support for them.
 
 ### 0.1.4 (2026-10-31)
 
