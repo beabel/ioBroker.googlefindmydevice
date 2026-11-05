@@ -20,6 +20,12 @@ declare global {
                 locate: boolean;
                 intervalMinutes: number;
             }[];
+            semanticLocations: {
+                name: string;
+                latitude: number | null;
+                longitude: number | null;
+                radius: number;
+            }[];
         }
     }
 }

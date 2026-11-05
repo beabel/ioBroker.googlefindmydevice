@@ -174,6 +174,31 @@ Device names, manufacturer/model info and pairing date are always kept
 up to date on the regular poll interval regardless of these settings, since
 reading that doesn't touch the tracker itself.
 
+### Named places
+
+Google sometimes reports only a place name such as "Home" instead of
+coordinates. The name is written to `semanticLocation`, and `latitude`,
+`longitude`, `altitude`, `accuracy`, `isOwnReport` and `mapsLink` are cleared,
+because that report has no position. The next GPS report clears
+`semanticLocation` again. So the states always describe one and the same
+report.
+
+If you want a map position for such a place, assign coordinates to its name in
+the table **Named places** of the configuration (shown once Part 2 is done):
+
+- **Place name** - the name exactly as Google reports it (upper and lower case
+  do not matter). New names are added to the table automatically, without
+  coordinates; the instance restarts once when that happens.
+- **Latitude** / **Longitude** - the position of the place. Rows without
+  coordinates are ignored.
+- **Radius (m)** - how far from that point the tracker may be; it is written to
+  `accuracy`.
+
+While the tracker reports that place, `latitude` and `longitude` hold these
+coordinates, `accuracy` the radius, and `mapsLink` the link to them.
+`semanticLocation` keeps the name, so you can tell such a position from a real
+GPS fix.
+
 ## Usage
 
 ### Objects
@@ -191,13 +216,13 @@ Google's identifier of the tracker with unsafe characters replaced by `_`.
 | `<id>.deviceType` | string | Device type |
 | `<id>.pairDate` | number | Pairing date (timestamp in ms) |
 | `<id>.sharedWithCount` | number | Number of people the tracker is shared with |
-| `<id>.latitude` / `<id>.longitude` | number | Coordinates of the last GPS report |
+| `<id>.latitude` / `<id>.longitude` | number | Coordinates of the newest report (empty while it is a named place without assigned coordinates, see "Named places") |
 | `<id>.altitude` | number | Altitude in metres |
-| `<id>.accuracy` | number | Accuracy in metres |
-| `<id>.lastSeen` | number | Time of the last report (timestamp in ms) |
-| `<id>.semanticLocation` | string | Named place such as "Home", if Google reports one instead of coordinates |
+| `<id>.accuracy` | number | Accuracy in metres (the radius of the place for an assigned named place) |
+| `<id>.lastSeen` | number | Time of the newest report (timestamp in ms) |
+| `<id>.semanticLocation` | string | Named place such as "Home", if the newest report is one instead of a GPS position; otherwise empty |
 | `<id>.isOwnReport` | boolean | `true` if the tracker reported directly, `false` if a stranger's device nearby relayed it |
-| `<id>.mapsLink` | string | Google Maps link to the last GPS position |
+| `<id>.mapsLink` | string | Google Maps link to the position |
 | `info.connection` | boolean | `true` while the last poll succeeded |
 
 Only devices that Google lists with a tracker identifier appear. Phones and tablets
@@ -208,9 +233,14 @@ not appear either. If a device you expect is missing, set the instance's log
 level to *debug*: every skipped device is logged with its manufacturer, model
 and type (without its name), which helps to tell why it was left out.
 
-A report is either a GPS position or a semantic location. For a semantic
-report `accuracy`, `isOwnReport` and `mapsLink` are cleared so they never
-describe an older position; `lastSeen` is always updated.
+A report is either a GPS position or a named place. All position states
+describe the newest report only: an older report never overwrites a newer
+one, and a GPS report and a named place never show up mixed. Reports without
+a time, or with a time far in the future, are ignored. If a report cannot be
+decrypted, the newest one that can be read is used; if none can, the log says
+so once per start, and at *debug* level every skipped report is listed with
+the size of its key part. Relayed reports with a key part other than 20 bytes
+(a second curve the Find Hub specification allows) are not supported yet.
 
 ### Upgrading from 0.0.7 or older
 
@@ -251,6 +281,15 @@ This project is not affiliated with, endorsed by, or supported by Google.
 risk; Google's internal APIs are undocumented and may change without notice.
 
 ## Changelog
+
+### **WORK IN PROGRESS**
+
+* (beabel) **FIXED**: a location report that cannot be decrypted no longer discards the other reports of the same answer; the newest report that can be read is used.
+* (beabel) **FIXED**: `isOwnReport` now follows how a report was really decrypted instead of a flag set by Google.
+* (beabel) **FIXED**: reports without a time or with a time far in the future are ignored, and such a time can no longer block later reports.
+* (beabel) **CHANGED**: a named place such as "Home" now clears latitude, longitude, altitude, accuracy and the maps link, and a GPS report clears the named place, so the states always describe one and the same report.
+* (beabel) **NEW**: the table "Named places" in the configuration assigns coordinates to a place name such as "Home"; new names are added to it automatically, and a change applies right after saving.
+* (beabel) **ENHANCED**: the log says once per tracker when none of its reports can be decrypted, and the debug log shows the size of the key part of every skipped report.
 
 ### 0.1.7 (2026-11-05)
 

@@ -138,3 +138,56 @@ test('isOlderThanStored: only a strictly older report is skipped', () => {
   assert.equal(isOlderThanStored(0, { timestamp: 1000 }), false);
   assert.equal(isOlderThanStored('x', { timestamp: 1000 }), false);
 });
+
+test('isOlderThanStored: a stored time far in the future never blocks a real report', () => {
+  const { isOlderThanStored } = require('../lib/util');
+  const now = Date.UTC(2026, 10, 5, 12, 0, 0);
+  const bogus = now + 3 * 86400 * 1000;
+  assert.equal(isOlderThanStored(bogus, { timestamp: now / 1000 }, now), false);
+  assert.equal(isOlderThanStored(now + 60 * 1000, { timestamp: now / 1000 - 60 }, now), true);
+});
+
+test('normalizeReportTime: accepts seconds, milliseconds, microseconds and protobuf times', () => {
+  const { normalizeReportTime } = require('../lib/util');
+  const now = 1_790_000_000;
+  assert.equal(normalizeReportTime({ seconds: '1758000000' }, now), 1758000000);
+  assert.equal(normalizeReportTime(1758000000, now), 1758000000);
+  assert.equal(normalizeReportTime(1758000000123, now), 1758000000);
+  assert.equal(normalizeReportTime(1758000000123456, now), 1758000000);
+  assert.equal(normalizeReportTime('1758000000', now), 1758000000);
+});
+
+test('normalizeReportTime: rejects missing, zero, invalid and far-future times', () => {
+  const { normalizeReportTime } = require('../lib/util');
+  const now = 1_790_000_000;
+  for (const bad of [undefined, null, '', 0, -5, 'abc', {}, { seconds: '0' }, now + 100000]) {
+    assert.equal(normalizeReportTime(bad, now), null, String(JSON.stringify(bad)));
+  }
+  assert.equal(normalizeReportTime(now + 60, now), now + 60, 'a small clock difference is fine');
+});
+
+test('findSemanticMapping: finds coordinates by name ignoring case and spaces', () => {
+  const { findSemanticMapping } = require('../lib/util');
+  const rows = [
+    { name: 'Office', latitude: 1, longitude: 2, radius: 30 },
+    { name: ' home ', latitude: '52.5', longitude: '13.4', radius: 80 },
+  ];
+  assert.deepEqual(findSemanticMapping(rows, 'Home'), { lat: 52.5, lon: 13.4, radius: 80 });
+  assert.deepEqual(findSemanticMapping(rows, 'OFFICE'), { lat: 1, lon: 2, radius: 30 });
+  assert.equal(findSemanticMapping(rows, 'Garage'), null);
+});
+
+test('findSemanticMapping: rows without usable coordinates are ignored, a missing radius gets a default', () => {
+  const { findSemanticMapping } = require('../lib/util');
+  assert.equal(findSemanticMapping([{ name: 'Home', latitude: null, longitude: null }], 'Home'), null);
+  assert.equal(findSemanticMapping([{ name: 'Home', latitude: '', longitude: 5 }], 'Home'), null);
+  assert.equal(findSemanticMapping([{ name: 'Home', latitude: 95, longitude: 5 }], 'Home'), null);
+  assert.equal(findSemanticMapping([{ name: 'Home', latitude: 5, longitude: 190 }], 'Home'), null);
+  assert.equal(findSemanticMapping('garbage', 'Home'), null);
+  assert.equal(findSemanticMapping([{ name: 'Home', latitude: 0, longitude: 0 }], ''), null);
+  assert.deepEqual(findSemanticMapping([{ name: 'Home', latitude: 0, longitude: 0 }], 'Home'), {
+    lat: 0,
+    lon: 0,
+    radius: 100,
+  });
+});

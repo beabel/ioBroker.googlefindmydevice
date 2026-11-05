@@ -22,6 +22,7 @@ const {
     describeDevice,
     newestLocation,
     isOlderThanStored,
+    findSemanticMapping,
 } = require('./lib/util');
 const { buildDeviceObjects, PUSH_IDS_STATE_ID, buildPushIdsObject } = require('./lib/objects');
 
@@ -64,6 +65,8 @@ class Googlefindmydevice extends utils.Adapter {
         this.locateTimers = new Map();
         this.currentCanonicIds = null; // ids of the trackers in the account, once the first list has arrived
         this.staleWarned = new Set(); // ids already reported as gone from the account
+        this.decryptWarned = new Set(); // trackers whose reports could not be decrypted (warned once)
+        this.semanticRegistered = new Set(); // place names already checked against the "Named places" table
         this.legacyChecked = new Set(); // trackers already checked for the removed EID states in this run
         // Tracker object tree already created in this run (id -> device name).
         // Objects are written once per run, not on every poll.
@@ -418,7 +421,9 @@ class Googlefindmydevice extends utils.Adapter {
             }
 
             try {
-                const location = await decryptLatestLocation(ownerKey, device);
+                const location = await decryptLatestLocation(ownerKey, device, {
+                    onSkip: this.skippedReportLogger(device.name),
+                });
                 if (!location) {
                     this.log.debug(
                         `No location report for "${device.name}" yet (none fetched so far, or cache empty).`,
@@ -427,10 +432,45 @@ class Googlefindmydevice extends utils.Adapter {
                     this.log.debug(`Decrypted location for "${device.name}": ${JSON.stringify(location)}`);
                 }
                 await this.updateLocationStates(stateId, location);
+                if (!location) {
+                    await this.reapplySemanticMapping(stateId);
+                }
             } catch (err) {
-                this.log.warn(`Could not decrypt location for "${device.name}": ${err.message}`);
+                this.warnDecryptOnce(device.name, err);
             }
         }
+    }
+
+    /**
+     * Builds the callback that logs (at debug level) every location report
+     * that had to be left out, with the reason but never the content.
+     *
+     * @param {string} name the tracker's display name
+     * @returns {(info: {reason: string, keyPartLength?: number}) => void} the callback for decryptLatestLocation()
+     */
+    skippedReportLogger(name) {
+        return info => {
+            const size = info.keyPartLength === undefined ? '' : ` (key part: ${info.keyPartLength} bytes)`;
+            this.log.debug(`Skipped a location report for "${name}": ${info.reason}${size}.`);
+        };
+    }
+
+    /**
+     * Warns that none of a tracker's reports could be decrypted - once per
+     * tracker and run, so a permanent problem does not fill the log at every poll.
+     *
+     * @param {string} name the tracker's display name
+     * @param {Error} err the decryption error
+     */
+    warnDecryptOnce(name, err) {
+        if (this.decryptWarned.has(name)) {
+            this.log.debug(`Could not decrypt the location of "${name}": ${err.message}`);
+            return;
+        }
+        this.decryptWarned.add(name);
+        this.log.warn(
+            `Could not decrypt the location of "${name}": ${err.message}. This is logged once per start; set the log level to debug for details.`,
+        );
     }
 
     /**
@@ -686,21 +726,30 @@ class Googlefindmydevice extends utils.Adapter {
         // without an object.
         await this.ensureDevice(stateId, name);
         const locations = [];
+        let lastError = null;
         for (const [index, deviceUpdate] of deviceUpdates.entries()) {
             if (!deviceUpdate.deviceMetadata) {
                 continue;
             }
             try {
-                const decrypted = await decryptLatestLocation(ownerKey, { raw: deviceUpdate.deviceMetadata });
+                const decrypted = await decryptLatestLocation(
+                    ownerKey,
+                    { raw: deviceUpdate.deviceMetadata },
+                    { onSkip: this.skippedReportLogger(name) },
+                );
                 this.log.debug(
                     `Answer ${index + 1} for "${name}": ${decrypted ? `newest report from ${new Date(decrypted.timestamp * 1000).toISOString()}` : 'no report'}.`,
                 );
                 locations.push(decrypted);
             } catch (err) {
+                lastError = err;
                 this.log.debug(`Answer ${index + 1} for "${name}" could not be decrypted: ${err.message}`);
             }
         }
         const location = newestLocation(locations);
+        if (!location && lastError) {
+            this.warnDecryptOnce(name, lastError);
+        }
         await this.updateLocationStates(stateId, location);
         this.log.debug(
             location ? `Location for "${name}" updated.` : `Google has no location report for "${name}" at the moment.`,
@@ -733,16 +782,18 @@ class Googlefindmydevice extends utils.Adapter {
         // it's a semantic ("Home") or a GPS report - always set it either way.
         await this.setStateChanged(`${stateId}.lastSeen`, { val: location.timestamp * 1000, ack: true });
 
+        // The states always describe this one report: a named place ("Home")
+        // clears the coordinates of an older GPS report, and a GPS report
+        // clears the named place of an older one.
         if (location.semantic !== undefined) {
-            await this.setStateChanged(`${stateId}.semanticLocation`, { val: location.semantic, ack: true });
-            // A semantic report has no coordinates of its own - clear the
-            // GPS-only fields so they don't keep showing an older report's
-            // accuracy/link as if it still applied.
-            await this.setStateChanged(`${stateId}.accuracy`, { val: null, ack: true });
-            await this.setStateChanged(`${stateId}.isOwnReport`, { val: null, ack: true });
-            await this.setStateChanged(`${stateId}.mapsLink`, { val: '', ack: true });
+            const mapped = await this.writeSemanticStates(stateId, location.semantic);
+            if (!mapped) {
+                await this.registerSemanticName(location.semantic);
+            }
             return;
         }
+
+        await this.setStateChanged(`${stateId}.semanticLocation`, { val: '', ack: true });
 
         await this.setStateChanged(`${stateId}.latitude`, { val: location.lat, ack: true });
         await this.setStateChanged(`${stateId}.longitude`, { val: location.lon, ack: true });
@@ -752,6 +803,82 @@ class Googlefindmydevice extends utils.Adapter {
         await this.setStateChanged(`${stateId}.mapsLink`, {
             val: `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lon}`,
             ack: true,
+        });
+    }
+
+    /**
+     * Writes the position states for a named place ("Home"): the coordinates
+     * the user assigned to that name in the "Named places" table, or empty
+     * values if there are none.
+     *
+     * @param {string} stateId sanitized id of the tracker's device object
+     * @param {string} name the place name reported by Google
+     * @returns {Promise<{lat: number, lon: number, radius: number} | null>} the assigned coordinates, if any
+     */
+    async writeSemanticStates(stateId, name) {
+        const mapped = findSemanticMapping(this.config.semanticLocations, name);
+        await this.setStateChanged(`${stateId}.semanticLocation`, { val: name, ack: true });
+        await this.setStateChanged(`${stateId}.latitude`, { val: mapped ? mapped.lat : null, ack: true });
+        await this.setStateChanged(`${stateId}.longitude`, { val: mapped ? mapped.lon : null, ack: true });
+        await this.setStateChanged(`${stateId}.altitude`, { val: null, ack: true });
+        await this.setStateChanged(`${stateId}.accuracy`, { val: mapped ? mapped.radius : null, ack: true });
+        await this.setStateChanged(`${stateId}.isOwnReport`, { val: null, ack: true });
+        await this.setStateChanged(`${stateId}.mapsLink`, {
+            val: mapped ? `https://www.google.com/maps/search/?api=1&query=${mapped.lat},${mapped.lon}` : '',
+            ack: true,
+        });
+        return mapped;
+    }
+
+    /**
+     * Applies the current "Named places" table to a tracker that is already
+     * at a named place, without waiting for the next report. Without it a
+     * change of the table would only show up with the next location answer.
+     *
+     * @param {string} stateId sanitized id of the tracker's device object
+     */
+    async reapplySemanticMapping(stateId) {
+        const state = await this.getStateAsync(`${stateId}.semanticLocation`);
+        if (state && typeof state.val === 'string' && state.val) {
+            await this.writeSemanticStates(stateId, state.val);
+        }
+    }
+
+    /**
+     * Adds a place name that Google reported to the "Named places" table of
+     * the configuration (without coordinates), so the user only has to fill
+     * in latitude and longitude. Checked once per name and run. The name is
+     * not logged: it is whatever the user called the place in Find Hub.
+     *
+     * @param {string} name the place name reported by Google
+     */
+    async registerSemanticName(name) {
+        const trimmed = String(name || '').trim();
+        const key = trimmed.toLowerCase();
+        if (!key || this.semanticRegistered.has(key)) {
+            return;
+        }
+        this.semanticRegistered.add(key);
+
+        const existing = Array.isArray(this.config.semanticLocations) ? this.config.semanticLocations : [];
+        if (
+            existing.some(
+                row =>
+                    row &&
+                    String(row.name || '')
+                        .trim()
+                        .toLowerCase() === key,
+            )
+        ) {
+            return;
+        }
+        this.log.info(
+            'Google reported a named place without coordinates; it was added to the table "Named places" in the configuration. Enter its latitude and longitude there to get a map position.',
+        );
+        await this.extendForeignObject(`system.adapter.${this.namespace}`, {
+            native: {
+                semanticLocations: existing.concat({ name: trimmed, latitude: null, longitude: null, radius: 100 }),
+            },
         });
     }
 

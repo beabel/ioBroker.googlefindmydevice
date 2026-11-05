@@ -459,6 +459,66 @@
           "max": 1440
         }
       ]
+    },
+    "_semanticHeadline": {
+      "type": "header",
+      "text": "semantic_headline",
+      "size": 4,
+      "hidden": "!data.ownerKey",
+      "newLine": true
+    },
+    "_semanticIntro": {
+      "type": "staticText",
+      "text": "semantic_intro",
+      "hidden": "!data.ownerKey",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
+    },
+    "semanticLocations": {
+      "type": "table",
+      "hidden": "!data.ownerKey",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12,
+      "items": [
+        {
+          "type": "text",
+          "attr": "name",
+          "title": "semantic_name_col",
+          "width": "34%"
+        },
+        {
+          "type": "number",
+          "attr": "latitude",
+          "title": "semantic_lat_col",
+          "width": "22%",
+          "min": -90,
+          "max": 90
+        },
+        {
+          "type": "number",
+          "attr": "longitude",
+          "title": "semantic_lon_col",
+          "width": "22%",
+          "min": -180,
+          "max": 180
+        },
+        {
+          "type": "number",
+          "attr": "radius",
+          "title": "semantic_radius_col",
+          "width": "16%",
+          "min": 1,
+          "max": 100000
+        }
+      ]
     }
   }
 }

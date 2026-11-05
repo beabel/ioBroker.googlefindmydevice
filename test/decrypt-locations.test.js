@@ -131,3 +131,116 @@ test('fails with a clear message when the identity key is missing or has an unex
   oddSize.raw.information.deviceRegistration.encryptedUserSecrets.encryptedIdentityKey = Buffer.alloc(10);
   await assert.rejects(decryptLatestLocation(OWNER_KEY, oddSize), /Unexpected length/);
 });
+
+// A device whose answer holds several reports, each with its own time.
+function deviceWithReports(reports) {
+  const device = deviceWith(undefined);
+  device.raw.information.locationInformation.reports = {
+    recentLocationAndNetworkLocations: {
+      networkLocations: reports.map(r => r.loc),
+      networkLocationTimestamps: reports.map(r => ({ seconds: String(r.time) })),
+    },
+  };
+  return device;
+}
+
+test('a report that cannot be read is skipped, the newest one that can be read is used', async () => {
+  const broken = await foreignReport();
+  broken.geoLocation.encryptedReport.encryptedLocation[3] ^= 0xff;
+  const skipped = [];
+  const result = await decryptLatestLocation(
+    OWNER_KEY,
+    deviceWithReports([
+      { loc: broken, time: TIMESTAMP + 500 },
+      { loc: await ownReport(), time: TIMESTAMP },
+    ]),
+    { onSkip: info => skipped.push(info) },
+  );
+  assert.equal(result.lat, 52.52);
+  assert.equal(result.timestamp, TIMESTAMP);
+  assert.equal(skipped.length, 1);
+  assert.equal(skipped[0].keyPartLength, 20);
+  assert.equal(skipped[0].ownReport, false);
+});
+
+test('a relayed report with a 32 byte key part is reported as unsupported, with its size', async () => {
+  const report = await foreignReport();
+  report.geoLocation.encryptedReport.publicKeyRandom = Buffer.alloc(32, 9);
+  const skipped = [];
+  await assert.rejects(
+    decryptLatestLocation(OWNER_KEY, deviceWith(report), { onSkip: info => skipped.push(info) }),
+    /Unsupported key part length 32/,
+  );
+  assert.deepEqual(skipped.map(s => s.keyPartLength), [32]);
+});
+
+test('an older readable report is used when the newest one is a 32 byte report', async () => {
+  const newer = await foreignReport();
+  newer.geoLocation.encryptedReport.publicKeyRandom = Buffer.alloc(32, 9);
+  const result = await decryptLatestLocation(
+    OWNER_KEY,
+    deviceWithReports([
+      { loc: newer, time: TIMESTAMP + 60 },
+      { loc: await foreignReport(), time: TIMESTAMP },
+    ]),
+  );
+  assert.equal(result.lat, 48.4);
+  assert.equal(result.timestamp, TIMESTAMP);
+});
+
+test('isOwnReport follows the way the report was decrypted, not the flag from Google', async () => {
+  const own = await ownReport();
+  own.geoLocation.encryptedReport.isOwnReport = false;
+  assert.equal((await decryptLatestLocation(OWNER_KEY, deviceWith(own))).isOwnReport, true);
+
+  const foreign = await foreignReport();
+  foreign.geoLocation.encryptedReport.isOwnReport = true;
+  assert.equal((await decryptLatestLocation(OWNER_KEY, deviceWith(foreign))).isOwnReport, false);
+});
+
+test('reports without a time, or with a time far in the future, are left out', async () => {
+  const skipped = [];
+  const onSkip = info => skipped.push(info.reason);
+  const future = Math.floor(Date.now() / 1000) + 86400;
+  const result = await decryptLatestLocation(
+    OWNER_KEY,
+    deviceWithReports([
+      { loc: await foreignReport(), time: future },
+      { loc: await foreignReport(), time: 0 },
+      { loc: await ownReport(), time: TIMESTAMP },
+    ]),
+    { onSkip },
+  );
+  assert.equal(result.timestamp, TIMESTAMP);
+  assert.equal(skipped.length, 2);
+  assert.ok(skipped.every(reason => /time/.test(reason)));
+});
+
+test('a time given in milliseconds is understood', async () => {
+  const result = await decryptLatestLocation(
+    OWNER_KEY,
+    deviceWithReports([{ loc: await ownReport(), time: TIMESTAMP * 1000 }]),
+  );
+  assert.equal(result.timestamp, TIMESTAMP);
+});
+
+test('a newer semantic report wins over an older GPS report, and the other way round', async () => {
+  const semantic = { status: 0, semanticLocation: { locationName: 'Home' } };
+  const newerSemantic = await decryptLatestLocation(
+    OWNER_KEY,
+    deviceWithReports([
+      { loc: semantic, time: TIMESTAMP + 10 },
+      { loc: await ownReport(), time: TIMESTAMP },
+    ]),
+  );
+  assert.deepEqual(newerSemantic, { semantic: 'Home', timestamp: TIMESTAMP + 10 });
+
+  const newerGps = await decryptLatestLocation(
+    OWNER_KEY,
+    deviceWithReports([
+      { loc: semantic, time: TIMESTAMP },
+      { loc: await ownReport(), time: TIMESTAMP + 10 },
+    ]),
+  );
+  assert.equal(newerGps.lat, 52.52);
+});

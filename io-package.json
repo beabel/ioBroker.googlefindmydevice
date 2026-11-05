@@ -190,7 +190,8 @@
     "ownerKey": "",
     "ownerKeyVersion": -1,
     "pollInterval": 15,
-    "deviceSettings": []
+    "deviceSettings": [],
+    "semanticLocations": []
   },
   "objects": [],
   "instanceObjects": [
