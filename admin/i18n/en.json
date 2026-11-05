@@ -24,6 +24,7 @@
 	"part2_intro": "You are now connected to Google. One more one-time step is needed for real coordinates (device names already work without it). Google encrypts the locations end-to-end; here you unlock that encryption once, again in your own browser.",
 	"part2_no_rush": "There is no time pressure here - you can do Part 2 in your own time.",
 	"part2_open_button": "Open Google's unlock page",
+	"part2_restart": "First save the configuration and wait until the instance has restarted (green status). Part 2 only works after that.",
 	"part2_script_button": "Show the script for the console",
 	"part2_step1": "1. Click the button below. Google's unlock page opens in a new browser tab.",
 	"part2_step2": "2. In that new tab, open the developer tools (press F12) and switch to the \"Console\" tab. Chrome blocks pasting at first: type \"allow pasting\" and press Enter.",

@@ -113,7 +113,13 @@ Google encrypts tracker locations end-to-end. Without this part the adapter
 still lists your trackers by name, but it cannot show real coordinates. Part 2
 unlocks that encryption once, again entirely in your own browser. There is no
 time pressure here - you can do Part 2 in your own time. The configuration
-page shows it as soon as Part 1 is done:
+page shows it as soon as Part 1 is done.
+
+**Before you start, make sure you saved the configuration after Part 1 and the
+instance has restarted (green status).** Part 2 only works after that restart;
+the configuration page reminds you of it as well.
+
+The steps:
 
 1. Click **Open Google's unlock page**. It opens in a new browser tab. (The
    same link is also written to the instance log, level "warn".)
@@ -245,6 +251,12 @@ This project is not affiliated with, endorsed by, or supported by Google.
 risk; Google's internal APIs are undocumented and may change without notice.
 
 ## Changelog
+
+### **WORK IN PROGRESS**
+
+* (beabel) **FIXED**: an older location report no longer overwrites a newer one; the "last seen" time could jump back to an older report when Google answered with only part of its data.
+* (beabel) **ENHANCED**: after a location request the adapter now also waits for further answers from Google (up to 25 seconds after the first one) and uses the newest report of all.
+* (beabel) **ENHANCED**: the setup now says in the configuration page and in this README that the configuration has to be saved and the instance restarted before Part 2.
 
 ### 0.1.6 (2026-11-01)
 

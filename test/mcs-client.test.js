@@ -26,7 +26,7 @@ function createClient() {
 
 test('a locate request that gets no answer is rejected with a clear message', async () => {
   const { client, scheduled } = createClient();
-  const pending = client.waitForDeviceUpdate('request-1', 45000);
+  const pending = client.waitForDeviceUpdates('request-1', 45000);
   assert.equal(scheduled.size, 1);
 
   for (const fire of scheduled.values()) {
@@ -37,7 +37,7 @@ test('a locate request that gets no answer is rejected with a clear message', as
 
 test('stopping the client rejects pending requests and cancels their timers', async () => {
   const { client, scheduled } = createClient();
-  const pending = client.waitForDeviceUpdate('request-2', 45000);
+  const pending = client.waitForDeviceUpdates('request-2', 45000);
   assert.equal(scheduled.size, 1);
 
   client.stop();
@@ -48,7 +48,7 @@ test('stopping the client rejects pending requests and cancels their timers', as
 
 test('error messages are English (they end up in the adapter log)', async () => {
   const { client } = createClient();
-  const pending = client.waitForDeviceUpdate('request-3', 1);
+  const pending = client.waitForDeviceUpdates('request-3', 1);
   client.stop();
   await assert.rejects(pending, err => /^[\x20-\x7E]+$/.test(err.message));
 });
@@ -80,4 +80,41 @@ test('a list that is not an array is ignored instead of throwing', () => {
   const { client } = createClient();
   client.setReceivedIds('garbage');
   assert.deepEqual(client._receivedIds, []);
+});
+
+test('without a grace period the first answer completes the request', async () => {
+  const { client, scheduled } = createClient();
+  const pending = client.waitForDeviceUpdates('request-4', 45000);
+  client._collectUpdate('request-4', { n: 1 });
+
+  assert.deepEqual(await pending, [{ n: 1 }]);
+  assert.equal(scheduled.size, 0, 'the request timeout must be cancelled');
+  assert.equal(client._pending.size, 0);
+});
+
+test('with a grace period further answers are collected until it ends', async () => {
+  const { client, scheduled } = createClient();
+  const pending = client.waitForDeviceUpdates('request-5', 45000, 25000);
+  client._collectUpdate('request-5', { n: 1 });
+  assert.equal(scheduled.size, 1, 'only the grace timer is left, the first-answer timeout is cancelled');
+  client._collectUpdate('request-5', { n: 2 });
+  client._collectUpdate('request-5', { n: 3 });
+  assert.equal(client._pending.size, 1, 'still open while the grace period runs');
+
+  for (const fire of scheduled.values()) {
+    fire();
+  }
+  assert.deepEqual(await pending, [{ n: 1 }, { n: 2 }, { n: 3 }]);
+  assert.equal(client._pending.size, 0);
+});
+
+test('stopping the client during the grace period keeps the answers that already arrived', async () => {
+  const { client, scheduled } = createClient();
+  const pending = client.waitForDeviceUpdates('request-6', 45000, 25000);
+  client._collectUpdate('request-6', { n: 1 });
+
+  client.stop();
+
+  assert.deepEqual(await pending, [{ n: 1 }]);
+  assert.equal(scheduled.size, 0, 'the grace timer must be cancelled');
 });

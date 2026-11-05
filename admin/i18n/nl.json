@@ -24,6 +24,7 @@
 	"part2_intro": "U bent nu verbonden met Google. Voor echte coördinaten is nog een eenmalige stap nodig (apparaatnamen werken al zonder). Google codeert de locaties end-to-end; hier ontgrendel je die encryptie nog een keer, opnieuw in je eigen browser.",
 	"part2_no_rush": "Er is hier geen tijdsdruk; je kunt deel 2 in je eigen tijd doen.",
 	"part2_open_button": "Open de ontgrendelingspagina van Google",
+	"part2_restart": "Sla eerst de configuratie op en wacht tot de instantie opnieuw is gestart (groene status). Pas daarna werkt deel 2.",
 	"part2_script_button": "Toon het script voor de console",
 	"part2_step1": "1. Klik op onderstaande knop. De ontgrendelingspagina van Google wordt geopend in een nieuw browsertabblad.",
 	"part2_step2": "2. Open op dat nieuwe tabblad de ontwikkelaarstools (druk op F12) en schakel over naar het tabblad \"Console\". Chrome blokkeert eerst het plakken: typ 'plakken toestaan' en druk op Enter.",

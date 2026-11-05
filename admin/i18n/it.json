@@ -24,6 +24,7 @@
 	"part2_intro": "Ora sei connesso a Google. Per le coordinate reali è necessario un ulteriore passaggio una tantum (i nomi dei dispositivi funzionano già senza di esso). Google crittografa le posizioni end-to-end; qui sblocchi quella crittografia ancora una volta, sempre nel tuo browser.",
 	"part2_no_rush": "Non c'è fretta: puoi completare la Parte 2 con i tuoi tempi.",
 	"part2_open_button": "Apri la pagina di sblocco di Google",
+	"part2_restart": "Salva prima la configurazione e attendi il riavvio dell'istanza (stato verde). La Parte 2 funziona solo dopo.",
 	"part2_script_button": "Mostra lo script per la console",
 	"part2_step1": "1. Fare clic sul pulsante in basso. La pagina di sblocco di Google si apre in una nuova scheda del browser.",
 	"part2_step2": "2. Nella nuova scheda, apri gli strumenti per sviluppatori (premi F12) e passa alla scheda \"Console\". Chrome inizialmente blocca l'incollatura: digita \"consenti incolla\" e premi Invio.",

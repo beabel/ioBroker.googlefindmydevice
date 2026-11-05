@@ -24,6 +24,7 @@
 	"part2_intro": "Ahora estás conectado a Google. Se necesita un paso más para las coordenadas reales (los nombres de los dispositivos ya funcionan sin él). Google cifra las ubicaciones de un extremo a otro; aquí desbloqueas ese cifrado una vez más en tu propio navegador.",
 	"part2_no_rush": "Aquí no hay presión de tiempo: puedes hacer la Parte 2 en tu propio tiempo.",
 	"part2_open_button": "Abra la página de desbloqueo de Google",
+	"part2_restart": "Primero guarda la configuración y espera a que la instancia se haya reiniciado (estado verde). La Parte 2 solo funciona después.",
 	"part2_script_button": "Mostrar el script para la consola.",
 	"part2_step1": "1. Haga clic en el botón de abajo. La página de desbloqueo de Google se abre en una nueva pestaña del navegador.",
 	"part2_step2": "2. En esa nueva pestaña, abra las herramientas de desarrollador (presione F12) y cambie a la pestaña \"Consola\". Chrome bloquea el pegado al principio: escribe \"permitir pegar\" y presiona Enter.",

@@ -24,6 +24,7 @@
 	"part2_intro": "Masz teraz połączenie z Google. Dla rzeczywistych współrzędnych potrzebny jest jeszcze jeden jednorazowy krok (nazwy urządzeń już działają bez niego). Google szyfruje lokalizacje od początku do końca; tutaj odblokujesz to szyfrowanie raz i ponownie we własnej przeglądarce.",
 	"part2_no_rush": "Nie ma tu presji czasu – część 2 możesz wykonać w swoim czasie.",
 	"part2_open_button": "Otwórz stronę odblokowania Google",
+	"part2_restart": "Najpierw zapisz konfigurację i poczekaj, aż instancja zostanie ponownie uruchomiona (zielony status). Część 2 działa dopiero potem.",
 	"part2_script_button": "Pokaż skrypt dla konsoli",
 	"part2_step1": "1. Kliknij poniższy przycisk. Strona odblokowania Google otwiera się w nowej karcie przeglądarki.",
 	"part2_step2": "2. Na nowej karcie otwórz narzędzia programistyczne (naciśnij F12) i przejdź do zakładki „Konsola”. Chrome początkowo blokuje wklejanie: wpisz „zezwól na wklejanie” i naciśnij Enter.",

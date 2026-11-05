@@ -24,6 +24,7 @@
 	"part2_intro": "Vous êtes maintenant connecté à Google. Une étape unique supplémentaire est nécessaire pour les coordonnées réelles (les noms d'appareils fonctionnent déjà sans cette étape). Google chiffre les emplacements de bout en bout ; ici, vous déverrouillez ce cryptage une fois de plus dans votre propre navigateur.",
 	"part2_no_rush": "Il n'y a aucune pression de temps ici - vous pouvez faire la partie 2 à votre rythme.",
 	"part2_open_button": "Ouvrez la page de déverrouillage de Google",
+	"part2_restart": "Enregistrez d'abord la configuration et attendez que l'instance ait redémarré (état vert). La partie 2 ne fonctionne qu'ensuite.",
 	"part2_script_button": "Afficher le script pour la console",
 	"part2_step1": "1. Cliquez sur le bouton ci-dessous. La page de déverrouillage de Google s'ouvre dans un nouvel onglet de navigateur.",
 	"part2_step2": "2. Dans ce nouvel onglet, ouvrez les outils de développement (appuyez sur F12) et passez à l'onglet \"Console\". Chrome bloque le collage dans un premier temps : tapez \"autoriser le collage\" et appuyez sur Entrée.",

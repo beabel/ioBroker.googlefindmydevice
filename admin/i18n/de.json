@@ -24,6 +24,7 @@
 	"part2_intro": "Du bist jetzt mit Google verbunden. Für echte Koordinaten ist noch ein einmaliger Schritt nötig (Gerätenamen funktionieren auch ohne). Google verschlüsselt die Standorte Ende-zu-Ende - hier schaltest du diese Verschlüsselung einmalig frei, wieder in deinem eigenen Browser.",
 	"part2_no_rush": "Hier gibt es keinen Zeitdruck - Teil 2 kannst du ganz in Ruhe erledigen.",
 	"part2_open_button": "Entsperr-Seite von Google öffnen",
+	"part2_restart": "Speichere zuerst die Konfiguration und warte, bis die Instanz neu gestartet ist (grüner Status). Erst danach funktioniert Teil 2.",
 	"part2_script_button": "Skript für die Konsole anzeigen",
 	"part2_step1": "1. Klicke auf den Button darunter. Die Entsperr-Seite von Google öffnet sich in einem neuen Browser-Tab.",
 	"part2_step2": "2. Öffne in diesem neuen Tab die Entwicklertools (Taste F12) und wechsle zum Reiter \"Konsole\". Chrome blockiert das Einfügen zunächst: Tippe \"allow pasting\" und drücke Enter.",

@@ -20,6 +20,8 @@ const {
     clampMinutes,
     canonicIdToStateId,
     describeDevice,
+    newestLocation,
+    isOlderThanStored,
 } = require('./lib/util');
 const { buildDeviceObjects, PUSH_IDS_STATE_ID, buildPushIdsObject } = require('./lib/objects');
 
@@ -41,6 +43,7 @@ const LOCATE_MIN_MINUTES = 5;
 const LOCATE_MAX_MINUTES = 1440; // 24h
 const LOCATE_INITIAL_DELAY_MS = 20000; // give the MCS connection time to log in first
 const LOCATE_RESPONSE_TIMEOUT_MS = 45000;
+const LOCATE_EXTRA_ANSWERS_MS = 25000; // Google may send further answers after the first one
 
 class Googlefindmydevice extends utils.Adapter {
     /**
@@ -651,7 +654,11 @@ class Googlefindmydevice extends utils.Adapter {
         );
 
         const requestUuid = crypto.randomUUID();
-        const responsePromise = this.mcsClient.waitForDeviceUpdate(requestUuid, LOCATE_RESPONSE_TIMEOUT_MS);
+        const responsePromise = this.mcsClient.waitForDeviceUpdates(
+            requestUuid,
+            LOCATE_RESPONSE_TIMEOUT_MS,
+            LOCATE_EXTRA_ANSWERS_MS,
+        );
         // Mark it as handled right away so Node doesn't log an "unhandled
         // promise rejection" if this settles (e.g. the connection drops)
         // before execution below reaches the real `await responsePromise`.
@@ -665,11 +672,11 @@ class Googlefindmydevice extends utils.Adapter {
             fmdClientUuid: this.fmdClientUuid,
         });
 
-        const deviceUpdate = await responsePromise;
-        this.log.debug(`Push response for "${name}" received.`);
+        const deviceUpdates = await responsePromise;
+        this.log.debug(`${deviceUpdates.length} push response(s) for "${name}" received.`);
 
         const ownerKey = this.config.ownerKey ? Buffer.from(this.config.ownerKey, 'hex') : null;
-        if (!ownerKey || !deviceUpdate.deviceMetadata) {
+        if (!ownerKey) {
             return;
         }
 
@@ -678,7 +685,22 @@ class Googlefindmydevice extends utils.Adapter {
         // they exist even if it failed, so the states below never end up
         // without an object.
         await this.ensureDevice(stateId, name);
-        const location = await decryptLatestLocation(ownerKey, { raw: deviceUpdate.deviceMetadata });
+        const locations = [];
+        for (const [index, deviceUpdate] of deviceUpdates.entries()) {
+            if (!deviceUpdate.deviceMetadata) {
+                continue;
+            }
+            try {
+                const decrypted = await decryptLatestLocation(ownerKey, { raw: deviceUpdate.deviceMetadata });
+                this.log.debug(
+                    `Answer ${index + 1} for "${name}": ${decrypted ? `newest report from ${new Date(decrypted.timestamp * 1000).toISOString()}` : 'no report'}.`,
+                );
+                locations.push(decrypted);
+            } catch (err) {
+                this.log.debug(`Answer ${index + 1} for "${name}" could not be decrypted: ${err.message}`);
+            }
+        }
+        const location = newestLocation(locations);
         await this.updateLocationStates(stateId, location);
         this.log.debug(
             location ? `Location for "${name}" updated.` : `Google has no location report for "${name}" at the moment.`,
@@ -693,6 +715,17 @@ class Googlefindmydevice extends utils.Adapter {
      */
     async updateLocationStates(stateId, location) {
         if (!location) {
+            return;
+        }
+
+        // Google answers with a different subset of reports from one request to
+        // the next (and the periodic list only carries its cache), so an older
+        // report must not overwrite a newer one that is already stored.
+        const stored = await this.getStateAsync(`${stateId}.lastSeen`);
+        if (isOlderThanStored(stored && stored.val, location)) {
+            this.log.debug(
+                `Ignoring a report from ${new Date(location.timestamp * 1000).toISOString()} for ${stateId}, a newer one is already stored.`,
+            );
             return;
         }
 

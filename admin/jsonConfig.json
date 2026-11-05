@@ -240,6 +240,18 @@
       "lg": 12,
       "xl": 12
     },
+    "_part2Restart": {
+      "type": "staticText",
+      "text": "part2_restart",
+      "style": { "color": "#e65100", "fontWeight": "bold" },
+      "hidden": "!data.aasToken || data.ownerKey",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
+    },
     "_part2Step1": {
       "type": "staticText",
       "text": "part2_step1",

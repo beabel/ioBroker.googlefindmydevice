@@ -118,3 +118,23 @@ test('describeDevice: reports an id outside the known fields by length only, plu
   );
   assert.ok(!text.includes('0b8f'));
 });
+
+test('newestLocation: picks the report with the highest timestamp and skips empty entries', () => {
+  const { newestLocation } = require('../lib/util');
+  const a = { timestamp: 100 };
+  const b = { timestamp: 300 };
+  const c = { timestamp: 200 };
+  assert.equal(newestLocation([a, null, b, undefined, c]), b);
+  assert.equal(newestLocation([]), null);
+  assert.equal(newestLocation([null]), null);
+});
+
+test('isOlderThanStored: only a strictly older report is skipped', () => {
+  const { isOlderThanStored } = require('../lib/util');
+  assert.equal(isOlderThanStored(2000000, { timestamp: 1000 }), true, 'older than stored');
+  assert.equal(isOlderThanStored(1000000, { timestamp: 1000 }), false, 'same time is still written');
+  assert.equal(isOlderThanStored(1000000, { timestamp: 2000 }), false, 'newer');
+  assert.equal(isOlderThanStored(null, { timestamp: 1000 }), false, 'nothing stored yet');
+  assert.equal(isOlderThanStored(0, { timestamp: 1000 }), false);
+  assert.equal(isOlderThanStored('x', { timestamp: 1000 }), false);
+});

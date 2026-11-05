@@ -24,6 +24,7 @@
 	"part2_intro": "Agora você está conectado ao Google. Mais uma etapa única é necessária para coordenadas reais (os nomes dos dispositivos já funcionam sem ela). O Google criptografa os locais de ponta a ponta; aqui você desbloqueia essa criptografia uma vez, novamente em seu próprio navegador.",
 	"part2_no_rush": "Não há pressão de tempo aqui – você pode fazer a Parte 2 em seu próprio tempo.",
 	"part2_open_button": "Abra a página de desbloqueio do Google",
+	"part2_restart": "Primeiro salve a configuração e aguarde até que a instância seja reiniciada (status verde). A Parte 2 só funciona depois disso.",
 	"part2_script_button": "Mostrar o script para o console",
 	"part2_step1": "1. Clique no botão abaixo. A página de desbloqueio do Google abre em uma nova guia do navegador.",
 	"part2_step2": "2. Nessa nova aba, abra as ferramentas do desenvolvedor (pressione F12) e mude para a aba “Console”. O Chrome bloqueia a colagem primeiro: digite \"permitir colagem\" e pressione Enter.",
