@@ -223,7 +223,34 @@ Google's identifier of the tracker with unsafe characters replaced by `_`.
 | `<id>.semanticLocation` | string | Named place such as "Home", if the newest report is one instead of a GPS position; otherwise empty |
 | `<id>.isOwnReport` | boolean | `true` if the tracker reported directly, `false` if a stranger's device nearby relayed it |
 | `<id>.mapsLink` | string | Google Maps link to the position |
+| `<id>.locateNow` | button | Requests a fresh location now (see "Buttons") |
+| `<id>.playSound` | button | Makes the tracker play its sound (see "Buttons") |
+| `<id>.stopSound` | button | Stops that sound again (see "Buttons") |
 | `info.connection` | boolean | `true` while the last poll succeeded |
+
+### Buttons
+
+Each tracker has three buttons. Press one by setting it to `true` (for example
+in the Objects view, in a script or a visualization); the adapter sets it back
+to acknowledged when the action is done. Nothing happens for an acknowledged
+value or for `false`.
+
+- **`locateNow`** - requests a fresh location right away, like the scheduled
+  request, but without waiting for the interval. It works for every tracker,
+  also if "Request location" is off in the table. The same cautions apply:
+  every request makes the tracker work over Bluetooth and costs battery. Only
+  one request per tracker runs at a time; a press during a running request is
+  skipped.
+- **`playSound`** - makes the tracker ring. Only trackers that have a speaker
+  can do this; for the others nothing happens. It rings for a limited time by
+  itself.
+- **`stopSound`** - stops the sound again. Google matches a stop to the start
+  it belongs to, so the adapter remembers the start it sent (in memory, until
+  the instance restarts). A stop without such a start is still sent, but the
+  tracker may keep ringing until it stops by itself, and the log says so.
+
+Pressing a button for a tracker that is no longer in the Google account only
+writes a warning to the log.
 
 Only devices that Google lists with a tracker identifier appear. Phones and tablets
 have none and are left out on purpose. Some headphones and earbuds are listed
@@ -284,6 +311,7 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ### **WORK IN PROGRESS**
 
+* (beabel) **NEW**: three buttons per tracker: `locateNow` requests a fresh location right away, `playSound` makes the tracker ring and `stopSound` stops it again.
 * (beabel) **FIXED**: a location report that cannot be decrypted no longer discards the other reports of the same answer; the newest report that can be read is used.
 * (beabel) **FIXED**: `isOwnReport` now follows how a report was really decrypted instead of a flag set by Google.
 * (beabel) **FIXED**: reports without a time or with a time far in the future are ignored, and such a time can no longer block later reports.

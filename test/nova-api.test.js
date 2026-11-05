@@ -82,3 +82,36 @@ test('listDevices: a Fast Pair device without an identity key is not taken over'
   const devices = await withDeviceList([await headphoneEntry(false)], () => listDevices('token'));
   assert.equal(devices[0].canonicId, null);
 });
+
+test('sound requests carry the start or stop command, the request id and the tracker', async () => {
+  const { executeSoundAction, executeLocateAction } = require('../lib/nova-api');
+  const root = await protobuf.load(path.join(__dirname, '..', 'lib', 'proto', 'device_update.proto'));
+  const Request = root.lookupType('googlefindmydevice.ExecuteActionRequest');
+  const sent = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    sent.push({ url, body: Buffer.from(init.body) });
+    return { ok: true };
+  };
+  const params = { canonicId: 'id-1', fcmRegistrationId: 'fcm', requestUuid: 'req-1', fmdClientUuid: 'client' };
+  try {
+    await executeSoundAction('tok', params, true);
+    await executeSoundAction('tok', { ...params, requestUuid: '' }, false);
+    await executeLocateAction('tok', params);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+
+  const [start, stop, locate] = sent.map(s => Request.toObject(Request.decode(s.body), { defaults: false }));
+  assert.ok(start.action.startSound && !start.action.stopSound && !start.action.locateTracker);
+  assert.ok(stop.action.stopSound && !stop.action.startSound);
+  assert.ok(locate.action.locateTracker && !locate.action.startSound);
+  assert.equal(start.requestMetadata.requestUuid, 'req-1');
+  assert.equal(stop.requestMetadata.requestUuid, undefined, 'a stop without a known start sends no request id');
+  assert.equal(start.scope.device.canonicId.id, 'id-1');
+  assert.ok(sent.every(s => s.url.endsWith('/nova/nbe_execute_action')));
+  // The command is the field itself: 31 (start) / 32 (stop) with an empty message.
+  // Both tags need two bytes (field numbers above 15): 31 -> 0xfa 0x01, 32 -> 0x82 0x02.
+  assert.ok(sent[0].body.includes(Buffer.from([0xfa, 0x01, 0x00])));
+  assert.ok(sent[1].body.includes(Buffer.from([0x82, 0x02, 0x00])));
+});

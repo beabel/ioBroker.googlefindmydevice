@@ -4,7 +4,7 @@ const crypto = require('node:crypto');
 const utils = require('@iobroker/adapter-core');
 const { gcmCheckin } = require('./lib/google-checkin');
 const { exchangeToken, performOAuth, DEFAULT_CLIENT_SIG } = require('./lib/google-auth');
-const { listDevices, executeLocateAction } = require('./lib/nova-api');
+const { listDevices, executeLocateAction, executeSoundAction } = require('./lib/nova-api');
 const {
     extractSharedKeyFromVaultKeys,
     retrieveOwnerKey,
@@ -45,6 +45,7 @@ const LOCATE_MAX_MINUTES = 1440; // 24h
 const LOCATE_INITIAL_DELAY_MS = 20000; // give the MCS connection time to log in first
 const LOCATE_RESPONSE_TIMEOUT_MS = 45000;
 const LOCATE_EXTRA_ANSWERS_MS = 25000; // Google may send further answers after the first one
+const SOUND_KEY_MAX_AGE_MS = 30 * 60 * 1000; // a stop for a ring older than this probably no longer fits
 
 class Googlefindmydevice extends utils.Adapter {
     /**
@@ -58,11 +59,15 @@ class Googlefindmydevice extends utils.Adapter {
             name: 'googlefindmydevice',
         });
         this.on('ready', this.onReady.bind(this));
+        this.on('stateChange', this.onStateChange.bind(this));
         this.on('message', this.onMessage.bind(this));
         this.on('unload', this.onUnload.bind(this));
         this.unloaded = false;
         this.pollTimeout = null;
         this.locateTimers = new Map();
+        this.trackers = new Map(); // state id -> {canonicId, name}, for the buttons
+        this.locating = new Set(); // trackers with a location request in progress
+        this.soundKeys = new Map(); // canonicId -> {uuid, at} of the last started sound (needed to stop it)
         this.currentCanonicIds = null; // ids of the trackers in the account, once the first list has arrived
         this.staleWarned = new Set(); // ids already reported as gone from the account
         this.decryptWarned = new Set(); // trackers whose reports could not be decrypted (warned once)
@@ -132,6 +137,7 @@ class Googlefindmydevice extends utils.Adapter {
             this.startLocateTimers();
         }
 
+        this.subscribeStates('*'); // the buttons below each tracker
         await this.pollLoop();
     }
 
@@ -410,8 +416,10 @@ class Googlefindmydevice extends utils.Adapter {
 
         const ownerKey = this.config.ownerKey ? Buffer.from(this.config.ownerKey, 'hex') : null;
 
+        this.trackers.clear();
         for (const device of devices) {
             const stateId = canonicIdToStateId(device.canonicId);
+            this.trackers.set(stateId, { canonicId: device.canonicId, name: device.name });
             await this.ensureDevice(stateId, device.name);
             await this.updateDeviceMetadataStates(stateId, device);
             await this.removeLegacyEidStates(stateId);
@@ -664,13 +672,127 @@ class Googlefindmydevice extends utils.Adapter {
     }
 
     /**
-     * Actively asks Google to ping one tracker for a fresh location, then
-     * waits for the asynchronous FCM push answer and decrypts it.
+     * Reacts to a press of one of the buttons below a tracker: locate now,
+     * play sound, stop sound. Only a press from outside (ack=false) counts;
+     * the button is acknowledged when the action is done.
+     *
+     * @param {string} id the full id of the changed state
+     * @param {ioBroker.State | null | undefined} state the new state
+     */
+    async onStateChange(id, state) {
+        if (!state || state.ack || !state.val) {
+            return;
+        }
+        const match = /\.([^.]+)\.(locateNow|playSound|stopSound)$/.exec(id);
+        if (!match) {
+            return;
+        }
+        const [, stateId, action] = match;
+        const tracker = this.trackers.get(stateId);
+        if (!tracker) {
+            this.log.warn(`The button ${action} was pressed, but the tracker is not in the Google account any more.`);
+            return;
+        }
+
+        try {
+            if (action === 'locateNow') {
+                this.log.info(`Locating "${tracker.name}" now.`);
+                await this.triggerLocate(tracker.canonicId, tracker.name);
+            } else {
+                await this.triggerSound(tracker.canonicId, tracker.name, action === 'playSound');
+            }
+        } catch (err) {
+            this.log.warn(`The action ${action} for "${tracker.name}" failed: ${err.message}`);
+        } finally {
+            await this.setState(id, { val: state.val, ack: true });
+        }
+    }
+
+    /**
+     * Makes a tracker play its sound or stops it. The stop is matched to the
+     * start by the request id of that start, which is kept in memory.
+     *
+     * @param {string} canonicId Google's canonic id of the tracker
+     * @param {string} name the tracker's display name (for log messages)
+     * @param {boolean} start true to start the sound, false to stop it
+     */
+    async triggerSound(canonicId, name, start) {
+        if (this.currentCanonicIds && !this.currentCanonicIds.has(canonicId)) {
+            throw new Error('the tracker is no longer in the Google account');
+        }
+        await this.ensureFcmReady();
+
+        const { Auth: admToken } = await performOAuth(
+            this.config.email,
+            this.config.aasToken,
+            this.config.androidId,
+            ADM_SERVICE_SCOPE,
+            ADM_APP,
+            DEFAULT_CLIENT_SIG,
+        );
+
+        let requestUuid = '';
+        if (start) {
+            requestUuid = crypto.randomUUID();
+        } else {
+            const key = this.soundKeys.get(canonicId);
+            if (!key) {
+                this.log.info(
+                    `No sound started by this adapter is known for "${name}"; the stop is sent anyway, but the tracker may keep ringing until it stops by itself.`,
+                );
+            } else {
+                requestUuid = key.uuid;
+                if (Date.now() - key.at > SOUND_KEY_MAX_AGE_MS) {
+                    this.log.debug(`The sound of "${name}" was started a long time ago; the stop may no longer fit.`);
+                }
+            }
+        }
+
+        await executeSoundAction(
+            admToken,
+            {
+                canonicId,
+                fcmRegistrationId: this.fcmIdentity.fcmToken,
+                requestUuid,
+                fmdClientUuid: this.fmdClientUuid,
+            },
+            start,
+        );
+        if (start) {
+            this.soundKeys.set(canonicId, { uuid: requestUuid, at: Date.now() });
+        }
+        this.log.info(`${start ? 'Sound started' : 'Stop sound sent'} for "${name}".`);
+    }
+
+    /**
+     * Actively asks Google to ping one tracker for a fresh location. Only one
+     * request per tracker runs at a time; a second one (for example a button
+     * press during the scheduled request) is skipped.
      *
      * @param {string} canonicId Google's canonic id of the tracker
      * @param {string} name the tracker's display name (for log messages)
      */
     async triggerLocate(canonicId, name) {
+        if (this.locating.has(canonicId)) {
+            this.log.debug(`A location request for "${name}" is already running.`);
+            return;
+        }
+        this.locating.add(canonicId);
+        try {
+            await this.requestLocation(canonicId, name);
+        } finally {
+            this.locating.delete(canonicId);
+        }
+    }
+
+    /**
+     * Asks Google to ping one tracker for a fresh location, then
+     * waits for the asynchronous FCM push answer and decrypts it.
+     *
+     * @param {string} canonicId Google's canonic id of the tracker
+     * @param {string} name the tracker's display name (for log messages)
+     */
+    async requestLocation(canonicId, name) {
         // A device that was paired again gets a new id; asking Google for the
         // old one only ends in an HTTP 500 every time.
         if (this.currentCanonicIds && !this.currentCanonicIds.has(canonicId)) {

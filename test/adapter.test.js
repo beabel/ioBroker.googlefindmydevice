@@ -20,6 +20,7 @@ class FakeAdapter {
     this.sent = [];
   }
   on() {}
+  subscribeStates() {}
   sendTo(to, command, result, callback) {
     this.sent.push({ to, command, result, callback });
   }
@@ -74,7 +75,11 @@ fake(lib('google-auth.js'), {
   DEFAULT_CLIENT_SIG: 'sig',
 });
 fake(lib('google-checkin.js'), { gcmCheckin: async () => ({ androidId: '111', securityToken: '222' }) });
-fake(lib('nova-api.js'), { listDevices: async () => trackers, executeLocateAction: async () => {} });
+fake(lib('nova-api.js'), {
+  listDevices: async () => trackers,
+  executeLocateAction: async () => {},
+  executeSoundAction: async () => {},
+});
 // Real parsing and script/URL helpers, but no network call for the owner key itself.
 const realOwnerKey = require('../lib/owner-key');
 fake(lib('owner-key.js'), {
@@ -83,6 +88,7 @@ fake(lib('owner-key.js'), {
 });
 
 const createAdapter = require('../main.js');
+const { DEVICE_STATES } = require('../lib/objects');
 
 const tracker = (canonicId, name) => ({
   canonicId,
@@ -109,11 +115,15 @@ test('creates each tracker as a device directly below the instance, once per run
   assert.equal(created[0][2].common.name, 'Bike');
   assert.ok(created.slice(1).every(call => call[1].startsWith('AAA-111.') && call[2].type === 'state'));
   assert.ok(!created.some(call => call[1].startsWith('devices')), 'no legacy "devices" folder');
-  assert.equal(created.length, 16, 'device plus 15 states; the phone creates nothing');
+  assert.equal(created.length, DEVICE_STATES.length + 1, 'the device plus all its states; the phone creates nothing');
 
   await adapter.updateDevices();
   await adapter.updateDevices();
-  assert.equal(callsOf(adapter, 'extendObject').length, 16, 'objects are not rewritten on every poll');
+  assert.equal(
+    callsOf(adapter, 'extendObject').length,
+    DEVICE_STATES.length + 1,
+    'objects are not rewritten on every poll',
+  );
 });
 
 test('values are written with setStateChanged under the new ids', async () => {
@@ -308,4 +318,79 @@ test('Connect button: a rejected token ("BadAuthentication") is explained in pla
   } finally {
     exchangeError = null;
   }
+});
+
+test('a button press runs the matching action and is acknowledged afterwards', async () => {
+  const adapter = createAdapter();
+  trackers = [tracker('AAA-111', 'Bike')];
+  await adapter.updateDevices();
+  const ran = [];
+  adapter.triggerLocate = async (id, name) => ran.push(['locate', id, name]);
+  adapter.triggerSound = async (id, name, start) => ran.push([start ? 'play' : 'stop', id, name]);
+
+  for (const button of ['locateNow', 'playSound', 'stopSound']) {
+    await adapter.onStateChange(`googlefindmydevice.0.AAA-111.${button}`, { val: true, ack: false });
+  }
+
+  assert.deepEqual(ran, [
+    ['locate', 'AAA-111', 'Bike'],
+    ['play', 'AAA-111', 'Bike'],
+    ['stop', 'AAA-111', 'Bike'],
+  ]);
+  const acks = callsOf(adapter, 'setState').filter(call => call[2].ack === true);
+  assert.equal(acks.length, 3, 'every press is acknowledged');
+});
+
+test('acknowledged changes, false values and unrelated states do not trigger anything', async () => {
+  const adapter = createAdapter();
+  trackers = [tracker('AAA-111', 'Bike')];
+  await adapter.updateDevices();
+  let ran = 0;
+  adapter.triggerLocate = async () => ran++;
+  adapter.triggerSound = async () => ran++;
+
+  await adapter.onStateChange('googlefindmydevice.0.AAA-111.locateNow', { val: true, ack: true });
+  await adapter.onStateChange('googlefindmydevice.0.AAA-111.locateNow', { val: false, ack: false });
+  await adapter.onStateChange('googlefindmydevice.0.AAA-111.latitude', { val: 5, ack: false });
+  await adapter.onStateChange('googlefindmydevice.0.AAA-111.locateNow', null);
+  await adapter.onStateChange('googlefindmydevice.0.UNKNOWN.locateNow', { val: true, ack: false });
+
+  assert.equal(ran, 0);
+});
+
+test('a failing button action is logged and the button is still acknowledged', async () => {
+  const adapter = createAdapter();
+  trackers = [tracker('AAA-111', 'Bike')];
+  await adapter.updateDevices();
+  const warnings = [];
+  adapter.log.warn = message => warnings.push(message);
+  adapter.triggerSound = async () => {
+    throw new Error('HTTP 500');
+  };
+
+  await adapter.onStateChange('googlefindmydevice.0.AAA-111.playSound', { val: true, ack: false });
+
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /HTTP 500/);
+  assert.equal(callsOf(adapter, 'setState').filter(call => call[2].ack === true).length, 1);
+});
+
+test('only one location request per tracker runs at a time', async () => {
+  const adapter = createAdapter();
+  let started = 0;
+  let release;
+  adapter.requestLocation = () => {
+    started++;
+    return new Promise(resolve => (release = resolve));
+  };
+
+  const first = adapter.triggerLocate('AAA-111', 'Bike');
+  await adapter.triggerLocate('AAA-111', 'Bike'); // skipped
+  assert.equal(started, 1);
+  release();
+  await first;
+  const third = adapter.triggerLocate('AAA-111', 'Bike'); // free again
+  assert.equal(started, 2);
+  release();
+  await third;
 });
