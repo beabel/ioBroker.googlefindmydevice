@@ -252,7 +252,7 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ## Changelog
 
-### **WORK IN PROGRESS**
+### 0.1.7 (2026-11-05)
 
 * (beabel) **FIXED**: an older location report no longer overwrites a newer one; the "last seen" time could jump back to an older report when Google answered with only part of its data.
 * (beabel) **ENHANCED**: after a location request the adapter now also waits for further answers from Google (up to 25 seconds after the first one) and uses the newest report of all.
@@ -281,12 +281,6 @@ risk; Google's internal APIs are undocumented and may change without notice.
   identifier (manufacturer, model and type, never its name), and the README explains which devices appear.
 * (beabel) **ENHANCED**: the README says explicitly that saving after "Connect" restarts the instance before Part 2.
 * (beabel) **TESTING**: updated `@iobroker/testing` to 6.3.1.
-
-### 0.1.2 (2026-10-03)
-
-* (beabel) **ENHANCED**: admin translations moved to the short i18n format (`admin/i18n/<lang>.json`); updated
-  `@iobroker/testing` to 6.3.0.
-* (beabel) **ENHANCED**: the Google account's email address is no longer written to the log.
 
 Older changelog entries: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
 
