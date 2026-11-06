@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "googlefindmydevice",
-    "version": "0.1.7",
+    "version": "0.1.8",
     "news": {
+      "0.1.8": {
+        "en": "every location report is tried on its own and the newest readable one is used; a named place such as Home clears the coordinates and can get its own coordinates in a new table; new buttons to locate now and (experimental) to play and stop a sound",
+        "de": "jeder Standortbericht wird einzeln geprüft und der neueste lesbare genutzt; ein benannter Ort wie Home leert die Koordinaten und kann in einer neuen Tabelle eigene Koordinaten bekommen; neue Knöpfe zum sofortigen Orten und (experimentell) zum Abspielen und Stoppen eines Tons",
+        "ru": "каждый отчёт о местоположении проверяется отдельно, используется самый новый читаемый; именованное место, например Home, очищает координаты и может получить собственные координаты в новой таблице; новые кнопки для немедленного определения местоположения и (экспериментально) для воспроизведения и остановки звука",
+        "pt": "cada relatório de localização é verificado separadamente e o mais recente legível é usado; um local nomeado como Home apaga as coordenadas e pode receber coordenadas próprias numa nova tabela; novos botões para localizar agora e (experimental) para tocar e parar um som",
+        "nl": "elk locatierapport wordt afzonderlijk gecontroleerd en het nieuwste leesbare rapport wordt gebruikt; een benoemde plaats zoals Home wist de coördinaten en kan in een nieuwe tabel eigen coördinaten krijgen; nieuwe knoppen om nu te lokaliseren en (experimenteel) om een geluid af te spelen en te stoppen",
+        "fr": "chaque rapport de position est examiné séparément et le plus récent lisible est utilisé ; un lieu nommé comme Home efface les coordonnées et peut recevoir ses propres coordonnées dans un nouveau tableau ; nouveaux boutons pour localiser maintenant et (expérimental) pour jouer et arrêter un son",
+        "it": "ogni rapporto di posizione viene esaminato separatamente e si usa il più recente leggibile; un luogo con nome come Home cancella le coordinate e può ricevere coordinate proprie in una nuova tabella; nuovi pulsanti per localizzare subito e (sperimentale) per riprodurre e interrompere un suono",
+        "es": "cada informe de ubicación se examina por separado y se usa el más reciente legible; un lugar con nombre como Home borra las coordenadas y puede recibir coordenadas propias en una tabla nueva; botones nuevos para localizar ahora y (experimental) para reproducir y detener un sonido",
+        "pl": "każdy raport lokalizacji jest sprawdzany osobno i używany jest najnowszy czytelny; nazwane miejsce, np. Home, czyści współrzędne i może dostać własne współrzędne w nowej tabeli; nowe przyciski do natychmiastowej lokalizacji i (eksperymentalnie) do odtwarzania i zatrzymywania dźwięku",
+        "uk": "кожен звіт про місцеперебування перевіряється окремо, використовується найновіший читабельний; іменоване місце, наприклад Home, очищає координати і може отримати власні координати в новій таблиці; нові кнопки для негайного визначення місцеперебування та (експериментально) для відтворення й зупинки звуку",
+        "zh-cn": "每个位置报告单独检查并使用最新的可读报告;像 Home 这样的命名地点会清除坐标,并可在新表中获得自己的坐标;新增立即定位按钮和(实验性)播放与停止声音按钮"
+      },
       "0.1.7": {
         "en": "an older location report no longer replaces a newer one; further answers to a location request are collected and the newest report is used; the setup now says to save and restart before Part 2",
         "de": "ein älterer Standortbericht ersetzt keinen neueren mehr; weitere Antworten auf eine Standortanfrage werden gesammelt und der neueste Bericht genutzt; die Einrichtung weist jetzt darauf hin, vor Teil 2 zu speichern und neu zu starten",
@@ -80,19 +93,6 @@
         "pl": "tłumaczenia panelu admin przeniesiono do krótkiego formatu i18n; zaktualizowano @iobroker/testing do 6.3.0; adres e-mail Google nie jest już zapisywany w logu",
         "uk": "переклади адмінки перенесено в короткий формат i18n; @iobroker/testing оновлено до 6.3.0; адресу електронної пошти Google більше не записують у журнал",
         "zh-cn": "管理界面翻译已迁移到简短的 i18n 格式；@iobroker/testing 已更新到 6.3.0；不再将 Google 邮箱地址写入日志"
-      },
-      "0.1.1": {
-        "en": "the configuration page now tells you to start the instance first (its buttons only work while the instance is running)",
-        "de": "Die Konfigurationsseite weist jetzt darauf hin, zuerst die Instanz zu starten (die Buttons funktionieren nur bei laufender Instanz)",
-        "ru": "страница конфигурации теперь напоминает сначала запустить экземпляр (её кнопки работают только при запущенном экземпляре)",
-        "pt": "a página de configuração agora avisa para iniciar primeiro a instância (os botões só funcionam com a instância em execução)",
-        "nl": "de configuratiepagina vermeldt nu dat eerst de instantie gestart moet worden (de knoppen werken alleen bij een draaiende instantie)",
-        "fr": "la page de configuration indique désormais de démarrer d'abord l'instance (ses boutons ne fonctionnent que lorsque l'instance est en cours d'exécution)",
-        "it": "la pagina di configurazione ora indica di avviare prima l'istanza (i suoi pulsanti funzionano solo con l'istanza in esecuzione)",
-        "es": "la página de configuración ahora indica que primero hay que iniciar la instancia (sus botones solo funcionan con la instancia en ejecución)",
-        "pl": "strona konfiguracji informuje teraz, aby najpierw uruchomić instancję (jej przyciski działają tylko przy uruchomionej instancji)",
-        "uk": "сторінка конфігурації тепер нагадує спочатку запустити екземпляр (її кнопки працюють лише за запущеного екземпляра)",
-        "zh-cn": "配置页面现在会提示先启动实例（页面上的按钮仅在实例运行时才可用）"
       }
     },
     "titleLang": {
