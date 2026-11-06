@@ -241,13 +241,20 @@ value or for `false`.
   every request makes the tracker work over Bluetooth and costs battery. Only
   one request per tracker runs at a time; a press during a running request is
   skipped.
-- **`playSound`** - makes the tracker ring. Only trackers that have a speaker
-  can do this; for the others nothing happens. It rings for a limited time by
-  itself.
-- **`stopSound`** - stops the sound again. Google matches a stop to the start
-  it belongs to, so the adapter remembers the start it sent (in memory, until
-  the instance restarts). A stop without such a start is still sent, but the
-  tracker may keep ringing until it stops by itself, and the log says so.
+- **`playSound`** - asks Google to make the tracker ring. **Experimental:**
+  Google accepts the request, but the adapter cannot see whether the tracker
+  really rings, and it has not been confirmed on any tracker yet. In the tests
+  for this adapter a Chipolo tracker and a JBL speaker did not ring, and the
+  official Find Hub app could not make them ring either at that moment. Only
+  trackers with a speaker can ring, and a nearby Android device has to reach the
+  tracker; Google may also hold the request back until the tracker is
+  reachable, so a ring can come later. Reports of a working ring (or of none)
+  for a tracker model are welcome as an issue on GitHub.
+- **`stopSound`** - stops the sound again (experimental, like `playSound`).
+  Google matches a stop to the start it belongs to, so the adapter remembers
+  the starts it sent (in memory, until the instance restarts) and sends a stop
+  for each of them. A stop without such a start is still sent, but the tracker
+  may keep ringing until it stops by itself, and the log says so.
 
 Pressing a button for a tracker that is no longer in the Google account only
 writes a warning to the log.
@@ -311,7 +318,9 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ### **WORK IN PROGRESS**
 
-* (beabel) **NEW**: three buttons per tracker: `locateNow` requests a fresh location right away, `playSound` makes the tracker ring and `stopSound` stops it again.
+* (beabel) **NEW**: the button `locateNow` below each tracker requests a fresh location right away.
+* (beabel) **NEW** (experimental): the buttons `playSound` and `stopSound` ask Google to make a tracker ring and to stop it; Google accepts the request, but a ring has not been confirmed on any tracker yet.
+* (beabel) **ENHANCED**: the debug log names the type and origin of the newest report of each answer and how many reports it held.
 * (beabel) **FIXED**: a location report that cannot be decrypted no longer discards the other reports of the same answer; the newest report that can be read is used.
 * (beabel) **FIXED**: `isOwnReport` now follows how a report was really decrypted instead of a flag set by Google.
 * (beabel) **FIXED**: reports without a time or with a time far in the future are ignored, and such a time can no longer block later reports.
