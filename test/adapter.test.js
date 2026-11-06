@@ -55,6 +55,7 @@ class FakeAdapter {
 }
 
 let trackers = [];
+const soundCalls = [];
 const lib = name => require.resolve(path.join(__dirname, '..', 'lib', name));
 const fake = (resolved, exports) => {
   require.cache[resolved] = { id: resolved, filename: resolved, loaded: true, exports };
@@ -78,7 +79,7 @@ fake(lib('google-checkin.js'), { gcmCheckin: async () => ({ androidId: '111', se
 fake(lib('nova-api.js'), {
   listDevices: async () => trackers,
   executeLocateAction: async () => {},
-  executeSoundAction: async () => {},
+  executeSoundAction: async (token, params, start) => soundCalls.push({ requestUuid: params.requestUuid, start }),
 });
 // Real parsing and script/URL helpers, but no network call for the owner key itself.
 const realOwnerKey = require('../lib/owner-key');
@@ -393,4 +394,25 @@ test('only one location request per tracker runs at a time', async () => {
   assert.equal(started, 2);
   release();
   await third;
+});
+
+test('every sound start is remembered and a stop cancels all of them', async () => {
+  const adapter = createAdapter();
+  adapter.ensureFcmReady = async () => {};
+  adapter.fcmIdentity = { fcmToken: 'fcm' };
+  adapter.fmdClientUuid = 'client';
+  soundCalls.length = 0;
+
+  await adapter.triggerSound('AAA-111', 'Bike', true);
+  await adapter.triggerSound('AAA-111', 'Bike', true);
+  const [first, second] = soundCalls.map(call => call.requestUuid);
+  assert.notEqual(first, second);
+
+  await adapter.triggerSound('AAA-111', 'Bike', false);
+  const stops = soundCalls.filter(call => !call.start).map(call => call.requestUuid);
+  assert.deepEqual(stops, [first, second], 'one stop per start, with the request id of that start');
+
+  soundCalls.length = 0;
+  await adapter.triggerSound('AAA-111', 'Bike', false);
+  assert.deepEqual(soundCalls, [{ requestUuid: '', start: false }], 'a stop without a known start has no request id');
 });

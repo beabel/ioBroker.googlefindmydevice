@@ -101,7 +101,7 @@ test('a semantic location ("Home") comes back as text, without coordinates', asy
     OWNER_KEY,
     deviceWith({ status: 0, semanticLocation: { locationName: 'Home' } }),
   );
-  assert.deepEqual(result, { semantic: 'Home', timestamp: TIMESTAMP });
+  assert.deepEqual(result, { semantic: 'Home', timestamp: TIMESTAMP, status: 0, reportCount: 1 });
 });
 
 test('returns null (not an error) while Google has no location report yet', async () => {
@@ -233,7 +233,7 @@ test('a newer semantic report wins over an older GPS report, and the other way r
       { loc: await ownReport(), time: TIMESTAMP },
     ]),
   );
-  assert.deepEqual(newerSemantic, { semantic: 'Home', timestamp: TIMESTAMP + 10 });
+  assert.deepEqual(newerSemantic, { semantic: 'Home', timestamp: TIMESTAMP + 10, status: 0, reportCount: 2 });
 
   const newerGps = await decryptLatestLocation(
     OWNER_KEY,

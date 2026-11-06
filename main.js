@@ -23,6 +23,7 @@ const {
     newestLocation,
     isOlderThanStored,
     findSemanticMapping,
+    describeAnswer,
 } = require('./lib/util');
 const { buildDeviceObjects, PUSH_IDS_STATE_ID, buildPushIdsObject } = require('./lib/objects');
 
@@ -46,6 +47,7 @@ const LOCATE_INITIAL_DELAY_MS = 20000; // give the MCS connection time to log in
 const LOCATE_RESPONSE_TIMEOUT_MS = 45000;
 const LOCATE_EXTRA_ANSWERS_MS = 25000; // Google may send further answers after the first one
 const SOUND_KEY_MAX_AGE_MS = 30 * 60 * 1000; // a stop for a ring older than this probably no longer fits
+const SOUND_KEYS_KEPT = 5; // started sounds remembered per tracker
 
 class Googlefindmydevice extends utils.Adapter {
     /**
@@ -67,7 +69,7 @@ class Googlefindmydevice extends utils.Adapter {
         this.locateTimers = new Map();
         this.trackers = new Map(); // state id -> {canonicId, name}, for the buttons
         this.locating = new Set(); // trackers with a location request in progress
-        this.soundKeys = new Map(); // canonicId -> {uuid, at} of the last started sound (needed to stop it)
+        this.soundKeys = new Map(); // canonicId -> [{uuid, at}] of the sounds started and not stopped yet (needed to stop them)
         this.currentCanonicIds = null; // ids of the trackers in the account, once the first list has arrived
         this.staleWarned = new Set(); // ids already reported as gone from the account
         this.decryptWarned = new Set(); // trackers whose reports could not be decrypted (warned once)
@@ -731,37 +733,45 @@ class Googlefindmydevice extends utils.Adapter {
             DEFAULT_CLIENT_SIG,
         );
 
-        let requestUuid = '';
+        const send = requestUuid =>
+            executeSoundAction(
+                admToken,
+                {
+                    canonicId,
+                    fcmRegistrationId: this.fcmIdentity.fcmToken,
+                    requestUuid,
+                    fmdClientUuid: this.fmdClientUuid,
+                },
+                start,
+            );
+
         if (start) {
-            requestUuid = crypto.randomUUID();
-        } else {
-            const key = this.soundKeys.get(canonicId);
-            if (!key) {
-                this.log.info(
-                    `No sound started by this adapter is known for "${name}"; the stop is sent anyway, but the tracker may keep ringing until it stops by itself.`,
-                );
-            } else {
-                requestUuid = key.uuid;
-                if (Date.now() - key.at > SOUND_KEY_MAX_AGE_MS) {
-                    this.log.debug(`The sound of "${name}" was started a long time ago; the stop may no longer fit.`);
-                }
-            }
+            const requestUuid = crypto.randomUUID();
+            await send(requestUuid);
+            const keys = (this.soundKeys.get(canonicId) || []).concat({ uuid: requestUuid, at: Date.now() });
+            this.soundKeys.set(canonicId, keys.slice(-SOUND_KEYS_KEPT));
+            this.log.info(`Sound started for "${name}".`);
+            return;
         }
 
-        await executeSoundAction(
-            admToken,
-            {
-                canonicId,
-                fcmRegistrationId: this.fcmIdentity.fcmToken,
-                requestUuid,
-                fmdClientUuid: this.fmdClientUuid,
-            },
-            start,
-        );
-        if (start) {
-            this.soundKeys.set(canonicId, { uuid: requestUuid, at: Date.now() });
+        // Google matches a stop to the start it belongs to by the request id, so
+        // every start that was not stopped yet gets its own stop.
+        const keys = this.soundKeys.get(canonicId) || [];
+        if (keys.length === 0) {
+            this.log.info(
+                `No sound started by this adapter is known for "${name}"; the stop is sent anyway, but the tracker may keep ringing until it stops by itself.`,
+            );
+            await send('');
+        } else {
+            for (const key of keys) {
+                if (Date.now() - key.at > SOUND_KEY_MAX_AGE_MS) {
+                    this.log.debug(`A sound of "${name}" was started a long time ago; its stop may no longer fit.`);
+                }
+                await send(key.uuid);
+            }
+            this.soundKeys.delete(canonicId);
         }
-        this.log.info(`${start ? 'Sound started' : 'Stop sound sent'} for "${name}".`);
+        this.log.info(`Stop sound sent for "${name}".`);
     }
 
     /**
@@ -860,7 +870,7 @@ class Googlefindmydevice extends utils.Adapter {
                     { onSkip: this.skippedReportLogger(name) },
                 );
                 this.log.debug(
-                    `Answer ${index + 1} for "${name}": ${decrypted ? `newest report from ${new Date(decrypted.timestamp * 1000).toISOString()}` : 'no report'}.`,
+                    `Answer ${index + 1} for "${name}": ${decrypted ? describeAnswer(decrypted) : 'no report'}.`,
                 );
                 locations.push(decrypted);
             } catch (err) {
