@@ -56,6 +56,7 @@ class FakeAdapter {
 
 let trackers = [];
 const soundCalls = [];
+let soundError = null;
 const lib = name => require.resolve(path.join(__dirname, '..', 'lib', name));
 const fake = (resolved, exports) => {
   require.cache[resolved] = { id: resolved, filename: resolved, loaded: true, exports };
@@ -79,7 +80,12 @@ fake(lib('google-checkin.js'), { gcmCheckin: async () => ({ androidId: '111', se
 fake(lib('nova-api.js'), {
   listDevices: async () => trackers,
   executeLocateAction: async () => {},
-  executeSoundAction: async (token, params, start) => soundCalls.push({ requestUuid: params.requestUuid, start }),
+  executeSoundAction: async (token, params, start) => {
+    if (soundError) {
+      throw soundError;
+    }
+    soundCalls.push({ requestUuid: params.requestUuid, start });
+  },
 });
 // Real parsing and script/URL helpers, but no network call for the owner key itself.
 const realOwnerKey = require('../lib/owner-key');
@@ -415,4 +421,62 @@ test('every sound start is remembered and a stop cancels all of them', async () 
   soundCalls.length = 0;
   await adapter.triggerSound('AAA-111', 'Bike', false);
   assert.deepEqual(soundCalls, [{ requestUuid: '', start: false }], 'a stop without a known start has no request id');
+});
+
+test('a location request without an answer is repeated once after a pause', async () => {
+  const adapter = createAdapter();
+  const attempts = [];
+  adapter.requestLocation = async () => {
+    attempts.push(attempts.length);
+    if (attempts.length === 1) {
+      throw Object.assign(new Error('Timed out waiting for the location push message.'), { code: 'LOCATE_TIMEOUT' });
+    }
+  };
+
+  const done = adapter.triggerLocate('AAA-111', 'Bike');
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(attempts.length, 1, 'the retry waits for its pause');
+  assert.equal(adapter.timers.length, 1);
+  adapter.timers[0].fn();
+  await done;
+
+  assert.equal(attempts.length, 2);
+  assert.equal(adapter.locating.size, 0, 'the tracker is free again');
+});
+
+test('only a timeout is retried, and only once', async () => {
+  const adapter = createAdapter();
+  let attempts = 0;
+  adapter.requestLocation = async () => {
+    attempts++;
+    throw new Error('HTTP 500');
+  };
+  await assert.rejects(adapter.triggerLocate('AAA-111', 'Bike'), /HTTP 500/);
+  assert.equal(attempts, 1, 'an error other than a timeout is not retried');
+
+  attempts = 0;
+  adapter.timers.length = 0;
+  adapter.requestLocation = async () => {
+    attempts++;
+    throw Object.assign(new Error('Timed out waiting for the location push message.'), { code: 'LOCATE_TIMEOUT' });
+  };
+  const done = assert.rejects(adapter.triggerLocate('AAA-111', 'Bike'), /Timed out/);
+  await new Promise(resolve => setImmediate(resolve));
+  adapter.timers[0].fn();
+  await done;
+  assert.equal(attempts, 2, 'a second timeout is reported instead of retried again');
+  assert.equal(adapter.locating.size, 0);
+});
+
+test('a sound request that Google rejects with HTTP 500 is explained', async () => {
+  const adapter = createAdapter();
+  adapter.ensureFcmReady = async () => {};
+  adapter.fcmIdentity = { fcmToken: 'fcm' };
+  adapter.fmdClientUuid = 'client';
+  soundError = new Error('Nova ExecuteAction failed: HTTP 500 - <HTML>');
+  try {
+    await assert.rejects(adapter.triggerSound('AAA-111', 'Speaker', true), /probably cannot play a sound/);
+  } finally {
+    soundError = null;
+  }
 });

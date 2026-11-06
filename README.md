@@ -248,8 +248,9 @@ value or for `false`.
   official Find Hub app could not make them ring either at that moment. Only
   trackers with a speaker can ring, and a nearby Android device has to reach the
   tracker; Google may also hold the request back until the tracker is
-  reachable, so a ring can come later. Reports of a working ring (or of none)
-  for a tracker model are welcome as an issue on GitHub.
+  reachable, so a ring can come later. Headphones and speakers answer with an
+  error (HTTP 500); the log then says so. Reports of a working ring (or of
+  none) for a tracker model are welcome as an issue on GitHub.
 - **`stopSound`** - stops the sound again (experimental, like `playSound`).
   Google matches a stop to the start it belongs to, so the adapter remembers
   the starts it sent (in memory, until the instance restarts) and sends a stop
@@ -315,6 +316,11 @@ This project is not affiliated with, endorsed by, or supported by Google.
 risk; Google's internal APIs are undocumented and may change without notice.
 
 ## Changelog
+
+### **WORK IN PROGRESS**
+
+* (beabel) **FIXED**: a location request that gets no answer from Google (typically the first one right after the instance started) is repeated once after a short pause, so "locate now" and the scheduled request no longer fail for that reason.
+* (beabel) **ENHANCED**: if Google rejects a sound request with HTTP 500, which is what headphones and speakers do, the log says that the device probably cannot play a sound this way.
 
 ### 0.1.8 (2026-11-06)
 

@@ -48,6 +48,7 @@ const LOCATE_RESPONSE_TIMEOUT_MS = 45000;
 const LOCATE_EXTRA_ANSWERS_MS = 25000; // Google may send further answers after the first one
 const SOUND_KEY_MAX_AGE_MS = 30 * 60 * 1000; // a stop for a ring older than this probably no longer fits
 const SOUND_KEYS_KEPT = 5; // started sounds remembered per tracker
+const LOCATE_RETRY_DELAY_MS = 10000; // pause before a location request without an answer is repeated once
 
 class Googlefindmydevice extends utils.Adapter {
     /**
@@ -733,17 +734,27 @@ class Googlefindmydevice extends utils.Adapter {
             DEFAULT_CLIENT_SIG,
         );
 
-        const send = requestUuid =>
-            executeSoundAction(
-                admToken,
-                {
-                    canonicId,
-                    fcmRegistrationId: this.fcmIdentity.fcmToken,
-                    requestUuid,
-                    fmdClientUuid: this.fmdClientUuid,
-                },
-                start,
-            );
+        const send = async requestUuid => {
+            try {
+                await executeSoundAction(
+                    admToken,
+                    {
+                        canonicId,
+                        fcmRegistrationId: this.fcmIdentity.fcmToken,
+                        requestUuid,
+                        fmdClientUuid: this.fmdClientUuid,
+                    },
+                    start,
+                );
+            } catch (err) {
+                if (/HTTP 500/.test(err.message)) {
+                    throw new Error(
+                        'Google rejected the request (HTTP 500); the device probably cannot play a sound this way (typical for headphones and speakers)',
+                    );
+                }
+                throw err;
+            }
+        };
 
         if (start) {
             const requestUuid = crypto.randomUUID();
@@ -789,7 +800,21 @@ class Googlefindmydevice extends utils.Adapter {
         }
         this.locating.add(canonicId);
         try {
-            await this.requestLocation(canonicId, name);
+            try {
+                await this.requestLocation(canonicId, name);
+            } catch (err) {
+                // Google sometimes does not answer the first request after the
+                // push connection was (re)opened, typically right after a start.
+                if (err.code !== 'LOCATE_TIMEOUT' || this.unloaded) {
+                    throw err;
+                }
+                this.log.debug(`No answer for "${name}", the request is repeated once.`);
+                await new Promise(resolve => this.setTimeout(resolve, LOCATE_RETRY_DELAY_MS));
+                if (this.unloaded) {
+                    return;
+                }
+                await this.requestLocation(canonicId, name);
+            }
         } finally {
             this.locating.delete(canonicId);
         }
