@@ -2,13 +2,19 @@
 
 See the "Changelog" section in [README.md](README.md) for the current
 history. Entries move here once that section grows too long.
+
+## 0.1.4 (2026-10-31)
+
+* (beabel) **NEW**: optional BLE identifier (EID) states for trackers (off by default, switch on per tracker in the device table).
+* (beabel) **FIXED**: push messages are now read correctly even if Google adds extra parameters to the encryption headers; if a push message still cannot be decrypted, the debug log says why (sizes and parameter names only).
+* (beabel) **ENHANCED**: the debug log shows the structure of the identifier block of every device (field numbers and sizes only, never names or ids) to help support devices such as headphones.
+
 ## 0.1.3 (2026-10-31)
 
 * (beabel) **ENHANCED**: the debug log now lists every device that is left out because Google gives it no tracker
   identifier (manufacturer, model and type, never its name), and the README explains which devices appear.
 * (beabel) **ENHANCED**: the README says explicitly that saving after "Connect" restarts the instance before Part 2.
 * (beabel) **TESTING**: updated `@iobroker/testing` to 6.3.1.
-
 
 ## 0.1.2 (2026-10-03)
 

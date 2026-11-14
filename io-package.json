@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "googlefindmydevice",
-    "version": "0.1.8",
+    "version": "0.1.9",
     "news": {
+      "0.1.9": {
+        "en": "new: tracking switch per tracker, home position from the system settings, diagnostic report for bug reports, decryption of P-256 trackers, retry of unanswered location requests, safer sound stop; fixed: description of isOwnReport",
+        "de": "neu: Tracking-Schalter pro Tracker, Heimposition aus den Systemeinstellungen, Diagnosebericht für Fehlermeldungen, Entschlüsselung von P-256-Trackern, Wiederholung unbeantworteter Standortanfragen, sichereres Stoppen von Tönen; korrigiert: Beschreibung von isOwnReport",
+        "ru": "новое: переключатель отслеживания для каждого трекера, домашняя позиция из системных настроек, диагностический отчёт для сообщений об ошибках, расшифровка трекеров P-256, повтор неотвеченных запросов местоположения, более надёжная остановка звука; исправлено: описание isOwnReport",
+        "pt": "novo: interruptor de rastreamento por rastreador, posição de casa a partir das configurações do sistema, relatório de diagnóstico para relatos de erros, descriptografia de rastreadores P-256, repetição de pedidos de localização sem resposta, parada de som mais segura; corrigido: descrição de isOwnReport",
+        "nl": "nieuw: trackingschakelaar per tracker, thuispositie uit de systeeminstellingen, diagnoserapport voor foutmeldingen, ontsleuteling van P-256-trackers, herhaling van onbeantwoorde locatieverzoeken, veiliger stoppen van geluiden; opgelost: beschrijving van isOwnReport",
+        "fr": "nouveau : interrupteur de suivi par traceur, position du domicile depuis les paramètres système, rapport de diagnostic pour les signalements, déchiffrement des traceurs P-256, répétition des demandes de position sans réponse, arrêt du son plus sûr ; corrigé : description de isOwnReport",
+        "it": "novità: interruttore di tracciamento per tracker, posizione di casa dalle impostazioni di sistema, rapporto diagnostico per le segnalazioni, decrittazione dei tracker P-256, ripetizione delle richieste di posizione senza risposta, arresto del suono più sicuro; corretto: descrizione di isOwnReport",
+        "es": "nuevo: interruptor de seguimiento por rastreador, posición de casa desde los ajustes del sistema, informe de diagnóstico para reportar errores, descifrado de rastreadores P-256, repetición de solicitudes de ubicación sin respuesta, detención del sonido más segura; corregido: descripción de isOwnReport",
+        "pl": "nowość: przełącznik śledzenia dla każdego lokalizatora, pozycja domu z ustawień systemu, raport diagnostyczny do zgłaszania błędów, odszyfrowywanie lokalizatorów P-256, ponawianie zapytań o lokalizację bez odpowiedzi, bezpieczniejsze zatrzymywanie dźwięku; poprawiono: opis isOwnReport",
+        "uk": "нове: перемикач відстеження для кожного трекера, домашня позиція із системних налаштувань, діагностичний звіт для повідомлень про помилки, розшифрування трекерів P-256, повтор запитів місцеперебування без відповіді, надійніша зупинка звуку; виправлено: опис isOwnReport",
+        "zh-cn": "新增:每个追踪器的跟踪开关、来自系统设置的家庭位置、用于错误报告的诊断报告、P-256 追踪器的解密、对无应答位置请求的重试、更安全的声音停止;修正:isOwnReport 的说明"
+      },
       "0.1.8": {
         "en": "every location report is tried on its own and the newest readable one is used; a named place such as Home clears the coordinates and can get its own coordinates in a new table; new buttons to locate now and (experimental) to play and stop a sound",
         "de": "jeder Standortbericht wird einzeln geprüft und der neueste lesbare genutzt; ein benannter Ort wie Home leert die Koordinaten und kann in einer neuen Tabelle eigene Koordinaten bekommen; neue Knöpfe zum sofortigen Orten und (experimentell) zum Abspielen und Stoppen eines Tons",
@@ -80,19 +93,6 @@
         "pl": "dziennik debugowania wymienia pominięte urządzenia (producent, model, typ); README wyjaśnia, że zapis między częściami konfiguracji restartuje instancję, i które urządzenia się pojawiają",
         "uk": "журнал налагодження перелічує пропущені пристрої (виробник, модель, тип); у README пояснено, що збереження між частинами налаштування перезапускає екземпляр, і які пристрої відображаються",
         "zh-cn": "调试日志会列出被跳过的设备（制造商、型号、类型）；README 说明了在设置各部分之间保存会重启实例，以及哪些设备会显示"
-      },
-      "0.1.2": {
-        "en": "admin translations moved to the short i18n format; updated @iobroker/testing to 6.3.0; the Google email address is no longer logged",
-        "de": "Admin-Übersetzungen ins kurze i18n-Format verschoben; @iobroker/testing auf 6.3.0 aktualisiert; die Google-E-Mail-Adresse wird nicht mehr geloggt",
-        "ru": "переводы админ-интерфейса перенесены в короткий формат i18n; @iobroker/testing обновлён до 6.3.0; адрес электронной почты Google больше не пишется в журнал",
-        "pt": "traduções do admin movidas para o formato curto i18n; @iobroker/testing atualizado para 6.3.0; o e-mail da conta Google já não é registado no log",
-        "nl": "admin-vertalingen verplaatst naar het korte i18n-formaat; @iobroker/testing bijgewerkt naar 6.3.0; het Google-e-mailadres wordt niet meer gelogd",
-        "fr": "traductions de l'admin déplacées vers le format court i18n ; @iobroker/testing mis à jour vers 6.3.0; l'adresse e-mail Google n'est plus écrite dans le journal",
-        "it": "traduzioni dell'admin spostate nel formato breve i18n; @iobroker/testing aggiornato alla 6.3.0; l'indirizzo e-mail Google non viene più scritto nel log",
-        "es": "traducciones del admin movidas al formato corto i18n; @iobroker/testing actualizado a 6.3.0; el correo de Google ya no se escribe en el registro",
-        "pl": "tłumaczenia panelu admin przeniesiono do krótkiego formatu i18n; zaktualizowano @iobroker/testing do 6.3.0; adres e-mail Google nie jest już zapisywany w logu",
-        "uk": "переклади адмінки перенесено в короткий формат i18n; @iobroker/testing оновлено до 6.3.0; адресу електронної пошти Google більше не записують у журнал",
-        "zh-cn": "管理界面翻译已迁移到简短的 i18n 格式；@iobroker/testing 已更新到 6.3.0；不再将 Google 邮箱地址写入日志"
       }
     },
     "titleLang": {
