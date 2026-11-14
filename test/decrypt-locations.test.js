@@ -163,20 +163,20 @@ test('a report that cannot be read is skipped, the newest one that can be read i
   assert.equal(skipped[0].ownReport, false);
 });
 
-test('a relayed report with a 32 byte key part is reported as unsupported, with its size', async () => {
+test('a relayed report with a key part of an unknown size is reported as unsupported, with its size', async () => {
   const report = await foreignReport();
-  report.geoLocation.encryptedReport.publicKeyRandom = Buffer.alloc(32, 9);
+  report.geoLocation.encryptedReport.publicKeyRandom = Buffer.alloc(33, 9);
   const skipped = [];
   await assert.rejects(
     decryptLatestLocation(OWNER_KEY, deviceWith(report), { onSkip: info => skipped.push(info) }),
-    /Unsupported key part length 32/,
+    /Unsupported key part length 33/,
   );
-  assert.deepEqual(skipped.map(s => s.keyPartLength), [32]);
+  assert.deepEqual(skipped.map(s => s.keyPartLength), [33]);
 });
 
-test('an older readable report is used when the newest one is a 32 byte report', async () => {
+test('an older readable report is used when the newest one cannot be read', async () => {
   const newer = await foreignReport();
-  newer.geoLocation.encryptedReport.publicKeyRandom = Buffer.alloc(32, 9);
+  newer.geoLocation.encryptedReport.publicKeyRandom = Buffer.alloc(33, 9);
   const result = await decryptLatestLocation(
     OWNER_KEY,
     deviceWithReports([
@@ -243,4 +243,28 @@ test('a newer semantic report wins over an older GPS report, and the other way r
     ]),
   );
   assert.equal(newerGps.lat, 52.52);
+});
+
+test('a location relayed by a P-256 tracker (32 byte key part) is decrypted and the reading is named', async () => {
+  const p256 = require('../lib/fmdn-p256');
+  const plain = await encodeLocation(484_000_000, 99_000_000, -3);
+  const beaconTimeCounter = 8_704_000;
+  const eid = p256.generateEid(IDENTITY_KEY, beaconTimeCounter, 'be_plus_one');
+  const { encryptedAndTag, Sx } = p256.encrypt(plain, Buffer.from(Array.from({ length: 32 }, (_, i) => i + 1)), eid, 10);
+  const report = {
+    status: 1,
+    geoLocation: {
+      accuracy: 25,
+      deviceTimeOffset: beaconTimeCounter,
+      encryptedReport: { encryptedLocation: encryptedAndTag, publicKeyRandom: Sx, isOwnReport: false },
+    },
+  };
+
+  const result = await decryptLatestLocation(OWNER_KEY, deviceWith(report));
+
+  assert.equal(result.lat, 48.4);
+  assert.equal(result.lon, 9.9);
+  assert.equal(result.isOwnReport, false);
+  assert.equal(result.keyPartLength, 32);
+  assert.equal(result.reading, 'p256/be_plus_one/nonce10');
 });
