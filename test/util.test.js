@@ -195,8 +195,8 @@ test('findSemanticMapping: rows without usable coordinates are ignored, a missin
 test('describeAnswer: names time, type, origin and report count, never coordinates', () => {
   const { describeAnswer } = require('../lib/util');
   const own = describeAnswer({ timestamp: 1758000000, status: 1, isOwnReport: true, reportCount: 3, lat: 1, lon: 2 });
-  assert.equal(own, 'newest report from 2025-09-16T05:20:00.000Z (type LAST_KNOWN, reported by the tracker itself, 3 report(s) in the answer)');
-  assert.match(describeAnswer({ timestamp: 1758000000, status: 2, isOwnReport: false, reportCount: 1 }), /CROWDSOURCED, relayed by a stranger's device, 1 report/);
+  assert.equal(own, 'newest report from 2025-09-16T05:20:00.000Z (type LAST_KNOWN, uploaded by one of your own devices, 3 report(s) in the answer)');
+  assert.match(describeAnswer({ timestamp: 1758000000, status: 2, isOwnReport: false, reportCount: 1 }), /CROWDSOURCED, relayed by another device, 1 report/);
   assert.match(describeAnswer({ timestamp: 1758000000, status: 0, semantic: 'Home', reportCount: 1 }), /type SEMANTIC, 1 report/);
   assert.doesNotMatch(own, /lat|lon|Home/);
   assert.match(describeAnswer({ timestamp: 1758000000, status: 9 }), /type 9/);

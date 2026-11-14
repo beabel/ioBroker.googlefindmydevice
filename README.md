@@ -238,7 +238,7 @@ Google's identifier of the tracker with unsafe characters replaced by `_`.
 | `<id>.accuracy` | number | Accuracy in metres (the radius of the place for an assigned named place) |
 | `<id>.lastSeen` | number | Time of the newest report (timestamp in ms) |
 | `<id>.semanticLocation` | string | Named place such as "Home", if the newest report is one instead of a GPS position; otherwise empty |
-| `<id>.isOwnReport` | boolean | `true` if the tracker reported directly, `false` if a stranger's device nearby relayed it |
+| `<id>.isOwnReport` | boolean | `true` if one of your own devices (a phone on your Google account) uploaded the report, also when it combined several reports it had received; `false` if another device relayed it |
 | `<id>.mapsLink` | string | Google Maps link to the position |
 | `<id>.tracking` | boolean | Switch for the scheduled location requests of this tracker, on by default (see "Requesting locations") |
 | `<id>.locateNow` | button | Requests a fresh location now (see "Buttons") |
@@ -265,9 +265,10 @@ value or for `false`.
   really rings, and it has not been confirmed on any tracker yet. In the tests
   for this adapter a Chipolo tracker and a JBL speaker did not ring, and the
   official Find Hub app could not make them ring either at that moment. Only
-  trackers with a speaker can ring, and a nearby Android device has to reach the
-  tracker; Google may also hold the request back until the tracker is
-  reachable, so a ring can come later. Headphones and speakers answer with an
+  trackers with a speaker can ring. The ring is carried out by an Android device
+  that is logged in with your Google account and near the tracker (it can take
+  several seconds); without such a device nothing happens. Google may also hold
+  the request back until the tracker is reachable, so a ring can come later. Headphones and speakers answer with an
   error (HTTP 500); the log then says so. Reports of a working ring (or of
   none) for a tracker model are welcome as an issue on GitHub.
 - **`stopSound`** - stops the sound again (experimental, like `playSound`).
@@ -346,6 +347,7 @@ risk; Google's internal APIs are undocumented and may change without notice.
 * (beabel) **ENHANCED**: the debug log shows the field layout of Google's answers to sound requests, to find out why a stop sometimes has no effect.
 * (beabel) **ENHANCED**: the wait for further answers after a location request is 3 seconds instead of 25, because Google has never sent a second answer.
 * (beabel) **CHANGED**: the documentation and the configuration no longer claim that location requests cost the tracker's battery; this is not established.
+* (beabel) **FIXED**: the description of `isOwnReport` was wrong: it does not mean that the tracker reported itself but that one of your own devices uploaded the report (also one that combined several reports). The state name, the README and the debug log now say so.
 * (beabel) **FIXED**: the debug log no longer says that a location was updated when an equal or newer report was already stored.
 
 ### 0.1.8 (2026-11-06)
