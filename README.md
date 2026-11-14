@@ -153,12 +153,18 @@ that.
 
 ### Requesting locations
 
-Google only ever hands out a location report if something actually asked the
-tracker for one recently - listing devices alone almost never returns
-coordinates. Getting a fresh one means actively pinging the tracker over
-Bluetooth (via whichever nearby Android phone hears it), which **noticeably
-uses that tracker's battery**. Because of that, this adapter does **not**
-request locations for any tracker automatically.
+Listing the devices alone does not return location reports; Google only
+answers with them to a location request. The adapter therefore sends such a
+request for every tracker you switched on, at the interval you set. In the
+tests for this adapter Google answered within about a second with the newest
+reports it already had. The request does not make the tracker send anything by
+itself, and no sign was seen that it makes a nearby phone look for the tracker,
+so a request does not find a location that the Find Hub network has not
+reported yet. New reports arrive when a phone that is near the tracker uploads
+them, and that is outside the control of the adapter. Whether the requests cost
+the tracker battery is not known; no effect was observed, but Google does not
+document it. Because the effect is unclear, the adapter does **not** request
+locations for any tracker automatically until you switch it on.
 
 Once Part 2 (location decryption) is set up, a table appears in the adapter
 configuration listing every discovered tracker with two settings each:
@@ -170,9 +176,17 @@ configuration listing every discovered tracker with two settings each:
   request one relatively often for something like an actively-moving bike,
   without hammering it constantly).
 
+Below each tracker there is also the switch `tracking` (on by default). While it
+is off, the scheduled requests of that tracker are skipped, for example while
+you are at home and do not need the position of your suitcase. Set it from a
+script or from your automation, for example `false` when you are home and
+`true` when you leave. The table switch stays the basic setting: a tracker
+whose table switch is off is never requested automatically, whatever `tracking`
+says. The buttons below still work while `tracking` is off.
+
 Device names, manufacturer/model info and pairing date are always kept
 up to date on the regular poll interval regardless of these settings, since
-reading that doesn't touch the tracker itself.
+reading that does not request a location.
 
 ### Named places
 
@@ -187,8 +201,11 @@ If you want a map position for such a place, assign coordinates to its name in
 the table **Named places** of the configuration (shown once Part 2 is done):
 
 - **Place name** - the name exactly as Google reports it (upper and lower case
-  do not matter). New names are added to the table automatically, without
-  coordinates; the instance restarts once when that happens.
+  do not matter). New names are added to the table automatically; the instance
+  restarts once when that happens. For your home place ("Home" and its
+  translations) the adapter fills in the position from the ioBroker system
+  settings (latitude and longitude); please check it. Other names are added
+  without coordinates.
 - **Latitude** / **Longitude** - the position of the place. Rows without
   coordinates are ignored.
 - **Radius (m)** - how far from that point the tracker may be; it is written to
@@ -223,6 +240,7 @@ Google's identifier of the tracker with unsafe characters replaced by `_`.
 | `<id>.semanticLocation` | string | Named place such as "Home", if the newest report is one instead of a GPS position; otherwise empty |
 | `<id>.isOwnReport` | boolean | `true` if the tracker reported directly, `false` if a stranger's device nearby relayed it |
 | `<id>.mapsLink` | string | Google Maps link to the position |
+| `<id>.tracking` | boolean | Switch for the scheduled location requests of this tracker, on by default (see "Requesting locations") |
 | `<id>.locateNow` | button | Requests a fresh location now (see "Buttons") |
 | `<id>.playSound` | button | Makes the tracker play its sound (see "Buttons") |
 | `<id>.stopSound` | button | Stops that sound again (see "Buttons") |
@@ -237,10 +255,11 @@ value or for `false`.
 
 - **`locateNow`** - requests a fresh location right away, like the scheduled
   request, but without waiting for the interval. It works for every tracker,
-  also if "Request location" is off in the table. The same cautions apply:
-  every request makes the tracker work over Bluetooth and costs battery. Only
-  one request per tracker runs at a time; a press during a running request is
-  skipped.
+  also if "Request location" is off in the table. Google answers with what it
+  already knows, as for the scheduled request, so the button does not make the
+  position newer than the Find Hub network has it.
+  Only one request per tracker runs at a time; a press during a running
+  request is skipped.
 - **`playSound`** - asks Google to make the tracker ring. **Experimental:**
   Google accepts the request, but the adapter cannot see whether the tracker
   really rings, and it has not been confirmed on any tracker yet. In the tests
@@ -321,6 +340,13 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 * (beabel) **FIXED**: a location request that gets no answer from Google (typically the first one right after the instance started) is repeated once after a short pause, so "locate now" and the scheduled request no longer fail for that reason.
 * (beabel) **ENHANCED**: if Google rejects a sound request with HTTP 500, which is what headphones and speakers do, the log says that the device probably cannot play a sound this way.
+* (beabel) **NEW**: the switch `tracking` below each tracker pauses its scheduled location requests, for example from a script while you are at home.
+* (beabel) **NEW**: for your home place the adapter fills in the position from the ioBroker system settings when it adds it to the table "Named places".
+* (beabel) **FIXED**: a stop for a sound waits until 12 seconds after the start (a stop right at the start can silence the tracker), and the adapter keeps the request ids of the starts, so a second stop still works.
+* (beabel) **ENHANCED**: the debug log shows the field layout of Google's answers to sound requests, to find out why a stop sometimes has no effect.
+* (beabel) **ENHANCED**: the wait for further answers after a location request is 3 seconds instead of 25, because Google has never sent a second answer.
+* (beabel) **CHANGED**: the documentation and the configuration no longer claim that location requests cost the tracker's battery; this is not established.
+* (beabel) **FIXED**: the debug log no longer says that a location was updated when an equal or newer report was already stored.
 
 ### 0.1.8 (2026-11-06)
 

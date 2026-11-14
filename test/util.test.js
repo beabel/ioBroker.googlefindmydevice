@@ -201,3 +201,22 @@ test('describeAnswer: names time, type, origin and report count, never coordinat
   assert.doesNotMatch(own, /lat|lon|Home/);
   assert.match(describeAnswer({ timestamp: 1758000000, status: 9 }), /type 9/);
 });
+
+test('isHomeName: knows "Home" and its translations, nothing else', () => {
+  const { isHomeName } = require('../lib/util');
+  for (const name of ['Home', ' home ', 'Zuhause', 'zu hause', 'Maison', 'Дом', '家']) {
+    assert.equal(isHomeName(name), true, name);
+  }
+  for (const name of ['Work', 'Office', '', null, undefined, 'Homeoffice']) {
+    assert.equal(isHomeName(name), false, String(name));
+  }
+});
+
+test('systemCoordinates: reads the ioBroker position and rejects missing or invalid values', () => {
+  const { systemCoordinates } = require('../lib/util');
+  assert.deepEqual(systemCoordinates({ common: { latitude: '50.83', longitude: 12.74 } }), { lat: 50.83, lon: 12.74 });
+  assert.equal(systemCoordinates({ common: { latitude: '', longitude: '' } }), null);
+  assert.equal(systemCoordinates({ common: {} }), null);
+  assert.equal(systemCoordinates({ common: { latitude: 95, longitude: 12 } }), null);
+  assert.equal(systemCoordinates(null), null);
+});

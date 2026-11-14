@@ -16,6 +16,8 @@ class FakeAdapter {
     this.log = { debug() {}, info() {}, warn() {}, error() {} };
     this.calls = [];
     this.objects = new Map();
+    this.states = new Map();
+    this.foreignObjects = new Map();
     this.timers = [];
     this.sent = [];
   }
@@ -35,6 +37,12 @@ class FakeAdapter {
   }
   async delObject(id, options) {
     this.calls.push(['delObject', id, options]);
+  }
+  async getStateAsync(id) {
+    return this.states.get(id) || null;
+  }
+  async getForeignObjectAsync(id) {
+    return this.foreignObjects.get(id) || null;
   }
   async getObjectAsync(id) {
     return this.objects.get(id) || null;
@@ -143,7 +151,8 @@ test('values are written with setStateChanged under the new ids', async () => {
   assert.equal(written['AAA-111.name'], 'Bike');
   assert.equal(written['AAA-111.manufacturer'], 'Maker');
   assert.equal(written['AAA-111.pairDate'], 1_700_000_000_000);
-  assert.ok(callsOf(adapter, 'setState').length === 0, 'no unconditional writes');
+  const unconditional = callsOf(adapter, 'setState').map(call => call[1]);
+  assert.deepEqual(unconditional, ['AAA-111.tracking'], 'only the tracking switch gets an initial value');
 });
 
 test('renaming a tracker only updates its device name', async () => {
@@ -344,7 +353,7 @@ test('a button press runs the matching action and is acknowledged afterwards', a
     ['play', 'AAA-111', 'Bike'],
     ['stop', 'AAA-111', 'Bike'],
   ]);
-  const acks = callsOf(adapter, 'setState').filter(call => call[2].ack === true);
+  const acks = callsOf(adapter, 'setState').filter(call => call[2].ack === true && !call[1].endsWith('.tracking'));
   assert.equal(acks.length, 3, 'every press is acknowledged');
 });
 
@@ -379,7 +388,10 @@ test('a failing button action is logged and the button is still acknowledged', a
 
   assert.equal(warnings.length, 1);
   assert.match(warnings[0], /HTTP 500/);
-  assert.equal(callsOf(adapter, 'setState').filter(call => call[2].ack === true).length, 1);
+  assert.equal(
+    callsOf(adapter, 'setState').filter(call => call[2].ack === true && !call[1].endsWith('.tracking')).length,
+    1,
+  );
 });
 
 test('only one location request per tracker runs at a time', async () => {
@@ -402,17 +414,23 @@ test('only one location request per tracker runs at a time', async () => {
   await third;
 });
 
-test('every sound start is remembered and a stop cancels all of them', async () => {
+function soundAdapter() {
   const adapter = createAdapter();
   adapter.ensureFcmReady = async () => {};
   adapter.fcmIdentity = { fcmToken: 'fcm' };
   adapter.fmdClientUuid = 'client';
   soundCalls.length = 0;
+  return adapter;
+}
+const ageSoundKeys = (adapter, ms) => adapter.soundKeys.get('AAA-111').forEach(key => (key.at -= ms));
 
+test('every sound start is remembered and a stop cancels all of them, as often as needed', async () => {
+  const adapter = soundAdapter();
   await adapter.triggerSound('AAA-111', 'Bike', true);
   await adapter.triggerSound('AAA-111', 'Bike', true);
   const [first, second] = soundCalls.map(call => call.requestUuid);
   assert.notEqual(first, second);
+  ageSoundKeys(adapter, 20000);
 
   await adapter.triggerSound('AAA-111', 'Bike', false);
   const stops = soundCalls.filter(call => !call.start).map(call => call.requestUuid);
@@ -420,7 +438,34 @@ test('every sound start is remembered and a stop cancels all of them', async () 
 
   soundCalls.length = 0;
   await adapter.triggerSound('AAA-111', 'Bike', false);
-  assert.deepEqual(soundCalls, [{ requestUuid: '', start: false }], 'a stop without a known start has no request id');
+  assert.deepEqual(
+    soundCalls.map(call => call.requestUuid),
+    [first, second],
+    'the keys stay, so a second stop still carries them',
+  );
+});
+
+test('a stop without a known start is sent without a request id', async () => {
+  const adapter = soundAdapter();
+  await adapter.triggerSound('AAA-111', 'Bike', false);
+  assert.deepEqual(soundCalls, [{ requestUuid: '', start: false }]);
+});
+
+test('a stop right after the start waits, so it cannot silence the tracker', async () => {
+  const adapter = soundAdapter();
+  await adapter.triggerSound('AAA-111', 'Bike', true);
+  const started = soundCalls.length;
+
+  const stop = adapter.triggerSound('AAA-111', 'Bike', false);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(soundCalls.length, started, 'the stop has not been sent yet');
+  assert.equal(adapter.timers.length, 1);
+  assert.ok(adapter.timers[0].ms > 0 && adapter.timers[0].ms <= 12000, 'it waits for the rest of the 12 seconds');
+
+  adapter.timers[0].fn();
+  await stop;
+  assert.equal(soundCalls.length, started + 1);
+  assert.equal(soundCalls.at(-1).start, false);
 });
 
 test('a location request without an answer is repeated once after a pause', async () => {
@@ -479,4 +524,64 @@ test('a sound request that Google rejects with HTTP 500 is explained', async () 
   } finally {
     soundError = null;
   }
+});
+
+test('the tracking switch is acknowledged, and a paused tracker is skipped by the schedule', async () => {
+  const adapter = createAdapter();
+  trackers = [tracker('AAA-111', 'Bike')];
+  await adapter.updateDevices();
+  assert.ok(callsOf(adapter, 'setState').some(call => call[1] === 'AAA-111.tracking' && call[2].val === true));
+
+  await adapter.onStateChange('googlefindmydevice.0.AAA-111.tracking', { val: false, ack: false });
+  const acks = callsOf(adapter, 'setState').filter(call => call[1].endsWith('.tracking') && call[2].ack === true);
+  assert.equal(acks.at(-1)[2].val, false);
+
+  adapter.config.deviceSettings = [{ canonicId: 'AAA-111', name: 'Bike', locate: true, intervalMinutes: 60 }];
+  adapter.states.set('AAA-111.tracking', { val: false });
+  let located = 0;
+  adapter.triggerLocate = async () => located++;
+  adapter.timers.length = 0;
+  adapter.startLocateTimers();
+  await adapter.timers[0].fn();
+  assert.equal(located, 0, 'no automatic request while the switch is off');
+  assert.equal(adapter.timers.length, 2, 'the next round is scheduled anyway');
+
+  adapter.states.set('AAA-111.tracking', { val: true });
+  await adapter.timers[1].fn();
+  assert.equal(located, 1, 'requests resume when the switch is on again');
+});
+
+test('the home place gets the position from the ioBroker system settings, other places stay empty', async () => {
+  const adapter = createAdapter();
+  const written = [];
+  adapter.extendForeignObject = async (id, obj) => written.push(obj.native.semanticLocations);
+  adapter.foreignObjects.set('system.config', { common: { latitude: '50.83', longitude: '12.74' } });
+
+  await adapter.registerSemanticName('Home');
+  await adapter.registerSemanticName('Office');
+
+  assert.deepEqual(written[0], [{ name: 'Home', latitude: 50.83, longitude: 12.74, radius: 100 }]);
+  assert.deepEqual(written[1], [{ name: 'Office', latitude: null, longitude: null, radius: 100 }]);
+});
+
+test('without a position in the system settings the home place is added empty', async () => {
+  const adapter = createAdapter();
+  const written = [];
+  adapter.extendForeignObject = async (id, obj) => written.push(obj.native.semanticLocations);
+  await adapter.registerSemanticName('Home');
+  assert.deepEqual(written[0], [{ name: 'Home', latitude: null, longitude: null, radius: 100 }]);
+});
+
+test('an unmatched push is logged with the tracker of the sound request it answers', () => {
+  const adapter = createAdapter();
+  const lines = [];
+  adapter.log.debug = message => lines.push(message);
+  adapter.trackers.set('AAA-111', { canonicId: 'canon-1', name: 'Bike' });
+  adapter.soundKeys.set('canon-1', [{ uuid: 'req-1', at: Date.now() }]);
+
+  adapter.onUnmatchedPush({ requestUuid: 'req-1', structure: '1{2:len36}' });
+  adapter.onUnmatchedPush({ requestUuid: 'other', structure: '9=1' });
+
+  assert.match(lines[0], /sound request for "Bike": 1\{2:len36\}/);
+  assert.match(lines[1], /unknown or expired request ignored: 9=1/);
 });

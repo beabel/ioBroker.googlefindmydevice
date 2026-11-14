@@ -25,6 +25,8 @@ const {
     isOlderThanStored,
     findSemanticMapping,
     describeAnswer,
+    isHomeName,
+    systemCoordinates,
 } = require('./lib/util');
 const { buildDeviceObjects, PUSH_IDS_STATE_ID, buildPushIdsObject } = require('./lib/objects');
 
@@ -46,9 +48,10 @@ const LOCATE_MIN_MINUTES = 5;
 const LOCATE_MAX_MINUTES = 1440; // 24h
 const LOCATE_INITIAL_DELAY_MS = 20000; // give the MCS connection time to log in first
 const LOCATE_RESPONSE_TIMEOUT_MS = 45000;
-const LOCATE_EXTRA_ANSWERS_MS = 25000; // Google may send further answers after the first one
+const LOCATE_EXTRA_ANSWERS_MS = 3000; // Google may send further answers after the first one (never seen so far)
 const SOUND_KEY_MAX_AGE_MS = 30 * 60 * 1000; // a stop for a ring older than this probably no longer fits
 const SOUND_KEYS_KEPT = 5; // started sounds remembered per tracker
+const SOUND_STOP_MIN_DELAY_MS = 12000; // a stop right after a start can silence the tracker, so it waits this long
 const LOCATE_RETRY_DELAY_MS = 10000; // pause before a location request without an answer is repeated once
 
 class Googlefindmydevice extends utils.Adapter {
@@ -76,6 +79,7 @@ class Googlefindmydevice extends utils.Adapter {
         this.staleWarned = new Set(); // ids already reported as gone from the account
         this.decryptWarned = new Set(); // trackers whose reports could not be decrypted (warned once)
         this.semanticRegistered = new Set(); // place names already checked against the "Named places" table
+        this.trackingInitialised = new Set(); // trackers whose "tracking" switch was checked in this run
         this.legacyChecked = new Set(); // trackers already checked for the removed EID states in this run
         // Tracker object tree already created in this run (id -> device name).
         // Objects are written once per run, not on every poll.
@@ -101,6 +105,7 @@ class Googlefindmydevice extends utils.Adapter {
                 clearInterval: timer => this.clearInterval(timer),
             },
         });
+        this.mcsClient.onUnmatchedUpdate = update => this.onUnmatchedPush(update);
         this.fcmIdentity = null;
         this.fcmReadyPromise = null;
         this.fmdClientUuid = crypto.randomUUID();
@@ -425,6 +430,7 @@ class Googlefindmydevice extends utils.Adapter {
             const stateId = canonicIdToStateId(device.canonicId);
             this.trackers.set(stateId, { canonicId: device.canonicId, name: device.name });
             await this.ensureDevice(stateId, device.name);
+            await this.initTrackingState(stateId);
             await this.updateDeviceMetadataStates(stateId, device);
             await this.removeLegacyEidStates(stateId);
 
@@ -662,7 +668,11 @@ class Googlefindmydevice extends utils.Adapter {
                 }
                 const timer = this.setTimeout(async () => {
                     try {
-                        await this.triggerLocate(setting.canonicId, setting.name);
+                        if (await this.isTrackingPaused(canonicIdToStateId(setting.canonicId))) {
+                            this.log.debug(`Automatic requests for "${setting.name}" are switched off.`);
+                        } else {
+                            await this.triggerLocate(setting.canonicId, setting.name);
+                        }
                     } catch (err) {
                         this.log.warn(`Location request for "${setting.name}" failed: ${err.message}`);
                     }
@@ -676,22 +686,63 @@ class Googlefindmydevice extends utils.Adapter {
     }
 
     /**
-     * Reacts to a press of one of the buttons below a tracker: locate now,
-     * play sound, stop sound. Only a press from outside (ack=false) counts;
-     * the button is acknowledged when the action is done.
+     * Whether the "tracking" switch of a tracker is off, which pauses its
+     * automatic location requests (the buttons still work).
+     *
+     * @param {string} stateId sanitized id of the tracker's device object
+     * @returns {Promise<boolean>} true if the switch is off
+     */
+    async isTrackingPaused(stateId) {
+        const state = await this.getStateAsync(`${stateId}.tracking`);
+        return !!state && state.val === false;
+    }
+
+    /**
+     * Gives the "tracking" switch of a tracker its initial value (on) once.
+     *
+     * @param {string} stateId sanitized id of the tracker's device object
+     */
+    async initTrackingState(stateId) {
+        if (this.trackingInitialised.has(stateId)) {
+            return;
+        }
+        this.trackingInitialised.add(stateId);
+        const state = await this.getStateAsync(`${stateId}.tracking`);
+        if (!state) {
+            await this.setState(`${stateId}.tracking`, { val: true, ack: true });
+        }
+    }
+
+    /**
+     * Reacts to a change of one of the switches and buttons below a tracker:
+     * tracking on/off, locate now, play sound, stop sound. Only a change from
+     * outside (ack=false) counts; it is acknowledged when the action is done.
+     * (Locate and the sounds react to a press, a value of true.)
      *
      * @param {string} id the full id of the changed state
      * @param {ioBroker.State | null | undefined} state the new state
      */
     async onStateChange(id, state) {
-        if (!state || state.ack || !state.val) {
+        if (!state || state.ack) {
             return;
         }
-        const match = /\.([^.]+)\.(locateNow|playSound|stopSound)$/.exec(id);
+        const match = /\.([^.]+)\.(locateNow|playSound|stopSound|tracking)$/.exec(id);
         if (!match) {
             return;
         }
         const [, stateId, action] = match;
+        if (action === 'tracking') {
+            const enabled = !!state.val;
+            await this.setState(id, { val: enabled, ack: true });
+            const known = this.trackers.get(stateId);
+            this.log.info(
+                `Automatic location requests for "${known ? known.name : stateId}" are switched ${enabled ? 'on' : 'off'}.`,
+            );
+            return;
+        }
+        if (!state.val) {
+            return;
+        }
         const tracker = this.trackers.get(stateId);
         if (!tracker) {
             this.log.warn(`The button ${action} was pressed, but the tracker is not in the Google account any more.`);
@@ -763,8 +814,8 @@ class Googlefindmydevice extends utils.Adapter {
         if (start) {
             const requestUuid = crypto.randomUUID();
             await send(requestUuid);
-            const keys = (this.soundKeys.get(canonicId) || []).concat({ uuid: requestUuid, at: Date.now() });
-            this.soundKeys.set(canonicId, keys.slice(-SOUND_KEYS_KEPT));
+            const recent = (this.soundKeys.get(canonicId) || []).filter(k => Date.now() - k.at <= SOUND_KEY_MAX_AGE_MS);
+            this.soundKeys.set(canonicId, recent.concat({ uuid: requestUuid, at: Date.now() }).slice(-SOUND_KEYS_KEPT));
             this.log.info(`Sound started for "${name}".`);
             return;
         }
@@ -779,12 +830,19 @@ class Googlefindmydevice extends utils.Adapter {
             await send('');
         } else {
             for (const key of keys) {
+                // A stop that comes right after the start can silence the tracker
+                // (measured by the Home Assistant integration), so it waits.
+                const wait = key.at + SOUND_STOP_MIN_DELAY_MS - Date.now();
+                if (wait > 0 && !this.unloaded) {
+                    this.log.info(`The stop for "${name}" waits ${Math.ceil(wait / 1000)} s after the start.`);
+                    await new Promise(resolve => this.setTimeout(resolve, wait));
+                }
                 if (Date.now() - key.at > SOUND_KEY_MAX_AGE_MS) {
                     this.log.debug(`A sound of "${name}" was started a long time ago; its stop may no longer fit.`);
                 }
                 await send(key.uuid);
             }
-            this.soundKeys.delete(canonicId);
+            // The keys stay: a second stop for the same sound must carry them again.
         }
         this.log.info(`Stop sound sent for "${name}".`);
     }
@@ -912,10 +970,16 @@ class Googlefindmydevice extends utils.Adapter {
         if (!location && lastError) {
             this.warnDecryptOnce(name, lastError);
         }
-        await this.updateLocationStates(stateId, location);
-        this.log.debug(
-            location ? `Location for "${name}" updated.` : `Google has no location report for "${name}" at the moment.`,
-        );
+        const written = await this.updateLocationStates(stateId, location);
+        if (!location) {
+            this.log.debug(`Google has no location report for "${name}" at the moment.`);
+        } else {
+            this.log.debug(
+                written
+                    ? `Location for "${name}" updated.`
+                    : `No newer location report for "${name}" than the stored one.`,
+            );
+        }
     }
 
     /**
@@ -923,10 +987,11 @@ class Googlefindmydevice extends utils.Adapter {
      *
      * @param {string} stateId sanitized id of the tracker's device object
      * @param {object | null} location the decrypted report, or null if there is none yet
+     * @returns {Promise<boolean>} true if the report was written, false if there was none or a newer one is stored
      */
     async updateLocationStates(stateId, location) {
         if (!location) {
-            return;
+            return false;
         }
 
         // Google answers with a different subset of reports from one request to
@@ -937,7 +1002,7 @@ class Googlefindmydevice extends utils.Adapter {
             this.log.debug(
                 `Ignoring a report from ${new Date(location.timestamp * 1000).toISOString()} for ${stateId}, a newer one is already stored.`,
             );
-            return;
+            return false;
         }
 
         // The timestamp tells you how fresh this report actually is, whether
@@ -952,7 +1017,7 @@ class Googlefindmydevice extends utils.Adapter {
             if (!mapped) {
                 await this.registerSemanticName(location.semantic);
             }
-            return;
+            return true;
         }
 
         await this.setStateChanged(`${stateId}.semanticLocation`, { val: '', ack: true });
@@ -966,6 +1031,27 @@ class Googlefindmydevice extends utils.Adapter {
             val: `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lon}`,
             ack: true,
         });
+        return true;
+    }
+
+    /**
+     * Logs a push answer that no waiting location request belongs to. For a
+     * sound request it names the tracker; only field numbers and sizes are
+     * logged, never contents.
+     *
+     * @param {{requestUuid: string, structure: string}} update the request id of the answer and its field layout
+     */
+    onUnmatchedPush({ requestUuid, structure }) {
+        for (const [canonicId, keys] of this.soundKeys) {
+            if (keys.some(key => key.uuid === requestUuid)) {
+                const tracker = [...this.trackers.values()].find(t => t.canonicId === canonicId);
+                this.log.debug(
+                    `Push answer to a sound request for "${tracker ? tracker.name : canonicId}": ${structure}`,
+                );
+                return;
+            }
+        }
+        this.log.debug(`MCS: push message for an unknown or expired request ignored: ${structure}`);
     }
 
     /**
@@ -1034,12 +1120,21 @@ class Googlefindmydevice extends utils.Adapter {
         ) {
             return;
         }
+        // For the home place the position from the ioBroker system settings is the natural choice.
+        const home = isHomeName(trimmed) ? systemCoordinates(await this.getForeignObjectAsync('system.config')) : null;
         this.log.info(
-            'Google reported a named place without coordinates; it was added to the table "Named places" in the configuration. Enter its latitude and longitude there to get a map position.',
+            home
+                ? 'Google reported your home place; it was added to the table "Named places" in the configuration with the position from the ioBroker system settings. Please check it there.'
+                : 'Google reported a named place without coordinates; it was added to the table "Named places" in the configuration. Enter its latitude and longitude there to get a map position.',
         );
         await this.extendForeignObject(`system.adapter.${this.namespace}`, {
             native: {
-                semanticLocations: existing.concat({ name: trimmed, latitude: null, longitude: null, radius: 100 }),
+                semanticLocations: existing.concat({
+                    name: trimmed,
+                    latitude: home ? home.lat : null,
+                    longitude: home ? home.lon : null,
+                    radius: 100,
+                }),
             },
         });
     }

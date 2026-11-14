@@ -25,13 +25,15 @@ test('a state never has children and every suffix is a single, unique segment', 
   }
 });
 
-const BUTTONS = ['locateNow', 'playSound', 'stopSound']; // the ones onStateChange in main.js answers
+const BUTTONS = ['locateNow', 'playSound', 'stopSound']; // buttons: writable, not readable
+const SWITCHES = ['tracking']; // writable and readable
+const HANDLED = [...BUTTONS, ...SWITCHES]; // the ones onStateChange in main.js answers
 
 test('every state is read-only except the buttons, typed, and uses a specific role', () => {
   for (const { suffix, obj } of buildDeviceObjects('x').slice(1)) {
     const isButton = BUTTONS.includes(suffix);
     assert.equal(obj.common.read, !isButton, `${suffix}: read`);
-    assert.equal(obj.common.write, isButton, `${suffix}: write (only buttons have an onStateChange handler)`);
+    assert.equal(obj.common.write, HANDLED.includes(suffix), `${suffix}: write (only handled states are writable)`);
     assert.ok(['string', 'number', 'boolean'].includes(obj.common.type), `${suffix}: type`);
     assert.ok(obj.common.role && obj.common.role !== 'state', `${suffix}: role`);
     assert.notEqual(obj.common.role, 'weblink', `${suffix}: weblink is not a valid role`);
