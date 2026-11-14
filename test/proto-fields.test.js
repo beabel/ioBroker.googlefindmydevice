@@ -102,3 +102,17 @@ test('parseHeaderParams: ignores extra parameters after the key', () => {
   assert.deepEqual(parseHeaderParams('salt=QUJD'), { salt: 'QUJD' });
   assert.deepEqual(parseHeaderParams(undefined), {});
 });
+
+test('readCapabilities: lists the action numbers Google offers for a device', () => {
+  const { readCapabilities } = require('../lib/proto-fields');
+  const lenField = (no, data) => Buffer.concat([Buffer.from([(no << 3) | 2, data.length]), data]);
+  const capability = no => {
+    // 2 { 1 { <no>: empty message }, 2 = 1 }
+    const tag = no < 16 ? Buffer.from([(no << 3) | 2, 0]) : Buffer.from([((no << 3) | 2) & 0x7f | 0x80, ((no << 3) | 2) >> 7, 0]);
+    return lenField(2, Buffer.concat([lenField(1, tag), Buffer.from([0x10, 0x01])]));
+  };
+  const entry = Buffer.concat([capability(31), capability(30), capability(32)]);
+  assert.deepEqual(readCapabilities(entry), [30, 31, 32]);
+  assert.deepEqual(readCapabilities(undefined), []);
+  assert.deepEqual(readCapabilities(Buffer.alloc(0)), []);
+});

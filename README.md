@@ -245,6 +245,7 @@ Google's identifier of the tracker with unsafe characters replaced by `_`.
 | `<id>.playSound` | button | Makes the tracker play its sound (see "Buttons") |
 | `<id>.stopSound` | button | Stops that sound again (see "Buttons") |
 | `info.connection` | boolean | `true` while the last poll succeeded |
+| `info.diagnostics` | string (JSON) | Diagnostic report for bug reports, see "Reporting problems" |
 
 ### Buttons
 
@@ -294,8 +295,9 @@ one, and a GPS report and a named place never show up mixed. Reports without
 a time, or with a time far in the future, are ignored. If a report cannot be
 decrypted, the newest one that can be read is used; if none can, the log says
 so once per start, and at *debug* level every skipped report is listed with
-the size of its key part. Relayed reports with a key part other than 20 bytes
-(a second curve the Find Hub specification allows) are not supported yet.
+the size of its key part. Relayed reports with a 32-byte key part (the second curve
+the Find Hub specification allows, P-256) are decrypted by trying several
+variants; this is new and has not been verified with a real tracker yet.
 
 ### Upgrading from 0.0.7 or older
 
@@ -303,6 +305,23 @@ Earlier versions placed trackers in a `devices` folder
 (`googlefindmydevice.0.devices.<id>.*`). The IDs no longer contain `devices`.
 The old folder is removed automatically on the first start; update scripts,
 visualizations, aliases and history settings that still use the old IDs.
+
+## Reporting problems
+
+If something does not work with your tracker, please open an issue on GitHub
+(or write in the forum thread) and paste the content of the state
+`info.diagnostics`. It lists for each tracker, numbered in the order they were
+found: manufacturer, model and type, which actions Google offers for it (30
+locate, 31 and 32 sound), what kinds of reports arrived (`LAST_KNOWN`,
+`CROWDSOURCED`, `AGGREGATED`, `SEMANTIC`), whether one of your own devices or
+another device relayed them, the size of their key part, how many reports could
+not be read and why, how old the newest report was when Google answered, and how
+location and sound requests ended. It contains **no** names, ids, positions or
+times of a position, so it is safe to post. For more detail set the log level
+of the instance to *debug* and post the lines about the tracker; they only show
+field numbers and sizes, never contents.
+
+The counts start with every start of the instance.
 
 ## Why not phone/tablet locations too?
 
@@ -348,6 +367,8 @@ risk; Google's internal APIs are undocumented and may change without notice.
 * (beabel) **ENHANCED**: the wait for further answers after a location request is 3 seconds instead of 25, because Google has never sent a second answer.
 * (beabel) **CHANGED**: the documentation and the configuration no longer claim that location requests cost the tracker's battery; this is not established.
 * (beabel) **FIXED**: the description of `isOwnReport` was wrong: it does not mean that the tracker reported itself but that one of your own devices uploaded the report (also one that combined several reports). The state name, the README and the debug log now say so.
+* (beabel) **NEW**: the state `info.diagnostics` holds a diagnostic report for bug reports (model data, offered actions, report types and origins, key part sizes, skipped reports, request results), without names, ids or positions.
+* (beabel) **NEW**: relayed reports of trackers that use the P-256 curve (key part of 32 bytes) are decrypted. There is no public test vector, so several variants are tried until the authentication of the report verifies; a wrong variant can never produce a wrong position. Please report whether it works for your tracker (the diagnostic report shows the variant that matched).
 * (beabel) **FIXED**: the debug log no longer says that a location was updated when an equal or newer report was already stored.
 
 ### 0.1.8 (2026-11-06)

@@ -27,8 +27,16 @@ const {
     describeAnswer,
     isHomeName,
     systemCoordinates,
+    describeIdentifierKind,
 } = require('./lib/util');
-const { buildDeviceObjects, PUSH_IDS_STATE_ID, buildPushIdsObject } = require('./lib/objects');
+const {
+    buildDeviceObjects,
+    PUSH_IDS_STATE_ID,
+    buildPushIdsObject,
+    DIAGNOSTICS_STATE_ID,
+    buildDiagnosticsObject,
+} = require('./lib/objects');
+const { Diagnostics } = require('./lib/diagnostics');
 
 const ADM_SERVICE_SCOPE = 'oauth2:https://www.googleapis.com/auth/android_device_manager';
 const ADM_APP = 'com.google.android.apps.adm';
@@ -79,6 +87,8 @@ class Googlefindmydevice extends utils.Adapter {
         this.staleWarned = new Set(); // ids already reported as gone from the account
         this.decryptWarned = new Set(); // trackers whose reports could not be decrypted (warned once)
         this.semanticRegistered = new Set(); // place names already checked against the "Named places" table
+        this.diagnostics = new Diagnostics(); // facts for compatibility reports, see lib/diagnostics.js
+        this.diagnosticsReady = false;
         this.trackingInitialised = new Set(); // trackers whose "tracking" switch was checked in this run
         this.legacyChecked = new Set(); // trackers already checked for the removed EID states in this run
         // Tracker object tree already created in this run (id -> device name).
@@ -147,6 +157,7 @@ class Googlefindmydevice extends utils.Adapter {
         }
 
         this.subscribeStates('*'); // the buttons below each tracker
+        await this.ensureDiagnosticsObject();
         await this.pollLoop();
     }
 
@@ -431,6 +442,14 @@ class Googlefindmydevice extends utils.Adapter {
             this.trackers.set(stateId, { canonicId: device.canonicId, name: device.name });
             await this.ensureDevice(stateId, device.name);
             await this.initTrackingState(stateId);
+            this.diagnostics.setDevice(device.canonicId, {
+                manufacturer: device.manufacturer,
+                model: device.model,
+                deviceType: device.deviceType,
+                fastPairModelId: device.fastPairModelId,
+                identifierKind: describeIdentifierKind(device.identifierLayout),
+                capabilities: device.capabilities,
+            });
             await this.updateDeviceMetadataStates(stateId, device);
             await this.removeLegacyEidStates(stateId);
 
@@ -440,8 +459,11 @@ class Googlefindmydevice extends utils.Adapter {
 
             try {
                 const location = await decryptLatestLocation(ownerKey, device, {
-                    onSkip: this.skippedReportLogger(device.name),
+                    onSkip: this.skippedReportLogger(device.name, device.canonicId),
                 });
+                if (location) {
+                    this.diagnostics.recordAnswer(device.canonicId, location);
+                }
                 if (!location) {
                     this.log.debug(
                         `No location report for "${device.name}" yet (none fetched so far, or cache empty).`,
@@ -464,10 +486,12 @@ class Googlefindmydevice extends utils.Adapter {
      * that had to be left out, with the reason but never the content.
      *
      * @param {string} name the tracker's display name
+     * @param {string} canonicId Google's id of the tracker (for the diagnostic report)
      * @returns {(info: {reason: string, keyPartLength?: number}) => void} the callback for decryptLatestLocation()
      */
-    skippedReportLogger(name) {
+    skippedReportLogger(name, canonicId) {
         return info => {
+            this.diagnostics.recordSkip(canonicId, info);
             const size = info.keyPartLength === undefined ? '' : ` (key part: ${info.keyPartLength} bytes)`;
             this.log.debug(`Skipped a location report for "${name}": ${info.reason}${size}.`);
         };
@@ -686,6 +710,35 @@ class Googlefindmydevice extends utils.Adapter {
     }
 
     /**
+     * Creates the state that holds the diagnostic report, once.
+     */
+    async ensureDiagnosticsObject() {
+        try {
+            await this.extendObject(DIAGNOSTICS_STATE_ID, buildDiagnosticsObject());
+            this.diagnosticsReady = true;
+        } catch (err) {
+            this.log.debug(`Could not create the diagnostic report: ${err.message}`);
+        }
+    }
+
+    /**
+     * Writes the diagnostic report (model data and counts, no names, ids or positions).
+     */
+    async writeDiagnostics() {
+        if (!this.diagnosticsReady) {
+            return;
+        }
+        try {
+            await this.setStateChanged(DIAGNOSTICS_STATE_ID, {
+                val: this.diagnostics.reportJson(this.version || ''),
+                ack: true,
+            });
+        } catch (err) {
+            this.log.debug(`Could not write the diagnostic report: ${err.message}`);
+        }
+    }
+
+    /**
      * Whether the "tracking" switch of a tracker is off, which pauses its
      * automatic location requests (the buttons still work).
      *
@@ -798,11 +851,14 @@ class Googlefindmydevice extends utils.Adapter {
                     },
                     start,
                 );
+                this.diagnostics.recordSound(canonicId, start ? 'start' : 'stop');
                 this.log.debug(
                     `Nova answer to the ${start ? 'start' : 'stop'} sound request: ${describeStructure(reply || Buffer.alloc(0))}`,
                 );
             } catch (err) {
-                if (/HTTP 500/.test(err.message)) {
+                const rejected = /HTTP 500/.test(err.message);
+                this.diagnostics.recordSound(canonicId, rejected ? 'rejected' : 'error');
+                if (rejected) {
                     throw new Error(
                         'Google rejected the request (HTTP 500); the device probably cannot play a sound this way (typical for headphones and speakers)',
                     );
@@ -870,6 +926,7 @@ class Googlefindmydevice extends utils.Adapter {
                 if (err.code !== 'LOCATE_TIMEOUT' || this.unloaded) {
                     throw err;
                 }
+                this.diagnostics.recordLocate(canonicId, 'retried');
                 this.log.debug(`No answer for "${name}", the request is repeated once.`);
                 await new Promise(resolve => this.setTimeout(resolve, LOCATE_RETRY_DELAY_MS));
                 if (this.unloaded) {
@@ -877,8 +934,13 @@ class Googlefindmydevice extends utils.Adapter {
                 }
                 await this.requestLocation(canonicId, name);
             }
+            this.diagnostics.recordLocate(canonicId, 'ok');
+        } catch (err) {
+            this.diagnostics.recordLocate(canonicId, err.code === 'LOCATE_TIMEOUT' ? 'timeout' : 'error');
+            throw err;
         } finally {
             this.locating.delete(canonicId);
+            await this.writeDiagnostics();
         }
     }
 
@@ -955,7 +1017,7 @@ class Googlefindmydevice extends utils.Adapter {
                 const decrypted = await decryptLatestLocation(
                     ownerKey,
                     { raw: deviceUpdate.deviceMetadata },
-                    { onSkip: this.skippedReportLogger(name) },
+                    { onSkip: this.skippedReportLogger(name, canonicId) },
                 );
                 this.log.debug(
                     `Answer ${index + 1} for "${name}": ${decrypted ? describeAnswer(decrypted) : 'no report'}.`,
@@ -967,6 +1029,7 @@ class Googlefindmydevice extends utils.Adapter {
             }
         }
         const location = newestLocation(locations);
+        this.diagnostics.recordAnswer(canonicId, location);
         if (!location && lastError) {
             this.warnDecryptOnce(name, lastError);
         }

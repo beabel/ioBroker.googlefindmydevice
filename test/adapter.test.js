@@ -585,3 +585,20 @@ test('an unmatched push is logged with the tracker of the sound request it answe
   assert.match(lines[0], /sound request for "Bike": 1\{2:len36\}/);
   assert.match(lines[1], /unknown or expired request ignored: 9=1/);
 });
+
+test('the diagnostic report is written without names, ids or positions', async () => {
+  const adapter = createAdapter();
+  trackers = [{ ...tracker('AAA-111', 'My secret bike'), capabilities: [30, 31, 32], identifierLayout: '2=2,3{1{1:len36}}' }];
+  await adapter.ensureDiagnosticsObject();
+  await adapter.updateDevices();
+  await adapter.triggerLocate('AAA-111', 'My secret bike').catch(() => {});
+
+  const written = callsOf(adapter, 'setStateChanged').filter(call => call[1] === 'info.diagnostics');
+  assert.ok(written.length > 0, 'the report is written after a request');
+  const report = JSON.parse(written.at(-1)[2].val);
+  assert.equal(report.trackers[0].manufacturer, 'Maker');
+  assert.equal(report.trackers[0].identifierKind, 'tracker');
+  assert.deepEqual(report.trackers[0].capabilities, [30, 31, 32]);
+  assert.ok(!written.at(-1)[2].val.includes('My secret bike'));
+  assert.ok(!written.at(-1)[2].val.includes('AAA-111'));
+});
