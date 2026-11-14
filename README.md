@@ -261,7 +261,10 @@ value or for `false`.
   position newer than the Find Hub network has it.
   Only one request per tracker runs at a time; a press during a running
   request is skipped.
-- **`playSound`** - asks Google to make the tracker ring. **Experimental:**
+- **`playSound`** - asks Google to make the tracker ring. The request is only
+  sent if Google lists a sound action for the device (shown as 31 and 32 under
+  `capabilities` in `info.diagnostics`); headphones and speakers usually have
+  none, and the log then says so instead. **Experimental:**
   Google accepts the request, but the adapter cannot see whether the tracker
   really rings, and it has not been confirmed on any tracker yet. In the tests
   for this adapter a Chipolo tracker and a JBL speaker did not ring, and the
@@ -316,7 +319,8 @@ locate, 31 and 32 sound), what kinds of reports arrived (`LAST_KNOWN`,
 `CROWDSOURCED`, `AGGREGATED`, `SEMANTIC`), whether one of your own devices or
 another device relayed them, the size of their key part, how many reports could
 not be read and why, how old the newest report was when Google answered, and how
-location and sound requests ended. It contains **no** names, ids, positions or
+location and sound requests ended (a key part size of 0 means a report from one of
+your own devices, which has none). It contains **no** names, ids, positions or
 times of a position, so it is safe to post. For more detail set the log level
 of the instance to *debug* and post the lines about the tracker; they only show
 field numbers and sizes, never contents.
@@ -367,6 +371,7 @@ risk; Google's internal APIs are undocumented and may change without notice.
 * (beabel) **ENHANCED**: the wait for further answers after a location request is 3 seconds instead of 25, because Google has never sent a second answer.
 * (beabel) **CHANGED**: the documentation and the configuration no longer claim that location requests cost the tracker's battery; this is not established.
 * (beabel) **FIXED**: the description of `isOwnReport` was wrong: it does not mean that the tracker reported itself but that one of your own devices uploaded the report (also one that combined several reports). The state name, the README and the debug log now say so.
+* (beabel) **CHANGED**: the buttons `playSound` and `stopSound` send nothing for a device for which Google lists no sound action (headphones, speakers), and the log says so, instead of ending in HTTP 500.
 * (beabel) **NEW**: the state `info.diagnostics` holds a diagnostic report for bug reports (model data, offered actions, report types and origins, key part sizes, skipped reports, request results), without names, ids or positions.
 * (beabel) **NEW**: relayed reports of trackers that use the P-256 curve (key part of 32 bytes) are decrypted. There is no public test vector, so several variants are tried until the authentication of the report verifies; a wrong variant can never produce a wrong position. Please report whether it works for your tracker (the diagnostic report shows the variant that matched).
 * (beabel) **FIXED**: the debug log no longer says that a location was updated when an equal or newer report was already stored.

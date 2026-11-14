@@ -439,7 +439,11 @@ class Googlefindmydevice extends utils.Adapter {
         this.trackers.clear();
         for (const device of devices) {
             const stateId = canonicIdToStateId(device.canonicId);
-            this.trackers.set(stateId, { canonicId: device.canonicId, name: device.name });
+            this.trackers.set(stateId, {
+                canonicId: device.canonicId,
+                name: device.name,
+                capabilities: device.capabilities,
+            });
             await this.ensureDevice(stateId, device.name);
             await this.initTrackingState(stateId);
             this.diagnostics.setDevice(device.canonicId, {
@@ -799,6 +803,22 @@ class Googlefindmydevice extends utils.Adapter {
         const tracker = this.trackers.get(stateId);
         if (!tracker) {
             this.log.warn(`The button ${action} was pressed, but the tracker is not in the Google account any more.`);
+            return;
+        }
+
+        // Google lists which actions it offers for a device; headphones and
+        // speakers, for example, have no sound. Without a list (unknown) it is tried.
+        const needed = action === 'playSound' ? 31 : action === 'stopSound' ? 32 : null;
+        if (
+            needed &&
+            tracker.capabilities &&
+            tracker.capabilities.length > 0 &&
+            !tracker.capabilities.includes(needed)
+        ) {
+            this.log.warn(
+                `Google offers no sound for "${tracker.name}" (typical for headphones and speakers), so nothing was sent.`,
+            );
+            await this.setState(id, { val: state.val, ack: true });
             return;
         }
 

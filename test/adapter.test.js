@@ -602,3 +602,38 @@ test('the diagnostic report is written without names, ids or positions', async (
   assert.ok(!written.at(-1)[2].val.includes('My secret bike'));
   assert.ok(!written.at(-1)[2].val.includes('AAA-111'));
 });
+
+test('a sound button does nothing for a device without a sound action, and says so', async () => {
+  const adapter = createAdapter();
+  trackers = [{ ...tracker('AAA-111', 'Speaker'), capabilities: [30] }];
+  await adapter.updateDevices();
+  const warnings = [];
+  adapter.log.warn = message => warnings.push(message);
+  soundCalls.length = 0;
+
+  await adapter.onStateChange('googlefindmydevice.0.AAA-111.playSound', { val: true, ack: false });
+  await adapter.onStateChange('googlefindmydevice.0.AAA-111.stopSound', { val: true, ack: false });
+
+  assert.equal(soundCalls.length, 0, 'no request was sent');
+  assert.equal(warnings.length, 2);
+  assert.match(warnings[0], /offers no sound/);
+  assert.equal(callsOf(adapter, 'setState').filter(call => call[2].ack === true && /Sound$/.test(call[1])).length, 2);
+});
+
+test('a device with a sound action, or an unknown action list, is tried', async () => {
+  const adapter = createAdapter();
+  adapter.ensureFcmReady = async () => {};
+  adapter.fcmIdentity = { fcmToken: 'fcm' };
+  adapter.fmdClientUuid = 'client';
+  trackers = [
+    { ...tracker('AAA-111', 'Tag'), capabilities: [30, 31, 32] },
+    { ...tracker('BBB-222', 'Unknown'), capabilities: [] },
+  ];
+  await adapter.updateDevices();
+  soundCalls.length = 0;
+
+  await adapter.onStateChange('googlefindmydevice.0.AAA-111.playSound', { val: true, ack: false });
+  await adapter.onStateChange('googlefindmydevice.0.BBB-222.playSound', { val: true, ack: false });
+
+  assert.equal(soundCalls.filter(call => call.start).length, 2);
+});
