@@ -14,6 +14,7 @@ const {
 const { decryptLatestLocation } = require('./lib/decrypt-locations');
 const { registerFcm } = require('./lib/fcm-register');
 const { McsClient } = require('./lib/mcs-client');
+const { describeStructure } = require('./lib/proto-fields');
 const {
     ENCRYPTED_NATIVE_FIELDS,
     looksCorrupted,
@@ -736,7 +737,7 @@ class Googlefindmydevice extends utils.Adapter {
 
         const send = async requestUuid => {
             try {
-                await executeSoundAction(
+                const reply = await executeSoundAction(
                     admToken,
                     {
                         canonicId,
@@ -745,6 +746,9 @@ class Googlefindmydevice extends utils.Adapter {
                         fmdClientUuid: this.fmdClientUuid,
                     },
                     start,
+                );
+                this.log.debug(
+                    `Nova answer to the ${start ? 'start' : 'stop'} sound request: ${describeStructure(reply || Buffer.alloc(0))}`,
                 );
             } catch (err) {
                 if (/HTTP 500/.test(err.message)) {
@@ -862,12 +866,13 @@ class Googlefindmydevice extends utils.Adapter {
         responsePromise.catch(() => {});
 
         this.log.debug(`Requesting current location for "${name}"...`);
-        await executeLocateAction(admToken, {
+        const reply = await executeLocateAction(admToken, {
             canonicId,
             fcmRegistrationId: this.fcmIdentity.fcmToken,
             requestUuid,
             fmdClientUuid: this.fmdClientUuid,
         });
+        this.log.debug(`Nova answer to the locate request: ${describeStructure(reply || Buffer.alloc(0))}`);
 
         const deviceUpdates = await responsePromise;
         this.log.debug(`${deviceUpdates.length} push response(s) for "${name}" received.`);
