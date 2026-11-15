@@ -366,7 +366,7 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 ## Changelog
 
-### **WORK IN PROGRESS**
+### 0.1.10 (2026-11-15)
 
 * (beabel) **CHANGED**: a location request now asks Google for every report it has (the time of the last high-traffic switch is 0) instead of telling it that the mode was only just switched on. The GoogleFindMy-HA project found that the latter makes Google drop reports between two requests. Whether this brings more reports, also relayed ones, is not confirmed yet; the diagnostic report shows the largest number of reports per answer.
 * (beabel) **ENHANCED**: the diagnostic report names the largest number of reports that one answer held (`maxReportsPerAnswer`).
@@ -410,12 +410,6 @@ risk; Google's internal APIs are undocumented and may change without notice.
 
 * (beabel) **NEW**: headphones, speakers and other Fast Pair devices that carry a Find Hub key are now listed and located like trackers (experimental; Google only returns a location if one of its devices has seen them recently).
 * (beabel) **FIXED**: a device that was paired again (and so got a new id) is no longer asked for its location under the old id every time; the log says once that its row can be removed from the device table.
-
-### 0.1.5 (2026-11-01)
-
-* (beabel) **ENHANCED**: the adapter remembers which push messages it already received, so Google does not deliver them again at every start.
-* (beabel) **CHANGED**: removed the optional BLE identifier (EID) states of version 0.1.4 again; their values did not match what a tracker really broadcasts. States left over from 0.1.4 are deleted at the start.
-* (beabel) **ENHANCED**: the debug log describes the structure of skipped devices (such as headphones) in more detail, field numbers and sizes only, to prepare support for them.
 
 Older changelog entries: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
 

@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "googlefindmydevice",
-    "version": "0.1.9",
+    "version": "0.1.10",
     "news": {
+      "0.1.10": {
+        "en": "location requests now ask Google for every report it has instead of telling it that high-traffic mode was just switched on; the diagnostic report names the largest number of reports per answer; documented that stopping a sound does not work on the UGREEN FineTrack G",
+        "de": "Standortanfragen fragen Google jetzt nach allen vorhandenen Berichten, statt zu melden, der Hochverkehrsmodus sei gerade erst eingeschaltet worden; der Diagnosebericht nennt die größte Zahl an Berichten pro Antwort; dokumentiert, dass das Stoppen eines Tons beim UGREEN FineTrack G nicht funktioniert",
+        "ru": "запросы местоположения теперь запрашивают у Google все имеющиеся отчёты, а не сообщают, что режим высокого трафика только что включён; диагностический отчёт указывает наибольшее число отчётов в одном ответе; задокументировано, что остановка звука на UGREEN FineTrack G не работает",
+        "pt": "os pedidos de localização agora pedem ao Google todos os relatórios que ele tem, em vez de informar que o modo de alto tráfego acabou de ser ligado; o relatório de diagnóstico indica o maior número de relatórios por resposta; documentado que parar um som não funciona no UGREEN FineTrack G",
+        "nl": "locatieverzoeken vragen Google nu om alle rapporten die het heeft, in plaats van te melden dat de modus voor druk verkeer net is ingeschakeld; het diagnoserapport noemt het grootste aantal rapporten per antwoord; gedocumenteerd dat het stoppen van een geluid op de UGREEN FineTrack G niet werkt",
+        "fr": "les demandes de position réclament désormais à Google tous les rapports dont il dispose, au lieu de signaler que le mode de trafic dense vient d'être activé ; le rapport de diagnostic indique le plus grand nombre de rapports par réponse ; documenté que l'arrêt d'un son ne fonctionne pas sur l'UGREEN FineTrack G",
+        "it": "le richieste di posizione chiedono ora a Google tutti i rapporti che ha, invece di segnalare che la modalità di traffico intenso è stata appena attivata; il rapporto diagnostico indica il numero massimo di rapporti per risposta; documentato che l'arresto di un suono non funziona sull'UGREEN FineTrack G",
+        "es": "las solicitudes de ubicación ahora piden a Google todos los informes que tiene, en lugar de indicarle que el modo de tráfico intenso se acaba de activar; el informe de diagnóstico indica el mayor número de informes por respuesta; documentado que detener un sonido no funciona en el UGREEN FineTrack G",
+        "pl": "zapytania o lokalizację żądają teraz od Google wszystkich posiadanych raportów, zamiast zgłaszać, że tryb dużego ruchu dopiero co włączono; raport diagnostyczny podaje największą liczbę raportów w jednej odpowiedzi; udokumentowano, że zatrzymywanie dźwięku nie działa w UGREEN FineTrack G",
+        "uk": "запити місцеперебування тепер просять у Google всі наявні звіти, а не повідомляють, що режим високого трафіку щойно ввімкнено; діагностичний звіт вказує найбільшу кількість звітів в одній відповіді; задокументовано, що зупинка звуку на UGREEN FineTrack G не працює",
+        "zh-cn": "位置请求现在向 Google 索取其拥有的所有报告，而不是告知高流量模式刚刚开启;诊断报告会显示每次应答中报告的最大数量;已记录 UGREEN FineTrack G 无法停止声音"
+      },
       "0.1.9": {
         "en": "new: tracking switch per tracker, home position from the system settings, diagnostic report for bug reports, decryption of P-256 trackers, retry of unanswered location requests, safer sound stop; fixed: description of isOwnReport",
         "de": "neu: Tracking-Schalter pro Tracker, Heimposition aus den Systemeinstellungen, Diagnosebericht für Fehlermeldungen, Entschlüsselung von P-256-Trackern, Wiederholung unbeantworteter Standortanfragen, sichereres Stoppen von Tönen; korrigiert: Beschreibung von isOwnReport",
@@ -80,19 +93,6 @@
         "pl": "opcjonalny identyfikator BLE (EID) dla każdego lokalizatora (domyślnie wyłączony); wiadomości push z dodatkowymi parametrami nagłówka są odczytywane poprawnie; dziennik debugowania pokazuje strukturę identyfikatora urządzeń",
         "uk": "необов’язковий ідентифікатор BLE (EID) для кожного трекера (за замовчуванням вимкнено); push-повідомлення з додатковими параметрами заголовка читаються правильно; журнал налагодження показує структуру ідентифікатора пристроїв",
         "zh-cn": "每个追踪器可选的 BLE 标识符 (EID)(默认关闭);带有额外标头参数的推送消息现在可正确读取;调试日志显示设备标识符的结构"
-      },
-      "0.1.3": {
-        "en": "debug log lists devices that are left out (manufacturer, model, type); README explains that saving restarts the instance between the setup parts and which devices appear",
-        "de": "Debug-Log nennt ausgelassene Geräte (Hersteller, Modell, Typ); README erklärt, dass das Speichern zwischen den Einrichtungsteilen die Instanz neu startet und welche Geräte erscheinen",
-        "ru": "в журнале отладки перечислены пропущенные устройства (производитель, модель, тип); в README объяснено, что сохранение между частями настройки перезапускает экземпляр, и какие устройства отображаются",
-        "pt": "o log de depuração lista os dispositivos ignorados (fabricante, modelo, tipo); o README explica que guardar entre as partes da configuração reinicia a instância e quais dispositivos aparecem",
-        "nl": "het debuglogboek toont overgeslagen apparaten (fabrikant, model, type); de README legt uit dat opslaan tussen de installatiedelen de instantie herstart en welke apparaten verschijnen",
-        "fr": "le journal de débogage liste les appareils ignorés (fabricant, modèle, type) ; le README explique que l'enregistrement entre les parties de la configuration redémarre l'instance et quels appareils apparaissent",
-        "it": "il log di debug elenca i dispositivi esclusi (produttore, modello, tipo); il README spiega che salvare tra le parti della configurazione riavvia l'istanza e quali dispositivi compaiono",
-        "es": "el registro de depuración lista los dispositivos omitidos (fabricante, modelo, tipo); el README explica que guardar entre las partes de la configuración reinicia la instancia y qué dispositivos aparecen",
-        "pl": "dziennik debugowania wymienia pominięte urządzenia (producent, model, typ); README wyjaśnia, że zapis między częściami konfiguracji restartuje instancję, i które urządzenia się pojawiają",
-        "uk": "журнал налагодження перелічує пропущені пристрої (виробник, модель, тип); у README пояснено, що збереження між частинами налаштування перезапускає екземпляр, і які пристрої відображаються",
-        "zh-cn": "调试日志会列出被跳过的设备（制造商、型号、类型）；README 说明了在设置各部分之间保存会重启实例，以及哪些设备会显示"
       }
     },
     "titleLang": {
