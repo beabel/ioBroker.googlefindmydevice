@@ -25,6 +25,7 @@ declare global {
                 latitude: number | null;
                 longitude: number | null;
                 radius: number;
+                useHome?: boolean;
             }[];
         }
     }

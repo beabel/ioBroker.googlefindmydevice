@@ -220,3 +220,26 @@ test('systemCoordinates: reads the ioBroker position and rejects missing or inva
   assert.equal(systemCoordinates({ common: { latitude: 95, longitude: 12 } }), null);
   assert.equal(systemCoordinates(null), null);
 });
+
+test('isRoomName: rooms and Google Home devices of the home, never work, school or the home itself', () => {
+  const { isRoomName } = require('../lib/util');
+  for (const name of ['Wohnzimmer', 'Schlafzimmer', 'Arbeitszimmer', 'Living Room', 'Kitchen Speaker', 'Küchen Display', 'Nest Hub', ' wohnzimmer ']) {
+    assert.equal(isRoomName(name), true, name);
+  }
+  for (const name of ['Home', 'Zuhause', 'Work', 'School', 'Schule', 'Büro', 'Office Nest Mini', 'Klassenzimmer', 'Gym', 'Oma', '', null]) {
+    assert.equal(isRoomName(name), false, String(name));
+  }
+});
+
+test('findSemanticMapping: a row that uses the position of Home follows the Home row', () => {
+  const { findSemanticMapping } = require('../lib/util');
+  const rows = [
+    { name: 'Home', latitude: 50.5, longitude: 12.5, radius: 80 },
+    { name: 'Wohnzimmer', latitude: null, longitude: null, radius: 100, useHome: true },
+    { name: 'Küche', latitude: 1, longitude: 2, radius: 30, useHome: false },
+  ];
+  assert.deepEqual(findSemanticMapping(rows, 'Wohnzimmer'), { lat: 50.5, lon: 12.5, radius: 80 });
+  assert.deepEqual(findSemanticMapping(rows, 'Küche'), { lat: 1, lon: 2, radius: 30 }, 'its own coordinates when not ticked');
+  assert.equal(findSemanticMapping([rows[1]], 'Wohnzimmer'), null, 'without a Home row there is nothing to take over');
+  assert.equal(findSemanticMapping([{ name: 'Home', useHome: true, latitude: null, longitude: null }, rows[1]], 'Wohnzimmer'), null);
+});

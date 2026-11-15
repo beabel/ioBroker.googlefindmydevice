@@ -492,13 +492,13 @@
           "type": "text",
           "attr": "name",
           "title": "semantic_name_col",
-          "width": "34%"
+          "width": "28%"
         },
         {
           "type": "number",
           "attr": "latitude",
           "title": "semantic_lat_col",
-          "width": "22%",
+          "width": "18%",
           "min": -90,
           "max": 90
         },
@@ -506,7 +506,7 @@
           "type": "number",
           "attr": "longitude",
           "title": "semantic_lon_col",
-          "width": "22%",
+          "width": "18%",
           "min": -180,
           "max": 180
         },
@@ -514,9 +514,15 @@
           "type": "number",
           "attr": "radius",
           "title": "semantic_radius_col",
-          "width": "16%",
+          "width": "14%",
           "min": 1,
           "max": 100000
+        },
+        {
+          "type": "checkbox",
+          "attr": "useHome",
+          "title": "semantic_use_home_col",
+          "width": "22%"
         }
       ]
     }

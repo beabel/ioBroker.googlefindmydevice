@@ -197,6 +197,12 @@ because that report has no position. The next GPS report clears
 `semanticLocation` again. So the states always describe one and the same
 report.
 
+What Google reports as a named place, as far as users of other projects have
+seen (Google does not document it): the zones of Google Home ("Home" or the
+name you gave your home, "Work", "School" and your own), and the names of Google
+Home devices or rooms near the tracker ("Kitchen Speaker", "Living Room",
+"Wohnzimmer"), which is the most exact place Google can name.
+
 If you want a map position for such a place, assign coordinates to its name in
 the table **Named places** of the configuration (shown once Part 2 is done):
 
@@ -208,6 +214,14 @@ the table **Named places** of the configuration (shown once Part 2 is done):
   without coordinates.
 - **Latitude** / **Longitude** - the position of the place. Rows without
   coordinates are ignored.
+- **Use position of Home** - for a place inside your home, such as a room or a
+  Google Home device. The row then takes the position and radius of the Home
+  row, so you enter them only once. It is ticked automatically for new names
+  that look like a room of the home or a Google Home device ("Wohnzimmer",
+  "Bedroom", "Kitchen Speaker"), but never for names that contain work or
+  school words ("Work", "School", "Office", "Büro") and never for other
+  places. Please check the tick when a place is added: a name like "Küche" can
+  also be a kitchen at work.
 - **Radius (m)** - how far from that point the tracker may be; it is written to
   `accuracy`.
 
@@ -365,6 +379,10 @@ This project is not affiliated with, endorsed by, or supported by Google.
 risk; Google's internal APIs are undocumented and may change without notice.
 
 ## Changelog
+
+### **WORK IN PROGRESS**
+
+* (beabel) **NEW**: the table "Named places" has a column "Use position of Home": a room or a Google Home device then takes the position of the Home row. It is ticked automatically for new names that look like a room of the home or a Google Home device, never for work or school names.
 
 ### 0.1.10 (2026-11-15)
 

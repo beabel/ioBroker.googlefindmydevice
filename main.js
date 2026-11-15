@@ -26,6 +26,7 @@ const {
     findSemanticMapping,
     describeAnswer,
     isHomeName,
+    isRoomName,
     systemCoordinates,
     describeIdentifierKind,
 } = require('./lib/util');
@@ -1205,11 +1206,18 @@ class Googlefindmydevice extends utils.Adapter {
         }
         // For the home place the position from the ioBroker system settings is the natural choice.
         const home = isHomeName(trimmed) ? systemCoordinates(await this.getForeignObjectAsync('system.config')) : null;
-        this.log.info(
-            home
-                ? 'Google reported your home place; it was added to the table "Named places" in the configuration with the position from the ioBroker system settings. Please check it there.'
-                : 'Google reported a named place without coordinates; it was added to the table "Named places" in the configuration. Enter its latitude and longitude there to get a map position.',
-        );
+        // A room of the home uses the position of Home; every other place stays empty.
+        const room = !home && isRoomName(trimmed);
+        let message =
+            'Google reported a named place without coordinates; it was added to the table "Named places" in the configuration. Enter its latitude and longitude there to get a map position.';
+        if (home) {
+            message =
+                'Google reported your home place; it was added to the table "Named places" in the configuration with the position from the ioBroker system settings. Please check it there.';
+        } else if (room) {
+            message =
+                'Google reported what looks like a room of your home; it was added to the table "Named places" in the configuration and uses the position of Home. Untick "Use position of Home" there if it is another place.';
+        }
+        this.log.info(message);
         await this.extendForeignObject(`system.adapter.${this.namespace}`, {
             native: {
                 semanticLocations: existing.concat({
@@ -1217,6 +1225,7 @@ class Googlefindmydevice extends utils.Adapter {
                     latitude: home ? home.lat : null,
                     longitude: home ? home.lon : null,
                     radius: 100,
+                    useHome: room,
                 }),
             },
         });

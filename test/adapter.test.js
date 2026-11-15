@@ -560,8 +560,8 @@ test('the home place gets the position from the ioBroker system settings, other 
   await adapter.registerSemanticName('Home');
   await adapter.registerSemanticName('Office');
 
-  assert.deepEqual(written[0], [{ name: 'Home', latitude: 50.83, longitude: 12.74, radius: 100 }]);
-  assert.deepEqual(written[1], [{ name: 'Office', latitude: null, longitude: null, radius: 100 }]);
+  assert.deepEqual(written[0], [{ name: 'Home', latitude: 50.83, longitude: 12.74, radius: 100, useHome: false }]);
+  assert.deepEqual(written[1], [{ name: 'Office', latitude: null, longitude: null, radius: 100, useHome: false }]);
 });
 
 test('without a position in the system settings the home place is added empty', async () => {
@@ -569,7 +569,7 @@ test('without a position in the system settings the home place is added empty', 
   const written = [];
   adapter.extendForeignObject = async (id, obj) => written.push(obj.native.semanticLocations);
   await adapter.registerSemanticName('Home');
-  assert.deepEqual(written[0], [{ name: 'Home', latitude: null, longitude: null, radius: 100 }]);
+  assert.deepEqual(written[0], [{ name: 'Home', latitude: null, longitude: null, radius: 100, useHome: false }]);
 });
 
 test('an unmatched push is logged with the tracker of the sound request it answers', () => {
@@ -636,4 +636,35 @@ test('a device with a sound action, or an unknown action list, is tried', async 
   await adapter.onStateChange('googlefindmydevice.0.BBB-222.playSound', { val: true, ack: false });
 
   assert.equal(soundCalls.filter(call => call.start).length, 2);
+});
+
+test('a new room name is added ticked to use the position of Home, other places stay empty and unticked', async () => {
+  const adapter = createAdapter();
+  const written = [];
+  adapter.extendForeignObject = async (id, obj) => written.push(obj.native.semanticLocations);
+  adapter.config.semanticLocations = [{ name: 'Home', latitude: 50.5, longitude: 12.5, radius: 100 }];
+
+  await adapter.registerSemanticName('Kitchen Speaker');
+  await adapter.registerSemanticName('Work');
+
+  const first = written[0].at(-1);
+  assert.deepEqual(first, { name: 'Kitchen Speaker', latitude: null, longitude: null, radius: 100, useHome: true });
+  const second = written[1].at(-1);
+  assert.deepEqual(second, { name: 'Work', latitude: null, longitude: null, radius: 100, useHome: false });
+});
+
+test('the position of a ticked room follows the Home row in the states', async () => {
+  const adapter = createAdapter();
+  adapter.config.semanticLocations = [
+    { name: 'Home', latitude: 50.5, longitude: 12.5, radius: 80 },
+    { name: 'Wohnzimmer', latitude: null, longitude: null, radius: 100, useHome: true },
+  ];
+
+  const mapped = await adapter.writeSemanticStates('AAA-111', 'Wohnzimmer');
+
+  assert.deepEqual(mapped, { lat: 50.5, lon: 12.5, radius: 80 });
+  const written = Object.fromEntries(callsOf(adapter, 'setStateChanged').map(call => [call[1], call[2].val]));
+  assert.equal(written['AAA-111.latitude'], 50.5);
+  assert.equal(written['AAA-111.accuracy'], 80);
+  assert.equal(written['AAA-111.semanticLocation'], 'Wohnzimmer');
 });
