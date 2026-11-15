@@ -3,6 +3,11 @@
 See the "Changelog" section in [README.md](README.md) for the current
 history. Entries move here once that section grows too long.
 
+## 0.1.6 (2026-11-01)
+
+* (beabel) **NEW**: headphones, speakers and other Fast Pair devices that carry a Find Hub key are now listed and located like trackers (experimental; Google only returns a location if one of its devices has seen them recently).
+* (beabel) **FIXED**: a device that was paired again (and so got a new id) is no longer asked for its location under the old id every time; the log says once that its row can be removed from the device table.
+
 ## 0.1.5 (2026-11-01)
 
 * (beabel) **ENHANCED**: the adapter remembers which push messages it already received, so Google does not deliver them again at every start.

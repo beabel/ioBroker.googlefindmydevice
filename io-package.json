@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "googlefindmydevice",
-    "version": "0.1.10",
+    "version": "0.1.11",
     "news": {
+      "0.1.11": {
+        "en": "the table of named places has a column \"Use position of Home\": rooms and Google Home devices take the position of the Home row; new names that look like a room or a Google Home device are ticked automatically, never work or school names",
+        "de": "die Tabelle der benannten Orte hat eine Spalte \"Position von Home verwenden\": Räume und Google-Home-Geräte übernehmen die Position der Zeile Home; neue Namen, die wie ein Raum oder ein Google-Home-Gerät aussehen, werden automatisch angehakt, nie Namen für Arbeit oder Schule",
+        "ru": "в таблице именованных мест есть столбец «Использовать позицию Home»: комнаты и устройства Google Home берут позицию строки Home; новые названия, похожие на комнату или устройство Google Home, отмечаются автоматически, но никогда названия рабочего места или школы",
+        "pt": "a tabela de locais nomeados tem uma coluna \"Usar a posição de Home\": cômodos e dispositivos Google Home assumem a posição da linha Home; novos nomes que parecem um cômodo ou um dispositivo Google Home são marcados automaticamente, nunca nomes de trabalho ou escola",
+        "nl": "de tabel met benoemde plaatsen heeft een kolom \"Positie van Home gebruiken\": kamers en Google Home-apparaten nemen de positie van de rij Home over; nieuwe namen die op een kamer of een Google Home-apparaat lijken worden automatisch aangevinkt, nooit namen voor werk of school",
+        "fr": "le tableau des lieux nommés a une colonne « Utiliser la position de Home » : les pièces et les appareils Google Home reprennent la position de la ligne Home ; les nouveaux noms qui ressemblent à une pièce ou à un appareil Google Home sont cochés automatiquement, jamais les noms de travail ou d'école",
+        "it": "la tabella dei luoghi con nome ha una colonna \"Usa la posizione di Home\": stanze e dispositivi Google Home assumono la posizione della riga Home; i nuovi nomi che sembrano una stanza o un dispositivo Google Home vengono selezionati automaticamente, mai i nomi di lavoro o scuola",
+        "es": "la tabla de lugares con nombre tiene una columna \"Usar la posición de Home\": las habitaciones y los dispositivos Google Home toman la posición de la fila Home; los nombres nuevos que parecen una habitación o un dispositivo Google Home se marcan automáticamente, nunca los de trabajo o escuela",
+        "pl": "tabela nazwanych miejsc ma kolumnę \"Użyj pozycji Home\": pomieszczenia i urządzenia Google Home przejmują pozycję wiersza Home; nowe nazwy podobne do pomieszczenia lub urządzenia Google Home są zaznaczane automatycznie, nigdy nazwy pracy ani szkoły",
+        "uk": "у таблиці іменованих місць є стовпець «Використовувати позицію Home»: кімнати та пристрої Google Home беруть позицію рядка Home; нові назви, схожі на кімнату або пристрій Google Home, позначаються автоматично, але ніколи назви роботи чи школи",
+        "zh-cn": "命名地点表新增“使用 Home 的位置”列:房间和 Google Home 设备采用 Home 行的位置;看起来像房间或 Google Home 设备的新名称会自动勾选,工作或学校的名称则不会"
+      },
       "0.1.10": {
         "en": "location requests now ask Google for every report it has instead of telling it that high-traffic mode was just switched on; the diagnostic report names the largest number of reports per answer; documented that stopping a sound does not work on the UGREEN FineTrack G",
         "de": "Standortanfragen fragen Google jetzt nach allen vorhandenen Berichten, statt zu melden, der Hochverkehrsmodus sei gerade erst eingeschaltet worden; der Diagnosebericht nennt die größte Zahl an Berichten pro Antwort; dokumentiert, dass das Stoppen eines Tons beim UGREEN FineTrack G nicht funktioniert",
@@ -80,19 +93,6 @@
         "pl": "zapamiętuje odebrane wiadomości push, więc Google nie dostarcza starych przy każdym uruchomieniu; opcjonalny identyfikator BLE (EID) ponownie usunięty; dziennik debugowania dokładniej opisuje pominięte urządzenia",
         "uk": "запам’ятовує отримані push-повідомлення, тому Google більше не доставляє старі при кожному запуску; необов’язковий ідентифікатор BLE (EID) знову видалено; журнал налагодження докладніше описує пропущені пристрої",
         "zh-cn": "记住已收到的推送消息,Google 不再在每次启动时重新发送旧消息;再次移除可选的 BLE 标识符 (EID);调试日志更详细地描述被跳过的设备"
-      },
-      "0.1.4": {
-        "en": "optional BLE identifier (EID) states per tracker (off by default); push messages with extra header parameters are read correctly; debug log shows the identifier layout of devices",
-        "de": "optionale BLE-Kennung (EID) pro Tracker (standardmäßig aus); Push-Nachrichten mit zusätzlichen Header-Parametern werden korrekt gelesen; Debug-Log zeigt den Kennungsaufbau der Geräte",
-        "ru": "необязательный идентификатор BLE (EID) для каждого трекера (по умолчанию выключен); push-сообщения с дополнительными параметрами заголовка читаются правильно; в журнале отладки показана структура идентификатора устройств",
-        "pt": "identificador BLE (EID) opcional por rastreador (desativado por padrão); mensagens push com parâmetros extras no cabeçalho são lidas corretamente; o log de depuração mostra a estrutura do identificador dos dispositivos",
-        "nl": "optionele BLE-identificatie (EID) per tracker (standaard uit); pushberichten met extra headerparameters worden correct gelezen; het debuglogboek toont de opbouw van de apparaat-ID",
-        "fr": "identifiant BLE (EID) facultatif par traceur (désactivé par défaut) ; les messages push avec des paramètres d'en-tête supplémentaires sont lus correctement ; le journal de débogage montre la structure de l'identifiant des appareils",
-        "it": "identificatore BLE (EID) facoltativo per tracker (disattivato di default); i messaggi push con parametri di intestazione aggiuntivi vengono letti correttamente; il log di debug mostra la struttura dell'identificatore dei dispositivi",
-        "es": "identificador BLE (EID) opcional por rastreador (desactivado por defecto); los mensajes push con parámetros de cabecera adicionales se leen correctamente; el registro de depuración muestra la estructura del identificador de los dispositivos",
-        "pl": "opcjonalny identyfikator BLE (EID) dla każdego lokalizatora (domyślnie wyłączony); wiadomości push z dodatkowymi parametrami nagłówka są odczytywane poprawnie; dziennik debugowania pokazuje strukturę identyfikatora urządzeń",
-        "uk": "необов’язковий ідентифікатор BLE (EID) для кожного трекера (за замовчуванням вимкнено); push-повідомлення з додатковими параметрами заголовка читаються правильно; журнал налагодження показує структуру ідентифікатора пристроїв",
-        "zh-cn": "每个追踪器可选的 BLE 标识符 (EID)(默认关闭);带有额外标头参数的推送消息现在可正确读取;调试日志显示设备标识符的结构"
       }
     },
     "titleLang": {
