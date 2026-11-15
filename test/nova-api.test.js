@@ -106,6 +106,8 @@ test('sound requests carry the start or stop command, the request id and the tra
   assert.ok(start.action.startSound && !start.action.stopSound && !start.action.locateTracker);
   assert.ok(stop.action.stopSound && !stop.action.startSound);
   assert.ok(locate.action.locateTracker && !locate.action.startSound);
+  // A locate request asks for every report: the time of the last high-traffic switch is present but 0.
+  assert.deepEqual(locate.action.locateTracker.lastHighTrafficEnablingTime, {});
   assert.equal(start.requestMetadata.requestUuid, 'req-1');
   assert.equal(stop.requestMetadata.requestUuid, undefined, 'a stop without a known start sends no request id');
   assert.equal(start.scope.device.canonicId.id, 'id-1');

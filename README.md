@@ -275,7 +275,13 @@ value or for `false`.
   the request back until the tracker is reachable, so a ring can come later. Headphones and speakers answer with an
   error (HTTP 500); the log then says so. Reports of a working ring (or of
   none) for a tracker model are welcome as an issue on GitHub.
-- **`stopSound`** - stops the sound again (experimental, like `playSound`).
+- **`stopSound`** - stops the sound again (experimental, like `playSound`). On
+  the UGREEN FineTrack G a stop does not work: Google answers it with a reply
+  that looks different from the answers to a start (a tester logged two stops,
+  both with the same reply, and the tracker kept ringing), and the
+  Home-Assistant integration reports the same for this model. Press the button
+  on the tracker to stop the ring; a ring seems to last up to 10 minutes (the
+  answers to a start name 600 seconds). Other models were not tested.
   Google matches a stop to the start it belongs to, so the adapter remembers
   the starts it sent (in memory, until the instance restarts) and sends a stop
   for each of them. A stop without such a start is still sent, but the tracker
@@ -359,6 +365,12 @@ This project is not affiliated with, endorsed by, or supported by Google.
 risk; Google's internal APIs are undocumented and may change without notice.
 
 ## Changelog
+
+### **WORK IN PROGRESS**
+
+* (beabel) **CHANGED**: a location request now asks Google for every report it has (the time of the last high-traffic switch is 0) instead of telling it that the mode was only just switched on. The GoogleFindMy-HA project found that the latter makes Google drop reports between two requests. Whether this brings more reports, also relayed ones, is not confirmed yet; the diagnostic report shows the largest number of reports per answer.
+* (beabel) **ENHANCED**: the diagnostic report names the largest number of reports that one answer held (`maxReportsPerAnswer`).
+* (beabel) **CHANGED**: the README says that stopping a sound does not work on the UGREEN FineTrack G, so the button on the tracker has to be used.
 
 ### 0.1.9 (2026-11-14)
 

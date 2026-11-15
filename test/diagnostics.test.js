@@ -29,6 +29,7 @@ test('the report holds model data and counts and nothing that identifies a track
     status: 1,
     isOwnReport: false,
     keyPartLength: 32,
+    reportCount: 4,
     reading: 'p256/be_mod_n/nonce8',
     lat: 50.1234,
     lon: 12.5678,
@@ -51,6 +52,7 @@ test('the report holds model data and counts and nothing that identifies a track
   assert.deepEqual(tracker.capabilities, [30, 31, 32]);
   assert.equal(tracker.answers, 3);
   assert.equal(tracker.withoutReport, 1);
+  assert.equal(tracker.maxReportsPerAnswer, 4);
   assert.deepEqual(tracker.reportTypes, { LAST_KNOWN: 1, SEMANTIC: 1 });
   assert.deepEqual(tracker.origin, { ownDevice: 0, relayed: 1 });
   assert.deepEqual(tracker.keyPartLengths, { 32: 1 });
